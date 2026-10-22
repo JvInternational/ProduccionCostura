@@ -138,4 +138,4 @@ function csv(){if(!R.length)return alert('No hay capturas.');let h=['Folio','Fec
 fill('personal',CAT.personal,'Seleccione personal');fill('maquina',CAT.maquinas,'Seleccione máquina');fill('proceso',CAT.operaciones,'Seleccione proceso');CAT.estilos.forEach(x=>$('estilosLista').appendChild(new Option('',x)));$('fecha').value=new Date().toISOString().slice(0,10);$('fecha').onchange=upd;$('estilo').onchange=price;$('proceso').onchange=price;$('limpiar').onclick=clearForm;$('exportar').onclick=csv;upd();render();status(`Catálogos cargados: ${CAT.personal.length} personas, ${CAT.maquinas.length} máquinas y ${CAT.operaciones.length} procesos.`,'ok');
 </script>
 </body>
-</html> 
+</html>
