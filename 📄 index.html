@@ -1,13 +1,138 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Producción Costura V3.1</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script><style>*{box-sizing:border-box}body{margin:0;background:#f3f6f5;font-family:Segoe UI,Arial;color:#192622}.app{display:flex;min-height:100vh}aside{width:220px;background:#101a20;color:#fff;padding:18px}.brand,.panel,.kpi{background:#fff;border-radius:12px;padding:18px}.brand{color:#173b35;text-align:center;font-weight:800}.nav{margin-top:20px;background:#21342f;padding:12px;border-radius:8px}main{width:calc(100% - 220px);padding:26px}h1{margin:0}.sub{color:#687873;margin:4px 0 18px}.panel,.kpi{border:1px solid #dfe8e5;box-shadow:0 5px 18px #153b3220;margin-bottom:15px}.folio{padding:13px;background:#f7faf9;border:1px solid #dfe8e5;border-radius:9px;margin-bottom:15px}.folio b{display:block;font:700 22px Consolas}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.field{display:grid;gap:5px}label{font-size:10px;color:#71807c;text-transform:uppercase;font-weight:700}input,select{height:40px;border:1px solid #dfe8e5;border-radius:8px;padding:0 10px;background:#fff}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:17px}button{height:39px;border:0;border-radius:8px;padding:0 16px;font-weight:700}.primary{background:#08776b;color:#fff}.primary:disabled{opacity:.5}.secondary{background:#e7efed;color:#173b35}.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.kpi{border-left:4px solid #08776b}.kpi b{display:block;font-size:22px}.ok{color:#08776b;font-weight:700}.err{color:#b42318;font-weight:700}.wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:9px;border-bottom:1px solid #edf1f0;text-align:left;white-space:nowrap}@media(max-width:700px){.app{display:block}aside,main{width:100%}.grid,.sum{grid-template-columns:1fr}}</style></head><body><div class="app"><aside><div class="brand">JV International</div><div class="nav">Captura diaria V3.1</div></aside><main><h1>Producción Costura</h1><div class="sub">Captura conectada a Google Sheets.</div><section class="panel"><div class="folio"><label>Último folio guardado</label><b id="folio">Se asigna al guardar</b><svg id="barcode"></svg></div><form id="form"><div class="grid"><div class="field"><label>Fecha *</label><input id="fecha" type="date" required></div><div class="field"><label>Semana ISO</label><input id="semana" type="text" readonly required></div><div class="field"><label>Nombre Personal *</label><select id="personal" required></select></div><div class="field"><label>Máquina *</label><select id="maquina" required></select></div><div class="field"><label>No. Corte *</label><input id="corte" type="text" required></div><div class="field"><label>Estilo *</label><input id="estilo" list="estilosLista" required><datalist id="estilosLista"></datalist></div><div class="field"><label>Proceso *</label><select id="proceso" required></select></div><div class="field"><label>Costo unitario *</label><input id="costo" type="number" min="0" step="0.01" required></div><div class="field"><label>Cantidad *</label><input id="cantidad" type="number" min="1" step="1" required></div></div><div class="actions"><button id="guardar" class="primary">Guardar en la nube</button><button type="button" id="limpiar" class="secondary">Limpiar</button><button type="button" id="exportar" class="secondary">Exportar sesión CSV</button><span id="status"></span></div></form></section><div class="sum"><div class="kpi"><small>Registros de sesión</small><b id="kr">0</b></div><div class="kpi"><small>Cantidad de sesión</small><b id="kq">0</b></div><div class="kpi"><small>Costo de sesión</small><b id="kc">$0.00</b></div></div><section class="panel"><b>Capturas confirmadas</b><div id="tabla"></div></section></main></div><script>
-const API="https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec",CAT={"personal": ["CORRIL MACARIO", "ELIUD ARCOS", "ESPINOZA ISABEL", "ESTRADA RAMON", "GARCIA GUSTAVO", "GARCIA RIGOBERTO", "GARCIA VICTOR", "GASPAR CLARA", "HERNANDEZ GUILLERMO", "HERNANDEZ LAURA", "HERNANDEZ NICOLAS", "JUSTO ELISER", "KAREN", "LANDERO JUAN", "LOPEZ SANDRA", "MALDONADO LUIS", "MARCIAL JULIO", "MEJIA ROCIO", "MENDIVIL IZZI", "MONTERO LILIANA", "NAVARRO ROSARIO", "PARRA MIGUEL", "PEDRO PABLO", "PEDRO PABLO FELIX", "PEÑUELAS NIDIA", "COLIMA RITA", "RODRIGO SERRANO", "SANCHEZ CRISTINA", "SANTOS FELIX", "SANTOS FRANSISCO", "ZAMORA SAN JUANA"], "maquinas": ["OVER", "COVER", "TAPE", "SENCILLA"], "operaciones": ["HOMBROS", "CUELLO", "S/C CUELLO", "TAPE", "PEGAR MANGA", "CERRAR COSTADOS", "BASTILLA MANGA", "BASTILLA RUEDO", "BIES CUELLO", "BIES MANGA/SISA", "REMACHES", "1ER HOMBRO", "2DO HOMBRO", "CERRAR PUÑO", "PEGAR PUÑO", "CERRAR BANDAS", "PEGAR BANDA", "CERRAR MANGA", "PEGAR MANGA L/S", "S/C RUEDO", "BIES ESPALDA", "CERRAR Y PEGAR PUÑO", "CLIP", "S/C MANGAS", "DESHEBRADO"], "estilos": ["25", "HH55", "JN02", "JR149", "JR47", "MN01", "NN55"], "precios": [{"e": "JR154", "o": "COSTO", "c": 10.2}, {"e": "JR154", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR154", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR154", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR154", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR154", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR154", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR154", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR154", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR154", "o": "CLIP", "c": 1.0}, {"e": "JR154", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR154", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR154", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR154", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR154", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR154", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR154", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR154", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR154", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR154", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR154", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR154", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR154", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR154", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR154", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR154", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR44", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR44", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR44", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR44", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR44", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR44", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR44", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR44", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR47", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR47", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR47", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR47", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR47", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR47", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR47", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR47", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR48", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR48", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR48", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR48", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR48", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR48", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR48", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR48", "o": "DESHEBRADO", "c": 0.0}, {"e": "GR08", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "GR08", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "GR08", "o": "S/C CUELLO", "c": 0.4}, {"e": "GR08", "o": "PEGAR MANGA", "c": 0.8}, {"e": "GR08", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "GR08", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "GR08", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "GR08", "o": "DESHEBRADO", "c": 0.0}, {"e": "MN03", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "MN03", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "MN03", "o": "S/C CUELLO", "c": 0.4}, {"e": "MN03", "o": "TAPE", "c": 0.6}, {"e": "MN03", "o": "PEGAR MANGA", "c": 0.8}, {"e": "MN03", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "MN03", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "MN03", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "MN03", "o": "DESHEBRADO", "c": 0.0}, {"e": "BY02", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "BY02", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "BY02", "o": "S/C CUELLO", "c": 0.4}, {"e": "BY02", "o": "TAPE", "c": 0.6}, {"e": "BY02", "o": "PEGAR MANGA", "c": 0.8}, {"e": "BY02", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "BY02", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "BY02", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "BY02", "o": "DESHEBRADO", "c": 0.0}, {"e": "BY05", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "BY05", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "BY05", "o": "S/C CUELLO", "c": 0.4}, {"e": "BY05", "o": "TAPE", "c": 0.6}, {"e": "BY05", "o": "PEGAR MANGA", "c": 0.8}, {"e": "BY05", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "BY05", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "BY05", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "BY05", "o": "DESHEBRADO", "c": 0.0}, {"e": "TD02", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "TD02", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "TD02", "o": "S/C CUELLO", "c": 0.4}, {"e": "TD02", "o": "TAPE", "c": 0.6}, {"e": "TD02", "o": "PEGAR MANGA", "c": 0.8}, {"e": "TD02", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "TD02", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "TD02", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "TD02", "o": "DESHEBRADO", "c": 0.0}, {"e": "GR02", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "GR02", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "GR02", "o": "S/C CUELLO", "c": 0.4}, {"e": "GR02", "o": "TAPE", "c": 0.6}, {"e": "GR02", "o": "PEGAR MANGA", "c": 0.8}, {"e": "GR02", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "GR02", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "GR02", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "GR02", "o": "DESHEBRADO", "c": 0.0}, {"e": "MN01", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "MN01", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "MN01", "o": "S/C CUELLO", "c": 0.4}, {"e": "MN01", "o": "TAPE", "c": 0.6}, {"e": "MN01", "o": "PEGAR MANGA", "c": 0.8}, {"e": "MN01", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "MN01", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "MN01", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "MN01", "o": "DESHEBRADO", "c": 0.0}, {"e": "BY03", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "BY03", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "BY03", "o": "S/C CUELLO", "c": 0.4}, {"e": "BY03", "o": "TAPE", "c": 0.6}, {"e": "BY03", "o": "PEGAR MANGA", "c": 0.8}, {"e": "BY03", "o": "CERRAR COSTADOS", "c": 1.1}, {"e": "BY03", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "BY03", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "BY03", "o": "DESHEBRADO", "c": 0.0}, {"e": "BY06", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "BY06", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "BY06", "o": "S/C CUELLO", "c": 0.4}, {"e": "BY06", "o": "TAPE", "c": 0.6}, {"e": "BY06", "o": "PEGAR MANGA", "c": 0.8}, {"e": "BY06", "o": "CERRAR COSTADOS", "c": 1.1}, {"e": "BY06", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "BY06", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "BY06", "o": "DESHEBRADO", "c": 0.0}, {"e": "MN02", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "MN02", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "MN02", "o": "S/C CUELLO", "c": 0.4}, {"e": "MN02", "o": "TAPE", "c": 0.6}, {"e": "MN02", "o": "PEGAR MANGA", "c": 0.8}, {"e": "MN02", "o": "CERRAR COSTADOS", "c": 1.1}, {"e": "MN02", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "MN02", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "MN02", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR154", "o": "CLIP", "c": 1.0}, {"e": "JR154", "o": "CERRAR HOMBROS", "c": 0.4}, {"e": "JR154", "o": "PEGAR CUELLO", "c": 0.7}, {"e": "JR154", "o": "S/C CUELLO", "c": 0.4}, {"e": "JR154", "o": "PEGAR MANGA", "c": 0.8}, {"e": "JR154", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR154", "o": "BASTILLA MANGA", "c": 0.7}, {"e": "JR154", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR154", "o": "DESHEBRADO", "c": 0.0}, {"e": "JR49", "o": "1ER HOMBRO", "c": 0.2}, {"e": "JR49", "o": "BIES SIZA", "c": 1.1}, {"e": "JR49", "o": "2DO HOMBRO", "c": 0.25}, {"e": "JR49", "o": "BIES CUELLO", "c": 0.8}, {"e": "JR49", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "JR49", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "JR49", "o": "REMACHES X3", "c": 1.0}, {"e": "JR49", "o": "DESHEBRADO", "c": 0.0}, {"e": "BY01", "o": "1ER HOMBRO", "c": 0.2}, {"e": "BY01", "o": "BIES SIZA", "c": 1.1}, {"e": "BY01", "o": "2DO HOMBRO", "c": 0.25}, {"e": "BY01", "o": "BIES CUELLO", "c": 0.8}, {"e": "BY01", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "BY01", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "BY01", "o": "REMACHES X3", "c": 1.0}, {"e": "BY01", "o": "DESHEBRADO", "c": 0.0}, {"e": "BY04", "o": "1ER HOMBRO", "c": 0.2}, {"e": "BY04", "o": "BIES SIZA", "c": 1.1}, {"e": "BY04", "o": "2DO HOMBRO", "c": 0.25}, {"e": "BY04", "o": "BIES CUELLO", "c": 0.8}, {"e": "BY04", "o": "CERRAR COSTADOS", "c": 0.9}, {"e": "BY04", "o": "BASTILLA RUEDO", "c": 0.7}, {"e": "BY04", "o": "REMACHES X3", "c": 1.0}, {"e": "BY04", "o": "DESHEBRADO", "c": 0.0}]};let R=[];const $=x=>document.getElementById(x),clean=x=>String(x??'').trim().replace(/\s+/g,' '),money=x=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(x||0);
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Producción Costura V3.2</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js">
+</script>
+<style>*{box-sizing:border-box}body{margin:0;background:#f3f6f5;font-family:Segoe UI,Arial;color:#192622}.app{display:flex;min-height:100vh}aside{width:220px;background:#101a20;color:#fff;padding:18px}.brand,.panel,.kpi{background:#fff;border-radius:12px;padding:18px}.brand{color:#173b35;text-align:center;font-weight:800}.nav{margin-top:20px;background:#21342f;padding:12px;border-radius:8px}main{width:calc(100% - 220px);padding:26px}h1{margin:0}.sub{color:#687873;margin:4px 0 18px}.panel,.kpi{border:1px solid #dfe8e5;box-shadow:0 5px 18px #153b3220;margin-bottom:15px}.folio{padding:13px;background:#f7faf9;border:1px solid #dfe8e5;border-radius:9px;margin-bottom:15px}.folio b{display:block;font:700 22px Consolas}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.field{display:grid;gap:5px}label{font-size:10px;color:#71807c;text-transform:uppercase;font-weight:700}input,select{height:40px;border:1px solid #dfe8e5;border-radius:8px;padding:0 10px;background:#fff}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:17px}button{height:39px;border:0;border-radius:8px;padding:0 16px;font-weight:700}.primary{background:#08776b;color:#fff}.primary:disabled{opacity:.5}.secondary{background:#e7efed;color:#173b35}.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.kpi{border-left:4px solid #08776b}.kpi b{display:block;font-size:22px}.ok{color:#08776b;font-weight:700}.err{color:#b42318;font-weight:700}.wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:9px;border-bottom:1px solid #edf1f0;text-align:left;white-space:nowrap}@media(max-width:700px){.app{display:block}aside,main{width:100%}.grid,.sum{grid-template-columns:1fr}}</style>
+</head>
+<body>
+<div class="app">
+<aside>
+<div class="brand">JV International</div>
+<div class="nav">Captura diaria V3.2</div>
+</aside>
+<main>
+<h1>Producción Costura</h1>
+<div class="sub">Captura conectada a Google Sheets. Estilos tomados de Precios.xlsx.</div>
+<section class="panel">
+<div class="folio">
+<label>Último folio guardado</label>
+<b id="folio">Se asigna al guardar</b>
+<svg id="barcode">
+</svg>
+</div>
+<form id="form">
+<div class="grid">
+<div class="field">
+<label>Fecha *</label>
+<input id="fecha" type="date" required>
+</div>
+<div class="field">
+<label>Semana ISO</label>
+<input id="semana" type="text" readonly required>
+</div>
+<div class="field">
+<label>Nombre Personal *</label>
+<select id="personal" required>
+</select>
+</div>
+<div class="field">
+<label>Máquina *</label>
+<select id="maquina" required>
+</select>
+</div>
+<div class="field">
+<label>No. Corte *</label>
+<input id="corte" type="text" required>
+</div>
+<div class="field">
+<label>Estilo *</label>
+<input id="estilo" list="estilosLista" required>
+<datalist id="estilosLista">
+</datalist>
+</div>
+<div class="field">
+<label>Proceso *</label>
+<select id="proceso" required>
+</select>
+</div>
+<div class="field">
+<label>Costo unitario *</label>
+<input id="costo" type="number" min="0" step="0.01" required>
+</div>
+<div class="field">
+<label>Cantidad *</label>
+<input id="cantidad" type="number" min="1" step="1" required>
+</div>
+</div>
+<div class="actions">
+<button id="guardar" class="primary">Guardar en la nube</button>
+<button type="button" id="limpiar" class="secondary">Limpiar</button>
+<button type="button" id="exportar" class="secondary">Exportar sesión CSV</button>
+<span id="status">
+</span>
+</div>
+</form>
+</section>
+<div class="sum">
+<div class="kpi">
+<small>Registros de sesión</small>
+<b id="kr">0</b>
+</div>
+<div class="kpi">
+<small>Cantidad de sesión</small>
+<b id="kq">0</b>
+</div>
+<div class="kpi">
+<small>Costo de sesión</small>
+<b id="kc">$0.00</b>
+</div>
+</div>
+<section class="panel">
+<b>Capturas confirmadas</b>
+<div id="tabla">
+</div>
+</section>
+</main>
+</div>
+<script>
+const API="https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec",CAT={"personal":["CORRIL MACARIO","ELIUD ARCOS","ESPINOZA ISABEL","ESTRADA RAMON","GARCIA GUSTAVO","GARCIA RIGOBERTO","GARCIA VICTOR","GASPAR CLARA","HERNANDEZ GUILLERMO","HERNANDEZ LAURA","HERNANDEZ NICOLAS","JUSTO ELISER","KAREN","LANDERO JUAN","LOPEZ SANDRA","MALDONADO LUIS","MARCIAL JULIO","MEJIA ROCIO","MENDIVIL IZZI","MONTERO LILIANA","NAVARRO ROSARIO","PARRA MIGUEL","PEDRO PABLO","PEDRO PABLO FELIX","PEÑUELAS NIDIA","COLIMA RITA","RODRIGO SERRANO","SANCHEZ CRISTINA","SANTOS FELIX","SANTOS FRANSISCO","ZAMORA SAN JUANA"],"maquinas":["OVER","COVER","TAPE","SENCILLA"],"operaciones":["HOMBROS","CUELLO","S/C CUELLO","TAPE","PEGAR MANGA","CERRAR COSTADOS","BASTILLA MANGA","BASTILLA RUEDO","BIES CUELLO","BIES MANGA/SISA","REMACHES","1ER HOMBRO","2DO HOMBRO","CERRAR PUÑO","PEGAR PUÑO","CERRAR BANDAS","PEGAR BANDA","CERRAR MANGA","PEGAR MANGA L/S","S/C RUEDO","BIES ESPALDA","CERRAR Y PEGAR PUÑO","CLIP","S/C MANGAS","DESHEBRADO"],"estilos":["BY01","BY02","BY03","BY04","BY05","BY06","GR02","GR08","JR154","JR44","JR47","JR48","JR49","MN01","MN02","MN03","TD02"],"precios":[{"e":"JR154","o":"CERRAR HOMBROS","c":0.4},{"e":"JR154","o":"PEGAR CUELLO","c":0.7},{"e":"JR154","o":"S/C CUELLO","c":0.4},{"e":"JR154","o":"PEGAR MANGA","c":0.8},{"e":"JR154","o":"CERRAR COSTADOS","c":0.9},{"e":"JR154","o":"BASTILLA MANGA","c":0.7},{"e":"JR154","o":"BASTILLA RUEDO","c":0.7},{"e":"JR154","o":"DESHEBRADO","c":0.0},{"e":"JR154","o":"CLIP","c":1.0},{"e":"JR154","o":"CERRAR HOMBROS","c":0.4},{"e":"JR154","o":"PEGAR CUELLO","c":0.7},{"e":"JR154","o":"S/C CUELLO","c":0.4},{"e":"JR154","o":"PEGAR MANGA","c":0.8},{"e":"JR154","o":"CERRAR COSTADOS","c":0.9},{"e":"JR154","o":"BASTILLA MANGA","c":0.7},{"e":"JR154","o":"BASTILLA RUEDO","c":0.7},{"e":"JR154","o":"DESHEBRADO","c":0.0}]};let R=[];const $=x=>document.getElementById(x),clean=x=>String(x??'').trim().replace(/\s+/g,' '),money=x=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(x||0);
 function fill(id,a,t){let e=$(id);e.replaceChildren();let z=new Option(t,'');e.add(z);a.forEach(x=>e.add(new Option(x,x)))}
 function week(v){if(!v)return'';let d=new Date(v+'T12:00:00');d.setDate(d.getDate()+4-(d.getDay()||7));return Math.ceil((((d-new Date(d.getFullYear(),0,1))/864e5)+1)/7)}
 function upd(){$('semana').value=week($('fecha').value)}
 function price(){let e=clean($('estilo').value).toUpperCase(),o=clean($('proceso').value).toUpperCase(),m=CAT.precios.find(x=>x.e===e&&x.o===o);if(m)$('costo').value=m.c.toFixed(2)}
 function status(t,c=''){$('status').textContent=t;$('status').className=c}
 function clearForm(){let f=$('fecha').value,p=$('personal').value;$('form').reset();$('fecha').value=f;$('personal').value=p;upd()}
-function render(){$('kr').textContent=R.length;$('kq').textContent=R.reduce((s,x)=>s+x.cantidad,0);$('kc').textContent=money(R.reduce((s,x)=>s+x.costoTotal,0));$('tabla').innerHTML=R.length?'<div class="wrap"><table><tr><th>Folio</th><th>Fecha</th><th>Personal</th><th>Máquina</th><th>Corte</th><th>Estilo</th><th>Proceso</th><th>Cantidad</th><th>Total</th></tr>'+R.slice().reverse().map(x=>`<tr><td>${x.folio}</td><td>${x.fecha}</td><td>${x.personal}</td><td>${x.maquina}</td><td>${x.corte}</td><td>${x.estilo}</td><td>${x.proceso}</td><td>${x.cantidad}</td><td>${money(x.costoTotal)}</td></tr>`).join('')+'</table></div>':'Sin capturas confirmadas en esta sesión.'}
+function render(){$('kr').textContent=R.length;$('kq').textContent=R.reduce((s,x)=>s+x.cantidad,0);$('kc').textContent=money(R.reduce((s,x)=>s+x.costoTotal,0));$('tabla').innerHTML=R.length?'<div class="wrap">
+<table>
+<tr>
+<th>Folio</th>
+<th>Fecha</th>
+<th>Personal</th>
+<th>Máquina</th>
+<th>Corte</th>
+<th>Estilo</th>
+<th>Proceso</th>
+<th>Cantidad</th>
+<th>Total</th>
+</tr>'+R.slice().reverse().map(x=>`<tr>
+<td>${x.folio}</td>
+<td>${x.fecha}</td>
+<td>${x.personal}</td>
+<td>${x.maquina}</td>
+<td>${x.corte}</td>
+<td>${x.estilo}</td>
+<td>${x.proceso}</td>
+<td>${x.cantidad}</td>
+<td>${money(x.costoTotal)}</td>
+</tr>`).join('')+'</table>
+</div>':'Sin capturas confirmadas en esta sesión.'}
 $('form').addEventListener('submit',async e=>{e.preventDefault();let q=Number($('cantidad').value),c=Number($('costo').value),btn=$('guardar');let d={fecha:$('fecha').value,semana:Number($('semana').value),personal:clean($('personal').value),maquina:clean($('maquina').value),corte:clean($('corte').value),estilo:clean($('estilo').value).toUpperCase(),proceso:clean($('proceso').value).toUpperCase(),costoUnitario:c,cantidad:q};btn.disabled=true;status('Guardando…');try{let r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d),redirect:'follow'}),a=await r.json();if(!a.ok)throw Error(a.error||'Sin confirmación');R.push({...d,folio:a.folio,costoTotal:Number(a.costoTotal)});localStorage.setItem('jvCosturaRespaldo',JSON.stringify(R));$('folio').textContent=a.folio;if(window.JsBarcode)JsBarcode('#barcode',a.folio,{format:'CODE128',height:42,margin:4,fontSize:14});render();clearForm();status('Captura '+a.folio+' guardada correctamente.','ok')}catch(x){status('No se pudo guardar: '+x.message,'err')}finally{btn.disabled=false}});
 function csv(){if(!R.length)return alert('No hay capturas.');let h=['Folio','Fecha','Semana','Nombre Personal','Maquina','No. Corte','Estilo','Proceso','Costo Unitario','Cantidad','Costo Total'],rows=R.map(x=>[x.folio,x.fecha,x.semana,x.personal,x.maquina,x.corte,x.estilo,x.proceso,x.costoUnitario,x.cantidad,x.costoTotal]),t='\ufeff'+[h,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='Produccion_Costura.csv';a.click()}
 fill('personal',CAT.personal,'Seleccione personal');fill('maquina',CAT.maquinas,'Seleccione máquina');fill('proceso',CAT.operaciones,'Seleccione proceso');CAT.estilos.forEach(x=>$('estilosLista').appendChild(new Option('',x)));$('fecha').value=new Date().toISOString().slice(0,10);$('fecha').onchange=upd;$('estilo').onchange=price;$('proceso').onchange=price;$('limpiar').onclick=clearForm;$('exportar').onclick=csv;upd();render();status(`Catálogos cargados: ${CAT.personal.length} personas, ${CAT.maquinas.length} máquinas y ${CAT.operaciones.length} procesos.`,'ok');
-</script></body></html>
+</script>
+</body>
+</html>
