@@ -1,22 +1,689 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JV Producción</title><style>
-:root{--g:#23463f;--l:#b7d943;--t:#08776b;--b:#f2f6f5;--d:#d9e5e1;--m:#667872}*{box-sizing:border-box}body{margin:0;background:var(--b);font-family:Segoe UI,Arial;color:#172522}.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}aside{background:#101b20;padding:16px;color:white}.logo{background:white;border-radius:9px;padding:6px;width:100%}nav{display:grid;gap:8px;margin-top:18px}nav button{padding:12px;border:0;border-radius:8px;background:transparent;color:#dce6e3;text-align:left;font-weight:700}nav button.active,nav button:hover{background:#244b43}main{padding:22px;min-width:0}.page{display:none}.page.active{display:block}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.head h1{margin:0}.head p{margin:4px 0;color:var(--m)}.card,.kpi{background:white;border:1px solid var(--d);border-radius:12px;padding:15px;margin-bottom:14px}.grid,.filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.field{display:grid;gap:5px}label{font-size:10px;text-transform:uppercase;font-weight:800;color:var(--m)}input,select{height:40px;width:100%;border:1px solid var(--d);border-radius:8px;padding:0 9px;background:white}input[readonly]{background:#edf3f1;font-weight:700}.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;background:#e4eeeb;color:var(--g);cursor:pointer}.primary{background:var(--t);color:white}.pdf{background:var(--g);color:white}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:15px}.ok{color:var(--t);font-weight:700}.err{color:#b42318;font-weight:700}.folio{display:flex;justify-content:space-between;align-items:center;background:#f7faf9;padding:12px;border:1px solid var(--d);border-radius:9px;margin-bottom:13px}.folio b{font:700 20px Consolas}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{border-left:4px solid var(--l)}.kpi b{display:block;font-size:22px;margin-top:4px}.wrap{overflow:auto;max-height:520px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:8px;border-bottom:1px solid #eaf0ee;text-align:left;white-space:nowrap}th{background:#edf3f1;position:sticky;top:0}.charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.barrow{display:grid;grid-template-columns:140px 1fr 75px;gap:7px;align-items:center;margin:8px 0;font-size:12px}.bar{height:14px;background:#e5eeeb;border-radius:7px;overflow:hidden}.bar i{display:block;height:100%;background:var(--t)}.printLogo{display:none}@media(max-width:850px){.app{grid-template-columns:1fr}nav{grid-template-columns:repeat(4,1fr)}nav button{text-align:center}.grid,.filters{grid-template-columns:repeat(2,1fr)}main{padding:12px}}@media(max-width:520px){.grid,.filters,.kpis,.charts{grid-template-columns:1fr}}@media print{aside,.noPrint{display:none!important}.app{display:block}main{padding:0}.page{display:none!important}.page.active{display:block!important}.printLogo{display:block;width:360px;max-width:100%}.card,.kpi{break-inside:avoid}}
-</style></head><body><div class="app"><aside><img class="logo" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201100%20250%22%3E%3Crect%20width=%221100%22%20height=%22250%22%20fill=%22white%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%23b7d943%22%20stroke-width=%2220%22%3E%3Cpath%20d=%22M28%2028h185v188H28z%22/%3E%3Cpath%20d=%22M69%2028%2028%2068M70%20216%20154%20132M91%20124l57-57M91%20151l57-57%22/%3E%3C/g%3E%3Ctext%20x=%22270%22%20y=%22110%22%20font-family=%22Arial%22%20font-size=%2278%22%20font-weight=%22800%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3EJV%20INTERNATIONAL%3C/text%3E%3Ctext%20x=%22270%22%20y=%22175%22%20font-family=%22Arial%22%20font-size=%2248%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3ESOLUTIONS%20INC.%3C/text%3E%3C/svg%3E"><nav><button data-p="capture" class="active">Captura</button><button data-p="database">Base de datos</button><button data-p="dashboard">Dashboard</button><button data-p="piecework">Destajo</button></nav></aside><main>
-<section id="capture" class="page active"><img class="printLogo" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201100%20250%22%3E%3Crect%20width=%221100%22%20height=%22250%22%20fill=%22white%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%23b7d943%22%20stroke-width=%2220%22%3E%3Cpath%20d=%22M28%2028h185v188H28z%22/%3E%3Cpath%20d=%22M69%2028%2028%2068M70%20216%20154%20132M91%20124l57-57M91%20151l57-57%22/%3E%3C/g%3E%3Ctext%20x=%22270%22%20y=%22110%22%20font-family=%22Arial%22%20font-size=%2278%22%20font-weight=%22800%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3EJV%20INTERNATIONAL%3C/text%3E%3Ctext%20x=%22270%22%20y=%22175%22%20font-family=%22Arial%22%20font-size=%2248%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3ESOLUTIONS%20INC.%3C/text%3E%3C/svg%3E"><div class="head"><div><h1>Captura de producción</h1><p>Versión productiva</p></div><button class="btn pdf noPrint" data-print>Exportar PDF</button></div><div class="card"><div class="folio"><div><label>Último folio</label><b id="folio">Consultando…</b></div><svg id="barcode" width="240" height="52"></svg></div><form id="form"><div class="grid"><div class="field"><label>Fecha</label><input id="fecha" type="date" required></div><div class="field"><label>Semana ISO</label><input id="semana" readonly></div><div class="field"><label>Personal</label><select id="personal" required></select></div><div class="field"><label>Máquina</label><select id="maquina" required></select></div><div class="field"><label>No. corte</label><input id="corte" required></div><div class="field"><label>Estilo</label><select id="estilo" required></select></div><div class="field"><label>Aplicación</label><select id="aplicacion" disabled required></select></div><div class="field"><label>Operación / proceso</label><select id="proceso" disabled required></select></div><div class="field"><label>Costo unitario</label><input id="costo" readonly></div><div class="field"><label>Cantidad</label><input id="cantidad" type="number" min="1" step="1" required></div></div><div class="actions noPrint"><button class="btn primary" id="save">Guardar</button><button class="btn" type="button" id="clear">Limpiar</button><span id="status"></span></div></form><iframe name="saveFrame" hidden></iframe></div></section>
-<section id="database" class="page"><img class="printLogo" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201100%20250%22%3E%3Crect%20width=%221100%22%20height=%22250%22%20fill=%22white%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%23b7d943%22%20stroke-width=%2220%22%3E%3Cpath%20d=%22M28%2028h185v188H28z%22/%3E%3Cpath%20d=%22M69%2028%2028%2068M70%20216%20154%20132M91%20124l57-57M91%20151l57-57%22/%3E%3C/g%3E%3Ctext%20x=%22270%22%20y=%22110%22%20font-family=%22Arial%22%20font-size=%2278%22%20font-weight=%22800%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3EJV%20INTERNATIONAL%3C/text%3E%3Ctext%20x=%22270%22%20y=%22175%22%20font-family=%22Arial%22%20font-size=%2248%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3ESOLUTIONS%20INC.%3C/text%3E%3C/svg%3E"><div class="head"><div><h1>Base de datos</h1><p>Registros en Google Sheets</p></div><div><button id="reload" class="btn noPrint">Actualizar</button> <button class="btn pdf noPrint" data-print>Exportar PDF</button></div></div><div class="card filters"><div class="field"><label>Desde</label><input id="bFrom" type="date"></div><div class="field"><label>Hasta</label><input id="bTo" type="date"></div><div class="field"><label>Buscar</label><input id="bSearch"></div><div class="field"><label>Registros</label><input id="bCount" readonly></div></div><div class="card wrap"><table><thead id="dbHead"></thead><tbody id="dbBody"></tbody></table></div></section>
-<section id="dashboard" class="page"><img class="printLogo" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201100%20250%22%3E%3Crect%20width=%221100%22%20height=%22250%22%20fill=%22white%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%23b7d943%22%20stroke-width=%2220%22%3E%3Cpath%20d=%22M28%2028h185v188H28z%22/%3E%3Cpath%20d=%22M69%2028%2028%2068M70%20216%20154%20132M91%20124l57-57M91%20151l57-57%22/%3E%3C/g%3E%3Ctext%20x=%22270%22%20y=%22110%22%20font-family=%22Arial%22%20font-size=%2278%22%20font-weight=%22800%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3EJV%20INTERNATIONAL%3C/text%3E%3Ctext%20x=%22270%22%20y=%22175%22%20font-family=%22Arial%22%20font-size=%2248%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3ESOLUTIONS%20INC.%3C/text%3E%3C/svg%3E"><div class="head"><div><h1>Dashboard JV</h1><p>Indicadores operativos</p></div><button class="btn pdf noPrint" data-print>Exportar PDF</button></div><div class="card filters" id="dFilters"><div class="field"><label>Semana</label><select id="fSemana"></select></div><div class="field"><label>Fecha</label><select id="fFecha"></select></div><div class="field"><label>Personal</label><select id="fPersonal"></select></div><div class="field"><label>Máquina</label><select id="fMaquina"></select></div><div class="field"><label>Estilo</label><select id="fEstilo"></select></div><div class="field"><label>Operación</label><select id="fProceso"></select></div><div class="field"><label>Corte</label><select id="fCorte"></select></div><div class="field"><label>Aplicación</label><select id="fAplicacion"></select></div></div><div class="kpis"><div class="kpi">Registros<b id="kReg">0</b></div><div class="kpi">Cantidad<b id="kCant">0</b></div><div class="kpi">Costo total<b id="kCost">$0.00</b></div><div class="kpi">Personal activo<b id="kPers">0</b></div></div><div class="charts"><div class="card"><b>Cantidad por personal</b><div id="cPersonal"></div></div><div class="card"><b>Costo por operación</b><div id="cProceso"></div></div><div class="card"><b>Cantidad por estilo</b><div id="cEstilo"></div></div><div class="card"><b>Cantidad por máquina</b><div id="cMaquina"></div></div></div></section>
-<section id="piecework" class="page"><img class="printLogo" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201100%20250%22%3E%3Crect%20width=%221100%22%20height=%22250%22%20fill=%22white%22/%3E%3Cg%20fill=%22none%22%20stroke=%22%23b7d943%22%20stroke-width=%2220%22%3E%3Cpath%20d=%22M28%2028h185v188H28z%22/%3E%3Cpath%20d=%22M69%2028%2028%2068M70%20216%20154%20132M91%20124l57-57M91%20151l57-57%22/%3E%3C/g%3E%3Ctext%20x=%22270%22%20y=%22110%22%20font-family=%22Arial%22%20font-size=%2278%22%20font-weight=%22800%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3EJV%20INTERNATIONAL%3C/text%3E%3Ctext%20x=%22270%22%20y=%22175%22%20font-family=%22Arial%22%20font-size=%2248%22%20font-style=%22italic%22%20fill=%22%2323463f%22%3ESOLUTIONS%20INC.%3C/text%3E%3C/svg%3E"><div class="head"><div><h1>Destajo</h1><p>Resumen por personal, semana y operación</p></div><button class="btn pdf noPrint" data-print>Exportar PDF</button></div><div class="card filters"><div class="field"><label>Semana</label><select id="pSemana"></select></div><div class="field"><label>Personal</label><select id="pPersonal"></select></div><div class="field"><label>Desde</label><input id="pFrom" type="date"></div><div class="field"><label>Hasta</label><input id="pTo" type="date"></div></div><div class="kpis"><div class="kpi">Personas<b id="pPeople">0</b></div><div class="kpi">Piezas<b id="pQty">0</b></div><div class="kpi">Destajo total<b id="pTotal">$0.00</b></div><div class="kpi">Operaciones<b id="pOps">0</b></div></div><div class="card wrap"><table><thead><tr><th>Personal</th><th>Semana</th><th>Operación</th><th>Cantidad</th><th>Tarifa promedio</th><th>Destajo</th></tr></thead><tbody id="pBody"></tbody></table></div></section>
-</main></div><script>const API="https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec",CAT={"personal":["CORRIL MACARIO","ELIUD ARCOS","ESPINOZA ISABEL","ESTRADA RAMON","GARCIA GUSTAVO","GARCIA RIGOBERTO","GARCIA VICTOR","GASPAR CLARA","HERNANDEZ GUILLERMO","HERNANDEZ LAURA","HERNANDEZ NICOLAS","JUSTO ELISER","KAREN","LANDERO JUAN","LOPEZ SANDRA","MALDONADO LUIS","MARCIAL JULIO","MEJIA ROCIO","MENDIVIL IZZI","MONTERO LILIANA","NAVARRO ROSARIO","PARRA MIGUEL","PEDRO PABLO","PEDRO PABLO FELIX","PEÑUELAS NIDIA","COLIMA RITA","RODRIGO SERRANO","SANCHEZ CRISTINA","SANTOS FELIX","SANTOS FRANSISCO","ZAMORA SAN JUANA"],"maquinas":["OVER","COVER","TAPE","SENCILLA"],"tarifas":[{"a":"TIENDAS EN GENERAL","e":"JR154","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR154","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR44","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR47","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR48","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"GR08","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN03","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY02","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY05","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"TD02","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"GR02","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN01","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"CERRAR COSTADOS","c":1.1},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY03","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"CERRAR COSTADOS","c":1.1},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY06","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"CERRAR HOMBROS","c":0.4},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"PEGAR CUELLO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"S/C CUELLO","c":0.4},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"TAPE","c":0.6},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"PEGAR MANGA","c":0.8},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"CERRAR COSTADOS","c":1.1},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"BASTILLA MANGA","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"MN02","o":"DESHEBRADO","c":0.0},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"CLIP","c":1.0},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"CERRAR HOMBROS","c":0.4},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"PEGAR CUELLO","c":0.7},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"S/C CUELLO","c":0.4},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"PEGAR MANGA","c":0.8},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"CERRAR COSTADOS","c":0.9},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"BASTILLA MANGA","c":0.7},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"BASTILLA RUEDO","c":0.7},{"a":"EXCLUSIVO TIENDAS DC","e":"JR154","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"1ER HOMBRO","c":0.2},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"BIES SIZA","c":1.1},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"2DO HOMBRO","c":0.25},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"BIES CUELLO","c":0.8},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"REMACHES X3","c":1.0},{"a":"TIENDAS EN GENERAL","e":"JR49","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"1ER HOMBRO","c":0.2},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"BIES SIZA","c":1.1},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"2DO HOMBRO","c":0.25},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"BIES CUELLO","c":0.8},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"REMACHES X3","c":1.0},{"a":"TIENDAS EN GENERAL","e":"BY01","o":"DESHEBRADO","c":0.0},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"1ER HOMBRO","c":0.2},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"BIES SIZA","c":1.1},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"2DO HOMBRO","c":0.25},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"BIES CUELLO","c":0.8},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"CERRAR COSTADOS","c":0.9},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"BASTILLA RUEDO","c":0.7},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"REMACHES X3","c":1.0},{"a":"TIENDAS EN GENERAL","e":"BY04","o":"DESHEBRADO","c":0.0}]};let DB=[];const $=x=>document.getElementById(x),unique=a=>[...new Set(a.filter(v=>v!==''&&v!=null).map(String))].sort((a,b)=>a.localeCompare(b,'es')),money=v=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(v)||0),number=v=>new Intl.NumberFormat('es-MX').format(Number(v)||0);
-function week(v){if(!v)return'';const d=new Date(v+'T12:00:00');d.setDate(d.getDate()+4-(d.getDay()||7));const y=new Date(d.getFullYear(),0,1);return Math.ceil((((d-y)/86400000)+1)/7)}function options(id,a,label='Todos'){const e=$(id);e.replaceChildren(new Option(label,''));a.forEach(v=>e.add(new Option(v,v)))}function setToday(){$('fecha').value=new Date().toISOString().slice(0,10);$('semana').value=week($('fecha').value)}function msg(t,c=''){$('status').textContent=t;$('status').className=c}
-function init(){options('personal',CAT.personal,'Seleccione personal');options('maquina',CAT.maquinas,'Seleccione máquina');options('estilo',unique(CAT.tarifas.map(x=>x.e)),'Seleccione estilo');options('aplicacion',[],'Seleccione aplicación');options('proceso',[],'Seleccione operación / proceso');setToday();msg(`Catálogos listos: ${CAT.personal.length} personas, ${CAT.maquinas.length} máquinas, ${unique(CAT.tarifas.map(x=>x.e)).length} estilos y ${CAT.tarifas.length} tarifas.`,'ok')}
-function onStyle(){const e=$('estilo').value,a=unique(CAT.tarifas.filter(x=>x.e===e).map(x=>x.a));options('aplicacion',a,'Seleccione aplicación');$('aplicacion').disabled=!e;if(a.length===1)$('aplicacion').value=a[0];onApp()}function onApp(){const e=$('estilo').value,a=$('aplicacion').value,r=CAT.tarifas.filter(x=>x.e===e&&x.a===a).sort((x,y)=>x.o.localeCompare(y.o,'es')),p=$('proceso');p.replaceChildren(new Option('Seleccione operación / proceso',''));r.forEach(x=>p.add(new Option(`${x.o} — ${money(x.c)}`,x.o)));p.disabled=!(e&&a);$('costo').value=''}function onProcess(){const r=CAT.tarifas.find(x=>x.e===$('estilo').value&&x.a===$('aplicacion').value&&x.o===$('proceso').value);$('costo').value=r?r.c.toFixed(2):''}
-function clearForm(){$('form').reset();setToday();options('aplicacion',[],'Seleccione aplicación');options('proceso',[],'Seleccione operación / proceso');$('aplicacion').disabled=$('proceso').disabled=true;$('costo').value='';$('personal').focus()}
-function jsonp(p,t=20000){return new Promise((ok,no)=>{const cb='jv_'+Date.now()+'_'+Math.random().toString(36).slice(2),s=document.createElement('script'),timer=setTimeout(()=>done(new Error('Tiempo de consulta agotado')),t);function done(e,v){clearTimeout(timer);delete window[cb];s.remove();e?no(e):ok(v)}window[cb]=v=>done(null,v);s.onerror=()=>done(new Error('No fue posible consultar el servidor'));s.src=API+'?'+new URLSearchParams({...p,callback:cb,_:Date.now()});document.head.appendChild(s)})}function submit(d,token){const f=document.createElement('form');f.method='POST';f.action=API;f.target='saveFrame';f.hidden=true;for(const[k,v]of Object.entries({payload:JSON.stringify(d),token})){const i=document.createElement('input');i.name=k;i.value=v;f.appendChild(i)}document.body.appendChild(f);f.submit();setTimeout(()=>f.remove(),1200)}async function confirm(token){for(let i=0;i<25;i++){await new Promise(r=>setTimeout(r,800));const x=await jsonp({action:'status',token},6000);if(x.pending)continue;if(x.ok)return x;throw new Error(x.error||'Error de guardado')}throw new Error('El servidor no confirmó el guardado')}
-function barcode(t){const s=$('barcode'),bits='101'+[...t].map(x=>(x.charCodeAt(0)%127).toString(2).padStart(7,'0')).join('')+'101';s.innerHTML='';bits.split('').forEach((b,i)=>{if(b==='1'){const r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('x',i*2);r.setAttribute('width',2);r.setAttribute('height',45);s.appendChild(r)}})}
-$('form').addEventListener('submit',async e=>{e.preventDefault();const d={fecha:$('fecha').value,semana:Number($('semana').value),personal:$('personal').value,maquina:$('maquina').value,corte:$('corte').value.trim(),aplicacion:$('aplicacion').value,estilo:$('estilo').value,proceso:$('proceso').value,costoUnitario:Number($('costo').value),cantidad:Number($('cantidad').value)};if(Object.values(d).some(v=>v===''||v==null)||!Number.isInteger(d.cantidad)||d.cantidad<1)return msg('Completa todos los campos','err');const token='pc_'+Date.now()+'_'+Math.random().toString(36).slice(2),b=$('save');b.disabled=true;msg('Guardando…');try{submit(d,token);const r=await confirm(token);$('folio').textContent=r.folio;barcode(r.folio);msg('Captura '+r.folio+' guardada correctamente','ok');clearForm();await load()}catch(x){msg(x.message,'err')}finally{b.disabled=false}});
-async function load(){try{const r=await jsonp({action:'list'},30000);if(!r.ok)throw new Error(r.error);DB=(r.records||[]).map(x=>({...x,semana:String(x.semana||''),cantidad:Number(x.cantidad)||0,costoUnitario:Number(x.costoUnitario)||0,costoTotal:Number(x.costoTotal)||0}));render()}catch(e){console.error(e);render()}}
-const cols=['folio','fecha','semana','personal','maquina','corte','aplicacion','estilo','proceso','costoUnitario','cantidad','costoTotal','capturadoEn'];function baseData(){const a=$('bFrom').value,b=$('bTo').value,q=$('bSearch').value.toLowerCase();return DB.filter(x=>(!a||x.fecha>=a)&&(!b||x.fecha<=b)&&(!q||Object.values(x).join(' ').toLowerCase().includes(q)))}function base(){const a=baseData();$('bCount').value=a.length;$('dbHead').innerHTML='<tr>'+cols.map(x=>'<th>'+x+'</th>').join('')+'</tr>';$('dbBody').innerHTML=a.map(x=>'<tr>'+cols.map(k=>'<td>'+(['costoUnitario','costoTotal'].includes(k)?money(x[k]):x[k]??'')+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="13">Sin registros</td></tr>'}
-function keep(id,a){const v=$(id).value;options(id,unique(a));if([...$(id).options].some(x=>x.value===v))$(id).value=v}function dashData(){const m={fSemana:'semana',fFecha:'fecha',fPersonal:'personal',fMaquina:'maquina',fEstilo:'estilo',fProceso:'proceso',fCorte:'corte',fAplicacion:'aplicacion'};return DB.filter(x=>Object.entries(m).every(([id,k])=>!$(id).value||String(x[k])===$(id).value))}function bars(id,d,k,val,cash=false){const a={};d.forEach(x=>a[x[k]||'Sin dato']=(a[x[k]||'Sin dato']||0)+val(x));const r=Object.entries(a).sort((x,y)=>y[1]-x[1]).slice(0,10),mx=Math.max(1,...r.map(x=>x[1]));$(id).innerHTML=r.map(([n,v])=>`<div class="barrow"><span>${n}</span><span class="bar"><i style="width:${v/mx*100}%"></i></span><b>${cash?money(v):number(v)}</b></div>`).join('')||'Sin datos'}function dashboard(){const d=dashData();$('kReg').textContent=number(d.length);$('kCant').textContent=number(d.reduce((s,x)=>s+x.cantidad,0));$('kCost').textContent=money(d.reduce((s,x)=>s+x.costoTotal,0));$('kPers').textContent=unique(d.map(x=>x.personal)).length;bars('cPersonal',d,'personal',x=>x.cantidad);bars('cProceso',d,'proceso',x=>x.costoTotal,true);bars('cEstilo',d,'estilo',x=>x.cantidad);bars('cMaquina',d,'maquina',x=>x.cantidad)}
-function piece(){const s=$('pSemana').value,p=$('pPersonal').value,a=$('pFrom').value,b=$('pTo').value,d=DB.filter(x=>(!s||x.semana===s)&&(!p||x.personal===p)&&(!a||x.fecha>=a)&&(!b||x.fecha<=b)),g={};d.forEach(x=>{const k=[x.personal,x.semana,x.proceso].join('|'),v=g[k]||(g[k]={p:x.personal,s:x.semana,o:x.proceso,q:0,t:0});v.q+=x.cantidad;v.t+=x.costoTotal});const r=Object.values(g);$('pPeople').textContent=unique(d.map(x=>x.personal)).length;$('pQty').textContent=number(d.reduce((s,x)=>s+x.cantidad,0));$('pTotal').textContent=money(d.reduce((s,x)=>s+x.costoTotal,0));$('pOps').textContent=unique(d.map(x=>x.proceso)).length;$('pBody').innerHTML=r.map(x=>`<tr><td>${x.p}</td><td>${x.s}</td><td>${x.o}</td><td>${number(x.q)}</td><td>${money(x.q?x.t/x.q:0)}</td><td>${money(x.t)}</td></tr>`).join('')||'<tr><td colspan="6">Sin registros</td></tr>'}
-function render(){const defs={fSemana:DB.map(x=>x.semana),fFecha:DB.map(x=>x.fecha),fPersonal:DB.map(x=>x.personal),fMaquina:DB.map(x=>x.maquina),fEstilo:DB.map(x=>x.estilo),fProceso:DB.map(x=>x.proceso),fCorte:DB.map(x=>x.corte),fAplicacion:DB.map(x=>x.aplicacion),pSemana:DB.map(x=>x.semana),pPersonal:DB.map(x=>x.personal)};Object.entries(defs).forEach(([id,a])=>keep(id,a));base();dashboard();piece()}
-$('fecha').addEventListener('change',()=>$('semana').value=week($('fecha').value));$('estilo').addEventListener('change',onStyle);$('aplicacion').addEventListener('change',onApp);$('proceso').addEventListener('change',onProcess);$('clear').addEventListener('click',clearForm);$('reload').addEventListener('click',load);['bFrom','bTo','bSearch'].forEach(x=>$(x).addEventListener('input',base));document.querySelectorAll('#dFilters select').forEach(x=>x.addEventListener('change',dashboard));['pSemana','pPersonal','pFrom','pTo'].forEach(x=>$(x).addEventListener('change',piece));document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button,.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.p).classList.add('active');if(b.dataset.p!=='capture')load()}));document.querySelectorAll('[data-print]').forEach(x=>x.addEventListener('click',()=>window.print()));init();load();jsonp({action:'lastfolio'}).then(r=>{if(r.ok){$('folio').textContent=r.folio;barcode(r.folio)}}).catch(()=>{$('folio').textContent='Se asigna al guardar'});
-</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Producción Costura</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f3f6f5;
+      font-family: Segoe UI, Arial, sans-serif;
+      color: #192622;
+    }
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+    aside {
+      width: 220px;
+      background: #101a20;
+      color: #fff;
+      padding: 18px 16px;
+    }
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      margin-bottom: 18px;
+    }
+    .nav {
+      background: #21342f;
+      padding: 12px;
+      border-radius: 8px;
+      color: #dfe7e3;
+    }
+    main {
+      flex: 1;
+      padding: 28px 26px;
+    }
+    h1 {
+      margin: 0 0 8px;
+    }
+    .sub {
+      color: #687873;
+      margin-bottom: 18px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #dfe8e5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 5px 18px rgba(21, 59, 50, 0.06);
+    }
+    .folio {
+      background: #f7faf9;
+      border: 1px solid #dfe8e5;
+      border-radius: 9px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+    }
+    .folio label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+    label {
+      font-size: 10px;
+      color: #71807c;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    input, select {
+      height: 40px;
+      border: 1px solid #dfe8e5;
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #fff;
+      font-size: 15px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    button {
+      height: 39px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .primary {
+      background: #08776b;
+      color: #fff;
+    }
+    .secondary {
+      background: #e7efe9;
+      color: #173b35;
+    }
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+    #status {
+      min-height: 20px;
+      display: inline-block;
+      font-weight: 700;
+    }
+    .ok { color: #0f7d52; }
+    .err { color: #b42318; }
+    .sum {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .kpi {
+      border-left: 4px solid #08776b;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 18px rgba(21, 59, 50, 0.04);
+    }
+    .kpi small {
+      display: block;
+      color: #687873;
+      margin-bottom: 6px;
+    }
+    .kpi b {
+      font-size: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 9px;
+      border-bottom: 1px solid #edf1f0;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      background: #f6f9f7;
+      color: #1f352f;
+      font-weight: 700;
+    }
+    .wrap {
+      overflow-x: auto;
+    }
+    @media (max-width: 700px) {
+      .app { display: block; }
+      aside { width: 100%; }
+      .grid, .sum { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <iframe id="hiddenFrame" name="hiddenFrame" style="display:none"></iframe>
+
+  <div class="app">
+    <aside>
+      <div class="brand">JV International</div>
+      <div class="nav">Captura diaria</div>
+    </aside>
+
+    <main>
+      <h1>Producción Costura</h1>
+      <div class="sub">Captura conectada a Google Sheets.</div>
+
+      <section class="panel">
+        <div class="folio">
+          <label>Último folio guardado</label>
+          <b id="folio">Se asigna al guardar</b>
+          <svg id="barcode"></svg>
+        </div>
+
+        <form id="form">
+          <div class="grid">
+            <div class="field">
+              <label>Fecha *</label>
+              <input id="fecha" type="date" required>
+            </div>
+
+            <div class="field">
+              <label>Semana ISO</label>
+              <input id="semana" type="text" readonly required>
+            </div>
+
+            <div class="field">
+              <label>Nombre Personal *</label>
+              <select id="personal" required></select>
+            </div>
+
+            <div class="field">
+              <label>Máquina *</label>
+              <select id="maquina" required></select>
+            </div>
+
+            <div class="field">
+              <label>No. Corte *</label>
+              <input id="corte" type="text" required>
+            </div>
+
+            <div class="field">
+              <label>Estilo *</label>
+              <input id="estilo" list="estilosLista" required>
+              <datalist id="estilosLista"></datalist>
+            </div>
+
+            <div class="field">
+              <label>Proceso *</label>
+              <select id="proceso" required></select>
+            </div>
+
+            <div class="field">
+              <label>Costo unitario *</label>
+              <input id="costo" type="number" min="0" step="0.01" required>
+            </div>
+
+            <div class="field">
+              <label>Cantidad *</label>
+              <input id="cantidad" type="number" min="1" step="1" required>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="guardar" class="primary">Guardar en la nube</button>
+            <button type="button" id="limpiar" class="secondary">Limpiar</button>
+            <button type="button" id="exportar" class="secondary">Exportar sesión CSV</button>
+            <span id="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <div class="sum">
+        <div class="kpi">
+          <small>Registros de sesión</small>
+          <b id="kr">0</b>
+        </div>
+        <div class="kpi">
+          <small>Cantidad de sesión</small>
+          <b id="kq">0</b>
+        </div>
+        <div class="kpi">
+          <small>Costo de sesión</small>
+          <b id="kc">$0.00</b>
+        </div>
+      </div>
+
+      <section class="panel">
+        <b>Capturas confirmadas</b>
+        <div id="tabla"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const app = {
+      config: {
+        apiUrl: "https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec",
+        storageKey: "jvCosturaRespaldo"
+      },
+
+      state: {
+        records: []
+      },
+
+      ui: {},
+
+      catalog: {
+        personal: [
+          "CORRIL MACARIO","ELIUD ARCOS","ESPINOZA ISABEL","ESTRADA RAMON","GARCIA GUSTAVO",
+          "GARCIA RIGOBERTO","GARCIA VICTOR","GASPAR CLARA","HERNANDEZ GUILLERMO","HERNANDEZ LAURA",
+          "HERNANDEZ NICOLAS","JUSTO ELISEO","KAREN","LANDERO JUAN","LOPEZ SANDRA","MALDONADO LUIS",
+          "MARCIAL JULIO","MEJIA ROCIO","MONTERO LILIANA","NAVARRO ROSARIO","PARA MIGUEL","PEDRO PABLO",
+          "PEDRO PABLO FELIX","PEREZ NIDIA","COLIMB RUIZ","RODRIGO SERRANO","SANCHEZ CRISTINA",
+          "SANTOS FELIX","SANTOS FRANCISCO","ZAMORA SAN JUAN"
+        ],
+        maquinas: ["OVER","COVER","TAPE","SENCILLA"],
+        operaciones: [
+          "1ER HOMBRE","2DO HOMBRE","BASTILLA MANGA","BASTILLA RUEDO","BIES CUELLO",
+          "BIES SIZA","CERRAR COSTADOS","CERRAR HOMBROS","CLIP","DESHEBRADO","PEGAR CUELLO",
+          "PEGAR MANGA","REMACHE","S/ C CUELLO","TAPE","TAPES"
+        ],
+        estilos: [
+          "BY01","BY02","BY03","BY04","BY05","BY06","GR02","GR08","JR154","JR44","JR47","JR48","MN01","MN02","MN03","TD02"
+        ],
+        precios: [
+          { e: "JR154", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "JR154", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "JR154", o: "S/ C CUELLO", c: 0.4 },
+          { e: "JR154", o: "PEGAR MANGA", c: 0.8 },
+          { e: "JR154", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "JR154", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "JR154", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "JR154", o: "DESHEBRADO", c: 0.0 },
+          { e: "JR44", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "JR44", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "JR44", o: "S/ C CUELLO", c: 0.4 },
+          { e: "JR44", o: "PEGAR MANGA", c: 0.8 },
+          { e: "JR44", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "JR44", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "JR44", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "JR44", o: "DESHEBRADO", c: 0.0 },
+          { e: "JR47", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "JR47", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "JR47", o: "S/ C CUELLO", c: 0.4 },
+          { e: "JR47", o: "PEGAR MANGA", c: 0.8 },
+          { e: "JR47", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "JR47", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "JR47", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "JR47", o: "DESHEBRADO", c: 0.0 },
+          { e: "JR48", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "JR48", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "JR48", o: "S/ C CUELLO", c: 0.4 },
+          { e: "JR48", o: "PEGAR MANGA", c: 0.8 },
+          { e: "JR48", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "JR48", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "JR48", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "JR48", o: "DESHEBRADO", c: 0.0 },
+          { e: "GR08", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "GR08", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "GR08", o: "S/ C CUELLO", c: 0.4 },
+          { e: "GR08", o: "PEGAR MANGA", c: 0.8 },
+          { e: "GR08", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "GR08", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "GR08", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "GR08", o: "DESHEBRADO", c: 0.0 },
+          { e: "MN03", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "MN03", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "MN03", o: "S/ C CUELLO", c: 0.4 },
+          { e: "MN03", o: "TAPE", c: 0.6 },
+          { e: "MN03", o: "PEGAR MANGA", c: 0.8 },
+          { e: "MN03", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "MN03", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "MN03", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "MN03", o: "DESHEBRADO", c: 0.0 },
+          { e: "BY02", o: "CERRAR HOMBROS", c: 0.4 },
+          { e: "BY02", o: "PEGAR CUELLO", c: 0.7 },
+          { e: "BY02", o: "S/ C CUELLO", c: 0.4 },
+          { e: "BY02", o: "TAPE", c: 0.6 },
+          { e: "BY02", o: "PEGAR MANGA", c: 0.8 },
+          { e: "BY02", o: "CERRAR COSTADOS", c: 0.9 },
+          { e: "BY02", o: "BASTILLA MANGA", c: 0.7 },
+          { e: "BY02", o: "BASTILLA RUEDO", c: 0.7 },
+          { e: "BY02", o: "DESHEBRADO", c: 0.0 }
+        ]
+      },
+
+      money(value) {
+        return new Intl.NumberFormat("es-MX", {
+          style: "currency",
+          currency: "MXN"
+        }).format(Number(value || 0));
+      },
+
+      clean(value) {
+        return String(value ?? "").trim().replace(/\\s+/g, " ");
+      },
+
+      getElement(id) {
+        return document.getElementById(id);
+      },
+
+      fillSelect(id, values, label) {
+        const el = this.getElement(id);
+        el.replaceChildren();
+        const defaultOption = new Option(label, "");
+        el.add(defaultOption);
+        values.forEach(v => el.add(new Option(v, v)));
+      },
+
+      weekFromDate(value) {
+        if (!value) return "";
+        const d = new Date(value + "T12:00:00");
+        d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+        return Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
+      },
+
+      updateWeek() {
+        const fecha = this.clean(this.ui.fecha.value);
+        this.ui.semana.value = this.weekFromDate(fecha);
+      },
+
+      autofillPrecio() {
+        const estilo = this.clean(this.ui.estilo.value).toUpperCase();
+        const proceso = this.clean(this.ui.proceso.value).toUpperCase();
+        const match = this.catalog.precios.find(x => x.e === estilo && x.o === proceso);
+        if (match) {
+          this.ui.costo.value = Number(match.c).toFixed(2);
+        }
+      },
+
+      setStatus(message, type = "") {
+        const statusEl = this.ui.status;
+        statusEl.textContent = message;
+        statusEl.className = type;
+      },
+
+      normalizeRecord(raw) {
+        return {
+          fecha: String(raw.fecha || "").trim(),
+          semana: Number(raw.semana || 0),
+          personal: this.clean(raw.personal),
+          maquina: this.clean(raw.maquina),
+          corte: this.clean(raw.corte),
+          estilo: this.clean(raw.estilo).toUpperCase(),
+          proceso: this.clean(raw.proceso).toUpperCase(),
+          costoUnitario: Number(raw.costoUnitario || 0),
+          cantidad: Number(raw.cantidad || 0),
+          costoTotal: Number((Number(raw.cantidad || 0) * Number(raw.costoUnitario || 0)).toFixed(2))
+        };
+      },
+
+      validateRecord(record) {
+        const errors = [];
+
+        if (!record.fecha) errors.push("Falta la fecha");
+        if (!record.personal) errors.push("Falta personal");
+        if (!record.maquina) errors.push("Falta máquina");
+        if (!record.corte) errors.push("Falta No. de corte");
+        if (!record.estilo) errors.push("Falta estilo");
+        if (!record.proceso) errors.push("Falta proceso");
+        if (!record.cantidad || Number(record.cantidad) <= 0) errors.push("Cantidad inválida");
+        if (!record.costoUnitario || Number(record.costoUnitario) < 0) errors.push("Costo inválido");
+
+        return { ok: errors.length === 0, errors };
+      },
+
+      loadLocalRecords() {
+        try {
+          const raw = localStorage.getItem(this.config.storageKey);
+          this.state.records = raw ? JSON.parse(raw) : [];
+        } catch {
+          this.state.records = [];
+        }
+      },
+
+      saveLocalRecords() {
+        localStorage.setItem(this.config.storageKey, JSON.stringify(this.state.records));
+      },
+
+      submitToGoogle(payload) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = this.config.apiUrl;
+        form.target = "hiddenFrame";
+
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "payload";
+        input.value = JSON.stringify(payload);
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+
+        setTimeout(() => {
+          form.remove();
+        }, 1000);
+      },
+
+      createFolio() {
+        return "LOCAL-" + Date.now();
+      },
+
+      handleSubmit(event) {
+        event.preventDefault();
+
+        const raw = {
+          fecha: this.ui.fecha.value,
+          semana: this.ui.semana.value,
+          personal: this.ui.personal.value,
+          maquina: this.ui.maquina.value,
+          corte: this.ui.corte.value,
+          estilo: this.ui.estilo.value,
+          proceso: this.ui.proceso.value,
+          costoUnitario: this.ui.costo.value,
+          cantidad: this.ui.cantidad.value
+        };
+
+        const record = this.normalizeRecord(raw);
+        const validation = this.validateRecord(record);
+
+        if (!validation.ok) {
+          this.setStatus(validation.errors.join(", "), "err");
+          return;
+        }
+
+        const folio = this.createFolio();
+        const item = {
+          ...record,
+          folio,
+          createdAt: new Date().toISOString()
+        };
+
+        this.state.records.push(item);
+        this.saveLocalRecords();
+
+        this.submitToGoogle(record);
+
+        this.ui.folio.textContent = folio;
+
+        if (window.JsBarcode) {
+          JsBarcode("#barcode", folio, {
+            format: "CODE128",
+            height: 42,
+            margin: 4,
+            fontSize: 12
+          });
+        }
+
+        this.renderSummary();
+        this.renderTable();
+        this.clearForm();
+        this.setStatus("Captura " + folio + " guardada correctamente.", "ok");
+      },
+
+      renderSummary() {
+        const totalCantidad = this.state.records.reduce((sum, x) => sum + Number(x.cantidad || 0), 0);
+        const totalCosto = this.state.records.reduce((sum, x) => sum + Number(x.costoTotal || 0), 0);
+
+        this.ui.kr.textContent = String(this.state.records.length);
+        this.ui.kq.textContent = String(totalCantidad);
+        this.ui.kc.textContent = this.money(totalCosto);
+      },
+
+      renderTable() {
+        const tableWrap = this.getElement("tabla");
+
+        if (!this.state.records.length) {
+          tableWrap.textContent = "Sin capturas confirmadas en esta sesión.";
+          return;
+        }
+
+        const rows = this.state.records
+          .slice()
+          .reverse()
+          .map(x => `
+            <tr>
+              <td>${x.folio}</td>
+              <td>${x.fecha}</td>
+              <td>${x.personal}</td>
+              <td>${x.maquina}</td>
+              <td>${x.corte}</td>
+              <td>${x.estilo}</td>
+              <td>${x.proceso}</td>
+              <td>${x.cantidad}</td>
+              <td>${this.money(x.costoTotal)}</td>
+            </tr>
+          `).join("");
+
+        tableWrap.innerHTML = `
+          <div class="wrap">
+            <table>
+              <tr>
+                <th>Folio</th>
+                <th>Fecha</th>
+                <th>Personal</th>
+                <th>Máquina</th>
+                <th>Corte</th>
+                <th>Estilo</th>
+                <th>Proceso</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+              </tr>
+              ${rows}
+            </table>
+          </div>
+        `;
+      },
+
+      exportCsv() {
+        if (!this.state.records.length) {
+          alert("No hay capturas.");
+          return;
+        }
+
+        const header = [
+          "Folio","Fecha","Semana","Nombre Personal","Maquina","No. Corte","Estilo","Proceso","Costo Unitario","Cantidad","Costo Total"
+        ];
+
+        const rows = this.state.records.map(x => [
+          x.folio,
+          x.fecha,
+          x.semana,
+          x.personal,
+          x.maquina,
+          x.corte,
+          x.estilo,
+          x.proceso,
+          x.costoUnitario,
+          x.cantidad,
+          x.costoTotal
+        ]);
+
+        const csvRows = [header, ...rows].map(row =>
+          row.map(v => `"${String(v).replace(/\"/g, '\"\"')}"`).join(",")
+        );
+
+        const blob = new Blob([csvRows.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Produccion_Costura.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      clearForm() {
+        const fecha = this.ui.fecha.value;
+        const personal = this.ui.personal.value;
+
+        this.ui.form.reset();
+        this.ui.fecha.value = fecha;
+        this.ui.personal.value = personal;
+        this.updateWeek();
+      },
+
+      bindEvents() {
+        this.ui.form.addEventListener("submit", (e) => this.handleSubmit(e));
+        this.ui.fecha.addEventListener("change", () => this.updateWeek());
+        this.ui.estilo.addEventListener("change", () => this.autofillPrecio());
+        this.ui.proceso.addEventListener("change", () => this.autofillPrecio());
+        this.getElement("limpiar").addEventListener("click", () => this.clearForm());
+        this.getElement("exportar").addEventListener("click", () => this.exportCsv());
+      },
+
+      init() {
+        this.ui = {
+          form: this.getElement("form"),
+          fecha: this.getElement("fecha"),
+          semana: this.getElement("semana"),
+          personal: this.getElement("personal"),
+          maquina: this.getElement("maquina"),
+          corte: this.getElement("corte"),
+          estilo: this.getElement("estilo"),
+          proceso: this.getElement("proceso"),
+          costo: this.getElement("costo"),
+          cantidad: this.getElement("cantidad"),
+          status: this.getElement("status"),
+          folio: this.getElement("folio"),
+          barcode: this.getElement("barcode"),
+          tabla: this.getElement("tabla"),
+          kr: this.getElement("kr"),
+          kq: this.getElement("kq"),
+          kc: this.getElement("kc")
+        };
+
+        this.fillSelect("personal", this.catalog.personal, "Seleccione personal");
+        this.fillSelect("maquina", this.catalog.maquinas, "Seleccione máquina");
+        this.fillSelect("proceso", this.catalog.operaciones, "Seleccione proceso");
+
+        this.catalog.estilos.forEach(x => {
+          const option = new Option(x, x);
+          this.getElement("estilosLista").appendChild(option);
+        });
+
+        this.loadLocalRecords();
+        this.bindEvents();
+
+        this.ui.fecha.value = new Date().toISOString().slice(0, 10);
+        this.updateWeek();
+        this.renderSummary();
+        this.renderTable();
+        this.setStatus("Catálogos cargados.", "ok");
+      }
+    };
+
+    app.init();
+  </script>
+</body>
+</html>
