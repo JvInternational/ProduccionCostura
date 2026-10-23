@@ -484,10 +484,9 @@
     </main>
   </div>
 
-  <iframe id="hiddenFrame" name="hiddenFrame" style="display:none;"></iframe>
-
   <script>
-    const API = "https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec";
+    const API = "https://script.google.com/macros/s/ID_DE_TU_WEB_APP/exec";
+    const SHEET_NAME = "Produccion";
 
     const STYLE_OPERATIONS = {
       JR154:[['CERRAR HOMBROS',0.4],['PEGAR CUELLO',0.7],['S/C CUELLO',0.4],['PEGAR MANGA',0.8],['CERRAR COSTADOS',0.9],['BASTILLA MANGA',0.7],['BASTILLA RUEDO',0.7],['DESHEBRADO',0],['CLIP',1]],
@@ -637,21 +636,38 @@
       updateWeek();
     }
 
-    function guardarGoogle(data) {
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = API;
-      form.target = 'hiddenFrame';
+    async function saveToSheets(data) {
+      const endpoint = API || '';
+      if (!endpoint || endpoint.includes('ID_DE_TU_WEB_APP')) {
+        throw new Error('Configura la URL de tu Apps Script en la constante API antes de guardar.');
+      }
 
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'payload';
-      input.value = JSON.stringify(data);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'append',
+          sheetName: SHEET_NAME,
+          payload: data
+        })
+      });
 
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-      setTimeout(() => form.remove(), 1000);
+      const text = await response.text();
+      let parsed = {};
+      try {
+        parsed = text ? JSON.parse(text) : {};
+      } catch (e) {
+        parsed = { raw: text };
+      }
+
+      if (!response.ok || parsed.ok === false) {
+        throw new Error(parsed.error || parsed.message || 'No se pudo guardar en la hoja de Google Sheets.');
+      }
+
+      return parsed;
     }
 
     function validate(item) {
@@ -679,7 +695,7 @@
       updateWeek();
     }
 
-    function onSubmit(e) {
+    async function onSubmit(e) {
       e.preventDefault();
 
       const item = {
@@ -705,18 +721,24 @@
       const folio = 'PC-' + Date.now();
       const record = { ...item, folio };
 
-      state.records.push(record);
+      setStatus('Guardando en Google Sheets...', 'info');
 
-      guardarGoogle(record);
+      try {
+        await saveToSheets(record);
 
-      $('folio').textContent = folio;
-      if (window.JsBarcode) {
-        JsBarcode('#barcode', folio, { format:'CODE128', height:42, width:1.6, margin:4, displayValue:true, fontSize:12 });
+        state.records.push(record);
+        $('folio').textContent = folio;
+        if (window.JsBarcode) {
+          JsBarcode('#barcode', folio, { format:'CODE128', height:42, width:1.6, margin:4, displayValue:true, fontSize:12 });
+        }
+
+        render();
+        clearForm();
+        setStatus('Captura guardada correctamente.', 'ok');
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'No se pudo guardar en Sheets.', 'err');
       }
-
-      render();
-      clearForm();
-      setStatus('Captura guardada correctamente.', 'ok');
     }
 
     function exportCsv() {
