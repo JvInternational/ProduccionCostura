@@ -4,74 +4,346 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Producción Costura</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
     :root{
-      --bg:#edf3f0;--panel:#fff;--panel-2:#f7faf9;--line:#dfeae5;--text:#142722;--muted:#627a71;
-      --primary:#0a7a68;--primary-dark:#065f52;--secondary:#e5f0ec;--danger:#b42318;--ok:#0d7d54;
-      --sidebar:#0f1d22;--shadow:0 12px 24px rgba(15,45,39,.08)
+      --bg:#edf3f0;
+      --panel:#ffffff;
+      --panel-soft:#f7faf9;
+      --line:#dfeae5;
+      --text:#152823;
+      --muted:#5d766f;
+      --primary:#0a7a68;
+      --primary-dark:#065f52;
+      --secondary:#eaf3f0;
+      --danger:#b42318;
+      --ok:#0e7d58;
+      --sidebar:#101b20;
+      --shadow:0 12px 26px rgba(15,38,32,.08);
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);font-family:"Segoe UI",Arial,sans-serif;color:var(--text)}
-    body{min-height:100vh}
-    .layout{display:flex;min-height:100vh}
-    .sidebar{width:240px;background:var(--sidebar);color:#fff;padding:20px 18px;display:flex;flex-direction:column;gap:18px}
-    .brand{display:flex;align-items:center;gap:12px;padding:8px 6px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
-    .brand img{width:58px;height:58px;border-radius:10px;background:#fff;padding:4px}
-    .brand-name{font-weight:800;letter-spacing:.08em;font-size:.74rem;text-transform:uppercase;line-height:1.2}
-    .side-menu{display:flex;flex-direction:column;gap:8px}
-    .menu-item{padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.85);font-weight:600;text-decoration:none;transition:.2s}
-    .menu-item.active,.menu-item:hover{background:rgba(255,255,255,.06)}
-    .menu-item.active{background:rgba(18,164,138,.25);border:1px solid rgba(90,208,185,.2)}
-    .side-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;font-size:.84rem;line-height:1.5;color:rgba(255,255,255,.8)}
-    .main{flex:1;padding:28px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;padding:8px 6px}
-    .page-title h1{margin:0;font-size:clamp(1.7rem,2vw,2.3rem);font-weight:800;letter-spacing:-.03em}
-    .page-title span{color:var(--muted);font-size:.9rem}
-    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{padding:11px 16px;border:0;border-radius:10px;font-weight:700;cursor:pointer}
-    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(10,122,104,.2)}
-    .btn-primary:hover{background:var(--primary-dark)}
-    .btn-secondary{background:var(--secondary);color:var(--text)}
-    .btn-warning{background:#fff3d6;color:#7a4a00}
-    .kpis{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:16px;margin-bottom:22px}
-    .kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;box-shadow:var(--shadow)}
-    .kpi small{display:block;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:.72rem}
-    .kpi strong{font-size:clamp(1.5rem,2vw,2.2rem);font-weight:800;letter-spacing:-.03em}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
-    .panel-header{padding:18px 20px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
-    .panel-header h3{margin:0;font-size:1.05rem;font-weight:800}
-    .panel-body{padding:18px 20px 22px}
-    .form-grid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:16px}
-    .field{display:flex;flex-direction:column;gap:6px}
-    .field label{font-size:.71rem;font-weight:800;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
-    .field input,.field select{width:100%;height:42px;border-radius:10px;border:1px solid var(--line);background:#fff;padding:0 12px;font-size:.98rem;color:var(--text);outline:none}
-    .field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,122,104,.12)}
-    .saverow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-    .status{min-height:22px;font-weight:700;font-size:.94rem;display:inline-flex;align-items:center}
-    .status.ok{color:var(--ok)}
-    .status.err{color:var(--danger)}
-    .status.info{color:var(--muted)}
-    .folio-box{display:flex;align-items:center;gap:18px;padding:12px 16px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;margin-bottom:18px}
-    .folio-label{color:var(--muted);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-    .folio-number{font-weight:800;font-size:1.15rem}
-    .barcode-wrap{min-width:180px;margin-left:auto}
-    .barcode-wrap svg{display:block}
-    .table-wrap{width:100%;overflow-x:auto}
-    table{width:100%;border-collapse:collapse;min-width:940px}
-    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:.9rem;vertical-align:middle}
-    th{background:var(--panel-2);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:.72rem}
-    .empty-row{text-align:center;color:var(--muted);padding:24px}
+
+    * { box-sizing:border-box; }
+    html, body {
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Segoe UI", Arial, sans-serif;
+    }
+    body { min-height:100vh; }
+    img { max-width:100%; display:block; }
+
+    .layout {
+      display:flex;
+      min-height:100vh;
+    }
+
+    .sidebar {
+      width:240px;
+      background:var(--sidebar);
+      color:#fff;
+      padding:20px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:8px 6px 16px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+    }
+
+    .brand img {
+      width:72px;
+      height:72px;
+      background:#fff;
+      border-radius:14px;
+      padding:6px;
+    }
+
+    .brand-name {
+      font-size:.76rem;
+      line-height:1.15;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .side-menu {
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .menu-item {
+      display:block;
+      padding:10px 12px;
+      border-radius:10px;
+      color:rgba(255,255,255,.85);
+      text-decoration:none;
+      font-weight:600;
+      transition:all .2s ease;
+    }
+
+    .menu-item.active,
+    .menu-item:hover {
+      background:rgba(255,255,255,.07);
+    }
+
+    .side-card {
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:14px 12px;
+      color:rgba(255,255,255,.85);
+      font-size:.84rem;
+      line-height:1.5;
+    }
+
+    .main {
+      flex:1;
+      padding:28px;
+    }
+
+    .topbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:22px;
+      padding:8px 0;
+    }
+
+    .page-title h1 {
+      margin:0;
+      font-size:clamp(1.8rem,2vw,2.4rem);
+      letter-spacing:-.03em;
+    }
+
+    .page-title span {
+      display:block;
+      font-size:.9rem;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .top-actions {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn {
+      border:none;
+      border-radius:10px;
+      padding:11px 16px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .btn-primary {
+      background:var(--primary);
+      color:#fff;
+      box-shadow:0 8px 18px rgba(10,122,104,.25);
+    }
+
+    .btn-primary:hover { background:var(--primary-dark); }
+    .btn-secondary {
+      background:var(--secondary);
+      color:var(--text);
+    }
+
+    .kpis {
+      display:grid;
+      grid-template-columns:repeat(4, minmax(160px, 1fr));
+      gap:16px;
+      margin-bottom:22px;
+    }
+
+    .kpi {
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:18px 18px 16px;
+    }
+
+    .kpi small {
+      display:block;
+      color:var(--muted);
+      font-weight:700;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      font-size:.72rem;
+      margin-bottom:8px;
+    }
+
+    .kpi strong {
+      font-size:clamp(1.5rem,2vw,2.1rem);
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .panel {
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .panel-header {
+      padding:18px 20px 14px;
+      background:var(--panel-soft);
+      border-bottom:1px solid var(--line);
+    }
+
+    .panel-header h3 {
+      margin:0;
+      font-size:1.05rem;
+      font-weight:800;
+    }
+
+    .panel-body {
+      padding:18px 20px 22px;
+    }
+
+    .folio-box {
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:12px 16px;
+      border:1px solid var(--line);
+      background:var(--panel-soft);
+      border-radius:12px;
+      margin-bottom:18px;
+    }
+
+    .folio-label {
+      color:var(--muted);
+      font-weight:700;
+      font-size:.74rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:4px;
+    }
+
+    .folio-number {
+      font-size:1.15rem;
+      font-weight:800;
+    }
+
+    .barcode-wrap {
+      margin-left:auto;
+      min-width:150px;
+    }
+
+    .form-grid {
+      display:grid;
+      grid-template-columns:repeat(3, minmax(180px, 1fr));
+      gap:16px;
+    }
+
+    .field {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .field label {
+      font-size:.72rem;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .field input,
+    .field select {
+      width:100%;
+      height:42px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:0 12px;
+      font-size:1rem;
+      background:#fff;
+      color:var(--text);
+      outline:none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(10,122,104,.12);
+    }
+
+    .saverow {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:18px;
+      padding-top:16px;
+      border-top:1px solid var(--line);
+    }
+
+    .status {
+      min-height:22px;
+      display:inline-flex;
+      align-items:center;
+      font-weight:700;
+      font-size:.94rem;
+    }
+
+    .status.ok { color:var(--ok); }
+    .status.err { color:var(--danger); }
+    .status.info { color:var(--muted); }
+
+    .table-wrap {
+      width:100%;
+      overflow-x:auto;
+    }
+
+    table {
+      width:100%;
+      min-width:940px;
+      border-collapse:collapse;
+    }
+
+    th, td {
+      padding:10px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      font-size:.9rem;
+    }
+
+    th {
+      background:var(--panel-soft);
+      font-size:.72rem;
+      text-transform:uppercase;
+      font-weight:800;
+      letter-spacing:.04em;
+    }
+
+    .empty-row {
+      color:var(--muted);
+      text-align:center;
+      padding:24px;
+    }
+
     @media (max-width:980px){
-      .layout{display:block}
-      .sidebar{width:100%}
-      .kpis{grid-template-columns:repeat(2,minmax(140px,1fr))}
-      .form-grid{grid-template-columns:repeat(2,minmax(180px,1fr))}
+      .layout { display:block; }
+      .sidebar { width:100%; }
+      .kpis { grid-template-columns:repeat(2, minmax(140px, 1fr)); }
+      .form-grid { grid-template-columns:repeat(2, minmax(180px, 1fr)); }
     }
+
     @media (max-width:640px){
-      .main{padding:18px}
-      .kpis,.form-grid{grid-template-columns:1fr}
-      .topbar{flex-direction:column;align-items:flex-start}
+      .main { padding:18px; }
+      .kpis, .form-grid { grid-template-columns:1fr; }
+      .topbar { flex-direction:column; align-items:flex-start; }
     }
   </style>
 </head>
@@ -82,12 +354,14 @@
         <img src="Logo_JV" alt="JV International">
         <div class="brand-name">JV<br>International</div>
       </div>
+
       <nav class="side-menu">
         <a href="#" class="menu-item active">Captura</a>
         <a href="#" class="menu-item">Resumen</a>
         <a href="#" class="menu-item">Reportes</a>
         <a href="#" class="menu-item">Configuración</a>
       </nav>
+
       <div class="side-card">
         <strong>Producción</strong><br>
         Control operativo de cortes y procesos por turno.
@@ -101,8 +375,7 @@
           <span>Panel operativo de captura y control</span>
         </div>
         <div class="top-actions">
-          <button id="export-csv" class="btn btn-secondary" type="button">Exportar CSV</button>
-          <button id="export-pdf" class="btn btn-warning" type="button">Exportar PDF</button>
+          <button type="button" class="btn btn-secondary" id="export-csv">Exportar CSV</button>
         </div>
       </div>
 
@@ -121,43 +394,53 @@
               <div class="folio-label">Último folio guardado</div>
               <div id="folio" class="folio-number">Se asigna al guardar</div>
             </div>
-            <div class="barcode-wrap"><svg id="barcode" width="180" height="55"></svg></div>
+            <div class="barcode-wrap">
+              <svg id="barcode" width="180" height="55"></svg>
+            </div>
           </div>
 
-          <form id="form">
+          <form id="form" novalidate>
             <div class="form-grid">
               <div class="field">
                 <label>Fecha *</label>
                 <input id="fecha" type="date" required>
               </div>
+
               <div class="field">
                 <label>Semana ISO</label>
                 <input id="semana" type="text" readonly required>
               </div>
+
               <div class="field">
                 <label>Nombre personal *</label>
                 <select id="personal" required></select>
               </div>
+
               <div class="field">
                 <label>Máquina *</label>
                 <select id="maquina" required></select>
               </div>
+
               <div class="field">
                 <label>No. Corte *</label>
                 <input id="corte" type="text" required>
               </div>
+
               <div class="field">
                 <label>Estilo *</label>
                 <select id="estilo" required></select>
               </div>
+
               <div class="field">
                 <label>Proceso *</label>
                 <select id="proceso" required></select>
               </div>
+
               <div class="field">
                 <label>Costo unitario *</label>
                 <input id="costo" type="number" min="0" step="0.01" required>
               </div>
+
               <div class="field">
                 <label>Cantidad *</label>
                 <input id="cantidad" type="number" min="1" step="1" required>
@@ -167,8 +450,8 @@
             <div class="saverow">
               <span id="status" class="status info">Listo para capturar.</span>
               <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <button class="btn btn-primary" type="submit">Guardar en la nube</button>
-                <button class="btn btn-secondary" type="button" id="btn-limpiar">Limpiar</button>
+                <button type="submit" class="btn btn-primary">Guardar en la nube</button>
+                <button type="button" class="btn btn-secondary" id="btn-limpiar">Limpiar</button>
               </div>
             </div>
           </form>
@@ -201,7 +484,7 @@
     </main>
   </div>
 
-  <iframe id="hiddenFrame" name="hiddenFrame" style="display:none"></iframe>
+  <iframe id="hiddenFrame" name="hiddenFrame" style="display:none;"></iframe>
 
   <script>
     const API = "https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec";
@@ -221,6 +504,7 @@
       BY03:[['CERRAR HOMBROS',0.4],['PEGAR CUELLO',0.7],['S/C CUELLO',0.4],['TAPE',0.6],['PEGAR MANGA',0.8],['CERRAR COSTADOS',1.1],['BASTILLA MANGA',0.7],['BASTILLA RUEDO',0.7],['DESHEBRADO',0]],
       BY06:[['CERRAR HOMBROS',0.4],['PEGAR CUELLO',0.7],['S/C CUELLO',0.4],['TAPE',0.6],['PEGAR MANGA',0.8],['CERRAR COSTADOS',1.1],['BASTILLA MANGA',0.7],['BASTILLA RUEDO',0.7],['DESHEBRADO',0]],
       MN02:[['CERRAR HOMBROS',0.4],['PEGAR CUELLO',0.7],['S/C CUELLO',0.4],['TAPE',0.6],['PEGAR MANGA',0.8],['CERRAR COSTADOS',1.1],['BASTILLA MANGA',0.7],['BASTILLA RUEDO',0.7],['DESHEBRADO',0]],
+
       BY01:[['1ER HOMBRO',0.2],['BIES SIZA',1.1],['2DO HOMBRO',0.25],['BIES CUELLO',0.8],['CERRAR COSTADOS',0.9],['BASTILLA RUEDO',0.7],['REMACHES X3',1],['DESHEBRADO',0]],
       BY04:[['1ER HOMBRO',0.2],['BIES SIZA',1.1],['2DO HOMBRO',0.25],['BIES CUELLO',0.8],['CERRAR COSTADOS',0.9],['BASTILLA RUEDO',0.7],['REMACHES X3',1],['DESHEBRADO',0]],
       JR49:[['1ER HOMBRO',0.2],['BIES SIZA',1.1],['2DO HOMBRO',0.25],['BIES CUELLO',0.8],['CERRAR COSTADOS',0.9],['BASTILLA RUEDO',0.7],['REMACHES X3',1],['DESHEBRADO',0]]
@@ -237,20 +521,29 @@
     const ESTILOS = Object.keys(STYLE_OPERATIONS);
 
     const state = { records: [] };
+
     const $ = id => document.getElementById(id);
 
     function fillSelect(el, arr, label) {
       el.innerHTML = '';
-      el.add(new Option(label, ''));
+      const empty = new Option(label, '');
+      el.add(empty);
       arr.forEach(v => el.add(new Option(v, v)));
     }
 
-    function clean(v) {
-      return String(v ?? '').trim().replace(/\s+/g, ' ');
+    function clean(value) {
+      return String(value ?? '').trim().replace(/\s+/g, ' ');
     }
 
-    function money(v) {
-      return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(v || 0));
+    function money(value) {
+      return new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' }).format(Number(value || 0));
+    }
+
+    function weekNumber(dateValue) {
+      if (!dateValue) return '';
+      const d = new Date(dateValue + 'T12:00:00');
+      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+      return Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
     }
 
     function updateWeek() {
@@ -260,20 +553,25 @@
         $('ks').textContent = '0';
         return;
       }
-      const d = new Date(val + 'T12:00:00');
-      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-      const isoWeek = Math.ceil((((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1) / 7);
-      $('semana').value = isoWeek;
-      $('ks').textContent = isoWeek;
+      const num = weekNumber(val);
+      $('semana').value = num;
+      $('ks').textContent = num;
     }
 
     function refreshProcessOptions() {
       const estilo = $('estilo').value;
       const ops = STYLE_OPERATIONS[estilo] || [];
       $('proceso').innerHTML = '';
-      $('proceso').add(new Option('Seleccione proceso', ''));
-      ops.forEach(([nombre]) => $('proceso').add(new Option(nombre, nombre)));
+
+      const placeholder = new Option('Seleccione proceso', '');
+      $('proceso').add(placeholder);
+
+      ops.forEach(([nombre]) => {
+        $('proceso').add(new Option(nombre, nombre));
+      });
+
       $('costo').value = '';
+      $('proceso').value = '';
     }
 
     function autofillCosto() {
@@ -281,7 +579,9 @@
       const proceso = $('proceso').value;
       const ops = STYLE_OPERATIONS[estilo] || [];
       const found = ops.find(([nombre]) => nombre === proceso);
-      if (found) $('costo').value = Number(found[1]).toFixed(2);
+      if (found) {
+        $('costo').value = Number(found[1]).toFixed(2);
+      }
     }
 
     function render() {
@@ -313,24 +613,28 @@
       `).join('');
     }
 
-    function setStatus(text, type = 'info') {
-      const s = $('status');
-      s.textContent = text;
-      s.className = 'status ' + type;
+    function setStatus(text, type='info') {
+      const el = $('status');
+      el.textContent = text;
+      el.className = 'status ' + type;
     }
 
     function clearForm() {
       const fecha = $('fecha').value;
       const personal = $('personal').value;
       document.getElementById('form').reset();
+
       $('fecha').value = fecha;
       $('personal').value = personal;
-      updateWeek();
-      $('costo').value = '';
-      $('cantidad').value = '';
+
+      $('estilo').value = '';
       $('proceso').innerHTML = '';
       $('proceso').add(new Option('Seleccione proceso', ''));
-      $('estilo').value = '';
+      $('costo').value = '';
+      $('cantidad').value = '';
+      $('corte').value = '';
+
+      updateWeek();
     }
 
     function guardarGoogle(data) {
@@ -363,14 +667,15 @@
     }
 
     function loadDefaults() {
-      const today = new Date().toISOString().slice(0, 10);
-      $('fecha').value = today;
-      $('semana').value = '';
+      const hoy = new Date().toISOString().slice(0, 10);
+      $('fecha').value = hoy;
       fillSelect($('personal'), PERSONAL, 'Seleccione personal');
       fillSelect($('maquina'), MAQUINAS, 'Seleccione máquina');
       fillSelect($('estilo'), ESTILOS, 'Seleccione estilo');
+
       $('proceso').innerHTML = '';
       $('proceso').add(new Option('Seleccione proceso', ''));
+
       updateWeek();
     }
 
@@ -388,6 +693,7 @@
         costoUnitario: Number($('costo').value || 0),
         cantidad: Number($('cantidad').value || 0)
       };
+
       item.costoTotal = Number((item.cantidad * item.costoUnitario).toFixed(2));
 
       const error = validate(item);
@@ -398,12 +704,14 @@
 
       const folio = 'PC-' + Date.now();
       const record = { ...item, folio };
+
       state.records.push(record);
 
       guardarGoogle(record);
+
       $('folio').textContent = folio;
       if (window.JsBarcode) {
-        JsBarcode('#barcode', folio, { format: 'CODE128', height: 42, margin: 4, fontSize: 12 });
+        JsBarcode('#barcode', folio, { format:'CODE128', height:42, width:1.6, margin:4, displayValue:true, fontSize:12 });
       }
 
       render();
@@ -419,11 +727,13 @@
 
       const rows = [
         ['Folio','Fecha','Semana','Nombre Personal','Maquina','No. Corte','Estilo','Proceso','Costo Unitario','Cantidad','Costo Total'],
-        ...state.records.map(x => [x.folio, x.fecha, x.semana, x.personal, x.maquina, x.corte, x.estilo, x.proceso, x.costoUnitario, x.cantidad, x.costoTotal])
+        ...state.records.map(x => [
+          x.folio, x.fecha, x.semana, x.personal, x.maquina, x.corte, x.estilo, x.proceso, x.costoUnitario, x.cantidad, x.costoTotal
+        ])
       ];
 
       const csv = rows.map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
-      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -434,13 +744,14 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       loadDefaults();
+      render();
+
       $('form').addEventListener('submit', onSubmit);
       $('estilo').addEventListener('change', refreshProcessOptions);
       $('proceso').addEventListener('change', autofillCosto);
       $('fecha').addEventListener('change', updateWeek);
       $('btn-limpiar').addEventListener('click', clearForm);
       $('export-csv').addEventListener('click', exportCsv);
-      render();
     });
   </script>
 </body>
