@@ -1,29 +1,961 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JV · Producción Costura</title><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script><style>
-:root{--g:#244b43;--lime:#b9dc45;--teal:#08776b;--bg:#f3f6f5;--line:#dce7e3;--text:#18332d}*{box-sizing:border-box}body{margin:0;font:14px Segoe UI,Arial;background:var(--bg);color:var(--text)}.app{display:grid;grid-template-columns:235px 1fr;min-height:100vh}aside{background:#102027;padding:16px;color:#fff}.logo{background:#fff;border-radius:10px;padding:10px}.logo img{width:100%;display:block}.nav{margin-top:18px}.nav button{display:block;width:100%;margin:8px 0;padding:12px;border:0;border-radius:8px;text-align:left;background:transparent;color:#e8f1ee;font-weight:700}.nav button.on{background:var(--g);border-left:4px solid var(--lime)}main{padding:22px;min-width:0}.view{display:none}.view.on{display:block}.title{display:flex;justify-content:space-between;align-items:center;gap:10px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #173b3510}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.field{display:grid;gap:5px}.field span{font-size:11px;text-transform:uppercase;font-weight:800;color:#667671}input,select,button{height:40px;border:1px solid #cfddd8;border-radius:8px;padding:0 10px;background:#fff}input[readonly]{background:#edf3f1;font-weight:700}button{cursor:pointer;font-weight:700}.primary{background:var(--teal);color:#fff;border:0}.secondary{background:#e7efed;color:var(--g)}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.status.ok{color:#08776b}.status.err{color:#b42318}.filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{background:#fff;border-left:4px solid var(--lime);padding:14px;border-radius:10px}.kpi b{display:block;font-size:22px;margin-top:4px}.tableWrap{overflow:auto;max-height:520px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:8px;border-bottom:1px solid #e8efed;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:#eaf2ef;z-index:1}.muted{color:#687873}.hidden{display:none!important}@media(max-width:1000px){.grid,.filters{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.app{display:block}aside{padding:10px}.nav{display:flex;overflow:auto;gap:6px}.nav button{min-width:130px}.grid,.filters,.kpis{grid-template-columns:1fr}main{padding:12px}}</style></head><body><div class="app"><aside><div class="logo"><img src="Logo_JV_International.svg" alt="JV International Solutions Inc."></div><nav class="nav"><button class="on" data-view="captura">Captura</button><button data-view="base">Base de datos</button><button data-view="dashboard">Dashboard</button><button data-view="destajo">Destajo</button><button data-view="admin">Migración</button></nav></aside><main>
-<section id="captura" class="view on"><div class="title"><div><h1>Captura de producción</h1><div class="muted">Una fila = una operación realizada.</div></div><b id="lastFolio">—</b></div><div class="card"><form id="captureForm"><div class="grid"><label class="field"><span>Fecha *</span><input id="fecha" type="date" required></label><label class="field"><span>Semana ISO</span><input id="semana" readonly></label><label class="field"><span>Personal *</span><select id="personal" required></select></label><label class="field"><span>Máquina *</span><select id="maquina" required></select></label><label class="field"><span>No. corte *</span><input id="corte" required></label><label class="field"><span>Estilo *</span><select id="estilo" required></select></label><label id="varianteField" class="field hidden"><span>Variante JR154 *</span><select id="variante"><option value="GENERAL">General</option><option value="DC">DC</option></select></label><label class="field"><span>Operación / proceso *</span><select id="operacion" required></select></label><label class="field"><span>Costo unitario</span><input id="costo" readonly></label><label class="field"><span>Cantidad *</span><input id="cantidad" type="number" min="1" step="1" required></label></div><div class="actions"><button class="primary" id="saveBtn">Guardar</button><button type="button" class="secondary" id="clearBtn">Limpiar</button><span id="captureStatus" class="status" aria-live="polite"></span></div></form><iframe name="postSink" hidden></iframe></div></section>
-<section id="base" class="view"><div class="title"><h1>Base de datos</h1><div><button class="secondary refresh">Actualizar</button> <button class="secondary pdf">PDF Dirección</button></div></div><div class="card"><div id="filters" class="filters"></div><div class="actions"><button id="applyFilters" class="primary">Aplicar filtros</button><button id="resetFilters" class="secondary">Restablecer</button><span id="resultCount" class="muted"></span></div></div><div class="card tableWrap" id="baseTable"></div></section>
-<section id="dashboard" class="view"><div class="title"><h1>Dashboard</h1><button class="secondary pdf">PDF Dirección</button></div><div id="kpis" class="kpis"></div><div class="grid"><div class="card tableWrap"><h3>Piezas por operador</h3><div id="byPersonal"></div></div><div class="card tableWrap"><h3>Piezas por operación</h3><div id="byOperacion"></div></div><div class="card tableWrap"><h3>Piezas por estilo</h3><div id="byEstilo"></div></div><div class="card tableWrap"><h3>Piezas por corte</h3><div id="byCorte"></div></div><div class="card tableWrap"><h3>Piezas por fecha</h3><div id="byFecha"></div></div><div class="card tableWrap"><h3>Piezas por máquina</h3><div id="byMaquina"></div></div></div></section>
-<section id="destajo" class="view"><div class="title"><h1>Destajo semanal</h1><button class="secondary pdf">PDF Dirección</button></div><div class="card tableWrap" id="destajoTable"></div></section>
-<section id="admin" class="view"><h1>Migración histórica</h1><div class="card"><p>Conserva <b>Base MRP</b> sin modificaciones y crea registros normalizados en <b>Produccion_Normalizada</b>. La migración es idempotente.</p><div class="actions"><button id="setupBtn" class="secondary">Preparar hojas</button><button id="migrateBtn" class="primary">Migrar históricos</button><span id="adminStatus" aria-live="polite"></span></div></div></section>
-</main></div><script>
-const API='https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec';let C={personal:[],maquinas:[],tarifas:[]},DB=[],F=[];const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n)||0),uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>String(x).localeCompare(String(y),'es'));
-function isoWeek(v){if(!v)return'';const d=new Date(v+'T12:00:00');d.setDate(d.getDate()+4-(d.getDay()||7));const y=new Date(d.getFullYear(),0,1);return Math.ceil((((d-y)/86400000)+1)/7)}
-function fill(id,items,label){const e=$(id);e.replaceChildren(new Option(label,''));items.forEach(v=>e.add(new Option(v,v)))}
-function jsonp(params,timeout=30000){return new Promise((resolve,reject)=>{const cb='jv_'+Date.now()+'_'+Math.random().toString(36).slice(2),s=document.createElement('script');let done=false;const t=setTimeout(()=>finish(new Error('Sin respuesta del servidor.')),timeout);function finish(err,val){if(done)return;done=true;clearTimeout(t);delete window[cb];s.remove();err?reject(err):resolve(val)}window[cb]=v=>finish(null,v);s.src=API+'?'+new URLSearchParams({...params,callback:cb});s.onerror=()=>finish(new Error('No fue posible conectar con Apps Script.'));document.head.appendChild(s)})}
-function loadStyles(){fill('estilo',uniq(C.tarifas.map(x=>x.estilo)),'Seleccione estilo');loadVariantOps()}
-function loadVariantOps(){const e=$('estilo').value,isJR=e==='JR154';$('varianteField').classList.toggle('hidden',!isJR);$('variante').required=isJR;if(!isJR)$('variante').value='GENERAL';const v=$('variante').value;const ops=uniq(C.tarifas.filter(x=>x.estilo===e&&(e!=='JR154'||x.variante===v)).map(x=>x.operacion));fill('operacion',ops,'Seleccione operación');setCost()}
-function setCost(){const e=$('estilo').value,v=e==='JR154'?$('variante').value:'GENERAL',o=$('operacion').value,m=C.tarifas.find(x=>x.estilo===e&&x.variante===v&&x.operacion===o);$('costo').value=m?Number(m.costo).toFixed(2):''}
-function resetCapture(){const keep={fecha:$('fecha').value,personal:$('personal').value,maquina:$('maquina').value};$('captureForm').reset();Object.entries(keep).forEach(([k,v])=>$(k).value=v);$('semana').value=isoWeek(keep.fecha);loadStyles();$('corte').focus()}
-function post(payload,token){const f=document.createElement('form');f.method='POST';f.action=API;f.target='postSink';[['payload',JSON.stringify(payload)],['token',token]].forEach(([n,v])=>{const i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;f.appendChild(i)});document.body.appendChild(f);f.submit();setTimeout(()=>f.remove(),1000)}
-async function confirmSave(token){for(let i=0;i<35;i++){await new Promise(r=>setTimeout(r,800));const x=await jsonp({action:'status',token},10000);if(x.pending)continue;if(!x.ok)throw Error(x.error||'Error de guardado');return x}throw Error('La captura pudo guardarse, pero no se recibió confirmación.')}
-$('captureForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('saveBtn'),q=Number($('cantidad').value),c=Number($('costo').value);if(!Number.isInteger(q)||q<1||!Number.isFinite(c)){return status('Revisa operación, costo y cantidad.','err')}const data={fecha:$('fecha').value,personal:$('personal').value,maquina:$('maquina').value,corte:$('corte').value.trim(),estilo:$('estilo').value,variante:$('estilo').value==='JR154'?$('variante').value:'GENERAL',operacion:$('operacion').value,cantidad:q};const token='pc_'+Date.now()+'_'+Math.random().toString(36).slice(2);btn.disabled=true;status('Guardando…');try{post(data,token);const r=await confirmSave(token);$('lastFolio').textContent=r.folio;status('Guardado '+r.folio,'ok');resetCapture();await loadDB()}catch(x){status(x.message,'err')}finally{btn.disabled=false}});
-function status(t,c=''){$('captureStatus').textContent=t;$('captureStatus').className='status '+c}
-function buildFilters(){const defs=[['fDesde','date','Fecha desde'],['fHasta','date','Fecha hasta'],['fSemana','select','Semana'],['fPersonal','select','Personal'],['fMaquina','select','Máquina'],['fCorte','select','Corte'],['fEstilo','select','Estilo'],['fOperacion','select','Operación'],['fFolio','text','Folio']];$('filters').innerHTML='';defs.forEach(([id,type,label])=>{const w=document.createElement('label');w.className='field';w.innerHTML='<span>'+label+'</span>';const e=document.createElement(type==='select'?'select':'input');e.id=id;if(type!=='select')e.type=type;w.appendChild(e);$('filters').appendChild(w)});fill('fSemana',uniq(DB.map(x=>String(x.semana))),'Todas');fill('fPersonal',uniq(DB.map(x=>x.personal)),'Todos');fill('fMaquina',uniq(DB.map(x=>x.maquina)),'Todas');fill('fCorte',uniq(DB.map(x=>x.corte)),'Todos');fill('fEstilo',uniq(DB.map(x=>x.estilo)),'Todos');fill('fOperacion',uniq(DB.map(x=>x.operacion)),'Todas')}
-function applyFilters(){const v=id=>$(id)?.value||'';F=DB.filter(x=>(!v('fDesde')||x.fecha>=v('fDesde'))&&(!v('fHasta')||x.fecha<=v('fHasta'))&&(!v('fSemana')||String(x.semana)===v('fSemana'))&&(!v('fPersonal')||x.personal===v('fPersonal'))&&(!v('fMaquina')||x.maquina===v('fMaquina'))&&(!v('fCorte')||x.corte===v('fCorte'))&&(!v('fEstilo')||x.estilo===v('fEstilo'))&&(!v('fOperacion')||x.operacion===v('fOperacion'))&&(!v('fFolio')||x.folio.toLowerCase().includes(v('fFolio').toLowerCase())));renderAll()}
-function table(headers,rows){return '<table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
-function renderAll(){const rows=F.map(x=>[x.folio,x.fecha,x.semana,x.personal,x.maquina,x.corte,x.estilo,x.variante,x.operacion,money(x.costoUnitario),x.cantidad,money(x.costoTotal)]);$('baseTable').innerHTML=table(['Folio','Fecha','Semana','Personal','Máquina','Corte','Estilo','Variante','Operación','Costo unit.','Cantidad','Total'],rows);$('resultCount').textContent=F.length+' registros';const sum=F.reduce((a,x)=>a+Number(x.cantidad||0),0),total=F.reduce((a,x)=>a+Number(x.costoTotal||0),0);const ks=[['Piezas',sum.toLocaleString('es-MX')],['Destajo total',money(total)],['Operadores',new Set(F.map(x=>x.personal)).size],['Operaciones',new Set(F.map(x=>x.operacion)).size],['Estilos',new Set(F.map(x=>x.estilo)).size],['Cortes',new Set(F.map(x=>x.corte)).size],['Máquinas',new Set(F.map(x=>x.maquina)).size],['Capturas',F.length]];$('kpis').innerHTML=ks.map(x=>'<div class="kpi">'+x[0]+'<b>'+x[1]+'</b></div>').join('');[['byPersonal','personal'],['byOperacion','operacion'],['byEstilo','estilo'],['byCorte','corte'],['byFecha','fecha'],['byMaquina','maquina']].forEach(([id,key])=>{const g={};F.forEach(x=>{g[x[key]]=(g[x[key]]||0)+Number(x.cantidad||0)});$(id).innerHTML=table([key==='personal'?'Operador':key.charAt(0).toUpperCase()+key.slice(1),'Piezas'],Object.entries(g).sort((a,b)=>b[1]-a[1]).map(x=>[x[0],x[1].toLocaleString('es-MX')]))});const d={};F.forEach(x=>{const k=[x.semana,x.personal,x.operacion,x.costoUnitario].join('|');d[k]??={semana:x.semana,personal:x.personal,operacion:x.operacion,costo:Number(x.costoUnitario),cantidad:0,total:0};d[k].cantidad+=Number(x.cantidad);d[k].total+=Number(x.costoTotal)});$('destajoTable').innerHTML=table(['Semana','Personal','Operación','Cantidad','Costo unitario','Total a pagar'],Object.values(d).sort((a,b)=>a.semana-b.semana||a.personal.localeCompare(b.personal)).map(x=>[x.semana,x.personal,x.operacion,x.cantidad,money(x.costo),money(x.total)]))}
-async function loadDB(){const r=await jsonp({action:'list'});if(!r.ok)throw Error(r.error);DB=r.records||[];F=DB.slice();buildFilters();renderAll()}
-async function init(){if(API.startsWith('REEMPLAZAR')){status('Configura la URL de Apps Script en la constante API.','err');return}try{const r=await jsonp({action:'catalogs'});if(!r.ok)throw Error(r.error);C=r.catalogs;fill('personal',C.personal,'Seleccione personal');fill('maquina',C.maquinas,'Seleccione máquina');$('fecha').value=new Date().toISOString().slice(0,10);$('semana').value=isoWeek($('fecha').value);loadStyles();$('lastFolio').textContent=r.lastFolio||'—';await loadDB()}catch(x){status(x.message,'err')}}
-function exportPDF(){if(!window.jspdf){alert('No se cargó jsPDF');return}const {jsPDF}=window.jspdf,active=document.querySelector('.view.on').id,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});doc.setFillColor(36,75,67);doc.rect(0,0,279,24,'F');doc.setTextColor(255);doc.setFontSize(18);doc.text('JV INTERNATIONAL',12,10);doc.setFontSize(9);doc.text('SOLUTIONS INC. · INFORME PARA DIRECCIÓN GENERAL',12,17);doc.setTextColor(25);doc.setFontSize(14);doc.text(active==='destajo'?'Destajo semanal':active==='dashboard'?'Dashboard de producción':'Base de datos',12,34);let head,body;if(active==='destajo'){head=[['Semana','Personal','Operación','Cantidad','Costo unitario','Total a pagar']];const tmp=document.querySelectorAll('#destajoTable tbody tr');body=[...tmp].map(tr=>[...tr.cells].map(td=>td.textContent))}else{head=[['Folio','Fecha','Sem.','Personal','Máquina','Corte','Estilo','Operación','Cantidad','Total']];body=F.map(x=>[x.folio,x.fecha,x.semana,x.personal,x.maquina,x.corte,x.estilo,x.operacion,x.cantidad,money(x.costoTotal)])}doc.autoTable({head,body,startY:42,theme:'grid',styles:{fontSize:7},headStyles:{fillColor:[8,119,107]}});doc.save('JV_'+active+'_'+new Date().toISOString().slice(0,10)+'.pdf')}
-document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav button,.view').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.view).classList.add('on')}));document.querySelectorAll('.pdf').forEach(b=>b.addEventListener('click',exportPDF));document.querySelectorAll('.refresh').forEach(b=>b.addEventListener('click',loadDB));$('fecha').addEventListener('change',()=>{$('semana').value=isoWeek($('fecha').value)});$('estilo').addEventListener('change',loadVariantOps);$('variante').addEventListener('change',loadVariantOps);$('operacion').addEventListener('change',setCost);$('clearBtn').addEventListener('click',resetCapture);$('applyFilters').addEventListener('click',applyFilters);$('resetFilters').addEventListener('click',()=>{buildFilters();F=DB.slice();renderAll()});$('setupBtn').addEventListener('click',async()=>{const r=await jsonp({action:'setup'});$('adminStatus').textContent=r.message||r.error});$('migrateBtn').addEventListener('click',async()=>{if(!confirm('¿Migrar Base MRP a Produccion_Normalizada?'))return;$('adminStatus').textContent='Migrando…';const r=await jsonp({action:'migrate'},120000);$('adminStatus').textContent=r.message||r.error;if(r.ok)await loadDB()});init();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08776b">
+  <title>Producción Costura | JV International</title>
+  <style>
+    :root {
+      --primary: #08776b;
+      --primary-dark: #075f57;
+      --primary-soft: #e7f5f3;
+      --accent: #f1a208;
+      --text: #172321;
+      --muted: #66736f;
+      --border: #d6e0dd;
+      --surface: #ffffff;
+      --background: #f4f7f6;
+      --danger: #b42318;
+      --danger-soft: #fef3f2;
+      --success: #067647;
+      --success-soft: #ecfdf3;
+      --shadow: 0 16px 40px rgba(25, 55, 49, 0.10);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: light;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--background);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, #075f57 0%, #08776b 65%, #0a8f80 100%);
+      color: #ffffff;
+      padding: 22px 20px 72px;
+    }
+
+    .header-inner,
+    .main {
+      width: min(100% - 32px, 1040px);
+      margin-inline: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 4vw, 2.15rem);
+      letter-spacing: -0.03em;
+    }
+
+    .brand-copy p {
+      margin: 5px 0 0;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .connection-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .connection-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #fdb022;
+    }
+
+    .connection-badge.online .connection-dot {
+      background: #75e0a7;
+    }
+
+    .connection-badge.error .connection-dot {
+      background: #fda29b;
+    }
+
+    .main {
+      margin-top: -48px;
+      padding-bottom: 40px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(214, 224, 221, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 22px 24px 17px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.18rem;
+    }
+
+    .card-header p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .form-body {
+      padding: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 0.88rem;
+      font-weight: 750;
+      color: #2d3a37;
+    }
+
+    .required::after {
+      content: " *";
+      color: var(--danger);
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 10px 12px;
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(8, 119, 107, 0.13);
+    }
+
+    input:disabled,
+    select:disabled {
+      cursor: not-allowed;
+      color: #82908c;
+      background: #f1f4f3;
+    }
+
+    .helper {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid #c9e6e1;
+      border-radius: 14px;
+      background: var(--primary-soft);
+    }
+
+    .summary-item {
+      padding: 2px 8px;
+    }
+
+    .summary-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 1.12rem;
+      color: var(--primary-dark);
+    }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    .button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 11px;
+      padding: 10px 18px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+    }
+
+    .button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .button:focus-visible {
+      outline: 3px solid rgba(8, 119, 107, 0.27);
+      outline-offset: 2px;
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .button-secondary {
+      background: #edf2f0;
+      color: #30413d;
+    }
+
+    .button-primary {
+      min-width: 148px;
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .button-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .notice {
+      display: none;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border-radius: 11px;
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    .notice.show {
+      display: block;
+    }
+
+    .notice.success {
+      border: 1px solid #abefc6;
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .notice.error {
+      border: 1px solid #fecdca;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .notice.info {
+      border: 1px solid #b2ddff;
+      background: #eff8ff;
+      color: #175cd3;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      vertical-align: -3px;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 680px) {
+      .app-header {
+        padding: 18px 0 66px;
+      }
+
+      .header-inner,
+      .main {
+        width: min(100% - 22px, 1040px);
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field.full {
+        grid-column: auto;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-item + .summary-item {
+        padding-top: 10px;
+        border-top: 1px solid #c9e6e1;
+      }
+
+      .form-body,
+      .card-header {
+        padding-left: 17px;
+        padding-right: 17px;
+      }
+
+      .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-copy">
+          <h1>Producción Costura</h1>
+          <p>JV International · Captura de operaciones</p>
+        </div>
+        <div id="connectionBadge" class="connection-badge" aria-live="polite">
+          <span class="connection-dot" aria-hidden="true"></span>
+          <span id="connectionText">Conectando…</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="card" aria-labelledby="formTitle">
+      <div class="card-header">
+        <h2 id="formTitle">Nueva captura</h2>
+        <p>Completa los datos. La tarifa se consulta directamente del catálogo oficial.</p>
+      </div>
+
+      <div class="form-body">
+        <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+        <form id="productionForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label class="required" for="fecha">Fecha</label>
+              <input id="fecha" name="fecha" type="date" required>
+            </div>
+
+            <div class="field">
+              <label class="required" for="personal">Personal</label>
+              <select id="personal" name="personal" required disabled>
+                <option value="">Cargando personal…</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="required" for="maquina">Máquina</label>
+              <select id="maquina" name="maquina" required disabled>
+                <option value="">Cargando máquinas…</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="required" for="corte">No. de corte</label>
+              <input id="corte" name="corte" type="text" inputmode="text" maxlength="80" autocomplete="off" placeholder="Ej. 185393" required>
+            </div>
+
+            <div class="field">
+              <label class="required" for="estilo">Estilo</label>
+              <select id="estilo" name="estilo" required disabled>
+                <option value="">Cargando estilos…</option>
+              </select>
+            </div>
+
+            <div id="variantField" class="field" hidden>
+              <label class="required" for="variante">Aplicación</label>
+              <select id="variante" name="variante">
+                <option value="GENERAL">TIENDAS EN GENERAL</option>
+                <option value="DC">EXCLUSIVO TIENDAS DC</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="required" for="operacion">Operación</label>
+              <select id="operacion" name="operacion" required disabled>
+                <option value="">Selecciona primero un estilo</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="required" for="cantidad">Cantidad</label>
+              <input id="cantidad" name="cantidad" type="number" inputmode="numeric" min="1" max="1000000" step="1" placeholder="0" required>
+              <div class="helper">Solo números enteros mayores que cero.</div>
+            </div>
+          </div>
+
+          <div class="summary" aria-label="Resumen de la operación">
+            <div class="summary-item">
+              <span>Costo unitario</span>
+              <strong id="unitCost">$0.00</strong>
+            </div>
+            <div class="summary-item">
+              <span>Cantidad</span>
+              <strong id="summaryQuantity">0</strong>
+            </div>
+            <div class="summary-item">
+              <span>Costo total</span>
+              <strong id="totalCost">$0.00</strong>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button id="clearButton" class="button button-secondary" type="button">Limpiar</button>
+            <button id="saveButton" class="button button-primary" type="submit" disabled>Guardar captura</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <p class="footer-note">Los costos guardados se validan nuevamente en Apps Script antes de registrar la operación.</p>
+  </main>
+
+  <script>
+    'use strict';
+
+    /*
+     * REEMPLAZA ÚNICAMENTE ESTA URL por la URL /exec de tu implementación.
+     * Ejemplo: https://script.google.com/macros/s/AKfycb.../exec
+     */
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec';
+
+    const ACTIONS = Object.freeze({
+      catalogs: 'catalogs',
+      operations: 'operations',
+      save: 'saveProduction'
+    });
+
+    const state = {
+      catalogsLoaded: false,
+      operations: [],
+      unitCost: 0,
+      saving: false
+    };
+
+    const elements = {
+      form: document.getElementById('productionForm'),
+      notice: document.getElementById('notice'),
+      fecha: document.getElementById('fecha'),
+      personal: document.getElementById('personal'),
+      maquina: document.getElementById('maquina'),
+      corte: document.getElementById('corte'),
+      estilo: document.getElementById('estilo'),
+      variantField: document.getElementById('variantField'),
+      variante: document.getElementById('variante'),
+      operacion: document.getElementById('operacion'),
+      cantidad: document.getElementById('cantidad'),
+      unitCost: document.getElementById('unitCost'),
+      summaryQuantity: document.getElementById('summaryQuantity'),
+      totalCost: document.getElementById('totalCost'),
+      clearButton: document.getElementById('clearButton'),
+      saveButton: document.getElementById('saveButton'),
+      connectionBadge: document.getElementById('connectionBadge'),
+      connectionText: document.getElementById('connectionText')
+    };
+
+    document.addEventListener('DOMContentLoaded', initialize);
+
+    function initialize() {
+      setToday();
+      bindEvents();
+
+      if (!isApiConfigured()) {
+        setConnection('error', 'Falta configurar API');
+        showNotice('error', 'Reemplaza API_URL en el código por la URL /exec de tu Apps Script.');
+        return;
+      }
+
+      loadCatalogs();
+    }
+
+    function bindEvents() {
+      elements.estilo.addEventListener('change', handleStyleChange);
+      elements.variante.addEventListener('change', loadOperations);
+      elements.operacion.addEventListener('change', handleOperationChange);
+      elements.cantidad.addEventListener('input', updateSummary);
+      elements.clearButton.addEventListener('click', resetForm);
+      elements.form.addEventListener('submit', handleSubmit);
+    }
+
+    function isApiConfigured() {
+      return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?.*)?$/.test(API_URL);
+    }
+
+    function setToday() {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      elements.fecha.value = local.toISOString().slice(0, 10);
+    }
+
+    async function loadCatalogs() {
+      setConnection('', 'Conectando…');
+      setInputsLoading(true);
+
+      try {
+        const response = await apiGet(ACTIONS.catalogs);
+        const data = unwrapPayload(response);
+
+        const styles = normalizeSimpleList(data.estilos || data.styles || []);
+        const machines = normalizeSimpleList(data.maquinas || data.machines || []);
+        const people = normalizeSimpleList(data.personal || data.personas || data.operadores || []);
+
+        if (!styles.length) {
+          throw new Error('La API no devolvió estilos.');
+        }
+
+        fillSelect(elements.estilo, styles, 'Selecciona un estilo');
+        fillSelect(elements.maquina, machines, 'Selecciona una máquina');
+        fillSelect(elements.personal, people, 'Selecciona personal');
+
+        state.catalogsLoaded = true;
+        setInputsLoading(false);
+        updateSaveAvailability();
+        setConnection('online', 'API conectada');
+        hideNotice();
+      } catch (error) {
+        setConnection('error', 'Sin conexión');
+        showNotice('error', getErrorMessage(error));
+        setInputsLoading(true);
+      }
+    }
+
+    function setInputsLoading(isLoading) {
+      elements.estilo.disabled = isLoading;
+      elements.maquina.disabled = isLoading;
+      elements.personal.disabled = isLoading;
+      updateSaveAvailability();
+    }
+
+    async function handleStyleChange() {
+      state.operations = [];
+      state.unitCost = 0;
+      elements.operacion.innerHTML = '<option value="">Cargando operaciones…</option>';
+      elements.operacion.disabled = true;
+
+      const style = elements.estilo.value;
+      const requiresVariant = style === 'JR154';
+      elements.variantField.hidden = !requiresVariant;
+
+      if (!requiresVariant) {
+        elements.variante.value = 'GENERAL';
+      }
+
+      updateSummary();
+
+      if (!style) {
+        elements.operacion.innerHTML = '<option value="">Selecciona primero un estilo</option>';
+        updateSaveAvailability();
+        return;
+      }
+
+      await loadOperations();
+    }
+
+    async function loadOperations() {
+      const style = elements.estilo.value;
+
+      if (!style) {
+        return;
+      }
+
+      elements.operacion.disabled = true;
+      elements.operacion.innerHTML = '<option value="">Cargando operaciones…</option>';
+
+      try {
+        const response = await apiGet(ACTIONS.operations, {
+          estilo: style,
+          variante: style === 'JR154' ? elements.variante.value : 'GENERAL'
+        });
+
+        const payload = unwrapPayload(response);
+        const rawOperations = Array.isArray(payload)
+          ? payload
+          : payload.operaciones || payload.operations || [];
+
+        state.operations = rawOperations
+          .map(normalizeOperation)
+          .filter(function(item) {
+            return item.operacion;
+          });
+
+        elements.operacion.innerHTML = '<option value="">Selecciona una operación</option>';
+
+        state.operations.forEach(function(item) {
+          const option = document.createElement('option');
+          option.value = item.operacion;
+          option.textContent = item.operacion;
+          option.dataset.cost = String(item.costo);
+          elements.operacion.appendChild(option);
+        });
+
+        elements.operacion.disabled = state.operations.length === 0;
+
+        if (!state.operations.length) {
+          showNotice('error', 'No hay operaciones configuradas para este estilo y aplicación.');
+        } else {
+          hideNotice();
+        }
+      } catch (error) {
+        elements.operacion.innerHTML = '<option value="">No fue posible cargar operaciones</option>';
+        showNotice('error', getErrorMessage(error));
+      }
+
+      updateSaveAvailability();
+    }
+
+    function normalizeOperation(item) {
+      if (typeof item === 'string') {
+        return { operacion: item.trim().toUpperCase(), costo: 0 };
+      }
+
+      const operation = String(item.operacion || item.operation || item.nombre || '').trim().toUpperCase();
+      const cost = Number(item.costo ?? item.cost ?? item.costoUnitario ?? 0);
+
+      return {
+        operacion: operation,
+        costo: Number.isFinite(cost) && cost >= 0 ? cost : 0
+      };
+    }
+
+    function handleOperationChange() {
+      const selected = elements.operacion.options[elements.operacion.selectedIndex];
+      const cost = selected ? Number(selected.dataset.cost) : 0;
+      state.unitCost = Number.isFinite(cost) && cost >= 0 ? cost : 0;
+      updateSummary();
+      updateSaveAvailability();
+    }
+
+    function updateSummary() {
+      const quantity = parseQuantity(elements.cantidad.value);
+      const total = Number((state.unitCost * quantity).toFixed(2));
+
+      elements.unitCost.textContent = formatCurrency(state.unitCost);
+      elements.summaryQuantity.textContent = quantity.toLocaleString('es-MX');
+      elements.totalCost.textContent = formatCurrency(total);
+      updateSaveAvailability();
+    }
+
+    function parseQuantity(value) {
+      const number = Number(value);
+      return Number.isInteger(number) && number > 0 && number <= 1000000 ? number : 0;
+    }
+
+    function formatCurrency(value) {
+      const valid = Number.isFinite(Number(value)) ? Number(value) : 0;
+      return valid.toLocaleString('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function updateSaveAvailability() {
+      const complete = Boolean(
+        state.catalogsLoaded &&
+        elements.fecha.value &&
+        elements.personal.value &&
+        elements.maquina.value &&
+        elements.corte.value.trim() &&
+        elements.estilo.value &&
+        elements.operacion.value &&
+        parseQuantity(elements.cantidad.value)
+      );
+
+      elements.saveButton.disabled = !complete || state.saving;
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+
+      if (state.saving) {
+        return;
+      }
+
+      const payload = getPayload();
+      const validationMessage = validatePayload(payload);
+
+      if (validationMessage) {
+        showNotice('error', validationMessage);
+        return;
+      }
+
+      setSaving(true);
+      showNotice('info', 'Guardando captura…');
+
+      try {
+        const response = await apiPost(ACTIONS.save, payload);
+        const result = unwrapPayload(response);
+
+        if (result.ok === false) {
+          throw new Error(result.error || result.message || 'La captura no pudo guardarse.');
+        }
+
+        const folio = result.folio ? ' Folio: ' + result.folio + '.' : '';
+        showNotice('success', 'Captura guardada correctamente.' + folio);
+        resetForm({ preserveNotice: true, preserveCatalogs: true });
+      } catch (error) {
+        showNotice('error', getErrorMessage(error));
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    function getPayload() {
+      return {
+        fecha: elements.fecha.value,
+        personal: elements.personal.value,
+        maquina: elements.maquina.value,
+        corte: elements.corte.value.trim(),
+        estilo: elements.estilo.value,
+        variante: elements.estilo.value === 'JR154' ? elements.variante.value : 'GENERAL',
+        operacion: elements.operacion.value,
+        cantidad: parseQuantity(elements.cantidad.value)
+      };
+    }
+
+    function validatePayload(payload) {
+      if (!payload.fecha) return 'Selecciona la fecha.';
+      if (!payload.personal) return 'Selecciona el personal.';
+      if (!payload.maquina) return 'Selecciona la máquina.';
+      if (!payload.corte) return 'Captura el número de corte.';
+      if (!payload.estilo) return 'Selecciona el estilo.';
+      if (!payload.operacion) return 'Selecciona la operación.';
+      if (!payload.cantidad) return 'La cantidad debe ser un entero mayor que cero.';
+      return '';
+    }
+
+    function setSaving(isSaving) {
+      state.saving = isSaving;
+      elements.saveButton.innerHTML = isSaving
+        ? '<span class="spinner" aria-hidden="true"></span>Guardando…'
+        : 'Guardar captura';
+      updateSaveAvailability();
+    }
+
+    function resetForm(options) {
+      const settings = options || {};
+      elements.form.reset();
+      setToday();
+      elements.operacion.innerHTML = '<option value="">Selecciona primero un estilo</option>';
+      elements.operacion.disabled = true;
+      elements.variantField.hidden = true;
+      state.operations = [];
+      state.unitCost = 0;
+      updateSummary();
+
+      if (!settings.preserveNotice) {
+        hideNotice();
+      }
+
+      if (!settings.preserveCatalogs) {
+        state.catalogsLoaded = false;
+      }
+
+      elements.corte.focus();
+    }
+
+    function fillSelect(select, values, placeholder) {
+      select.innerHTML = '';
+
+      const first = document.createElement('option');
+      first.value = '';
+      first.textContent = placeholder;
+      select.appendChild(first);
+
+      values.forEach(function(value) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    function normalizeSimpleList(list) {
+      const values = list.map(function(item) {
+        if (typeof item === 'string' || typeof item === 'number') {
+          return String(item).trim();
+        }
+
+        return String(
+          item.nombre ||
+          item.name ||
+          item.valor ||
+          item.value ||
+          item.estilo ||
+          item.maquina ||
+          item.personal ||
+          ''
+        ).trim();
+      }).filter(Boolean);
+
+      return Array.from(new Set(values)).sort(function(a, b) {
+        return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' });
+      });
+    }
+
+    async function apiGet(action, params) {
+      const query = new URLSearchParams({ action: action });
+
+      Object.entries(params || {}).forEach(function(entry) {
+        const key = entry[0];
+        const value = entry[1];
+
+        if (value !== undefined && value !== null && value !== '') {
+          query.set(key, String(value));
+        }
+      });
+
+      const response = await fetch(API_URL + '?' + query.toString(), {
+        method: 'GET',
+        cache: 'no-store',
+        redirect: 'follow'
+      });
+
+      return parseResponse(response);
+    }
+
+    async function apiPost(action, payload) {
+      const body = new URLSearchParams();
+      body.set('action', action);
+      body.set('payload', JSON.stringify(payload));
+
+      Object.entries(payload).forEach(function(entry) {
+        body.set(entry[0], String(entry[1]));
+      });
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        body: body.toString(),
+        redirect: 'follow'
+      });
+
+      return parseResponse(response);
+    }
+
+    async function parseResponse(response) {
+      const text = await response.text();
+
+      if (!response.ok) {
+        throw new Error('Error HTTP ' + response.status + '.');
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        throw new Error('La API no devolvió JSON válido. Revisa la implementación /exec y sus permisos.');
+      }
+    }
+
+    function unwrapPayload(response) {
+      if (!response || typeof response !== 'object') {
+        throw new Error('Respuesta vacía de la API.');
+      }
+
+      if (response.ok === false) {
+        throw new Error(response.error || response.message || 'La API devolvió un error.');
+      }
+
+      return response.data !== undefined ? response.data : response;
+    }
+
+    function showNotice(type, message) {
+      elements.notice.className = 'notice show ' + type;
+      elements.notice.textContent = message;
+    }
+
+    function hideNotice() {
+      elements.notice.className = 'notice';
+      elements.notice.textContent = '';
+    }
+
+    function setConnection(status, text) {
+      elements.connectionBadge.className = 'connection-badge' + (status ? ' ' + status : '');
+      elements.connectionText.textContent = text;
+    }
+
+    function getErrorMessage(error) {
+      if (error && error.message) {
+        return error.message;
+      }
+
+      return 'Ocurrió un error inesperado.';
+    }
+  </script>
+</body>
+</html>
