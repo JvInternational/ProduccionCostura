@@ -58,18 +58,16 @@
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static}.side-brand{display:inline-block;margin:0 10px 8px 0}.side-group{display:none}.side-nav{display:flex;gap:4px;overflow:auto}.side-nav a{white-space:nowrap}main.content{padding:14px}}
     @media(max-width:520px){.page-head{display:block}.head-status{margin-top:8px}}
 
-/* Producción por fecha: formato replicado del index de referencia */
-#fechaChart{height:280px;min-height:280px;overflow:hidden}
-#fechaChart .line-chart{position:relative;width:100%;height:100%;overflow:hidden}
-#fechaChart .line-chart svg{display:block;width:100%;height:100%;overflow:hidden}
-#fechaChart .line-path{fill:none;stroke:#08776b;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-#fechaChart .line-area{fill:url(#lineAreaGradient)}
-#fechaChart .line-point{fill:#08776b;stroke:#fff;stroke-width:1.5;vector-effect:non-scaling-stroke}
-#fechaChart .line-hit{fill:transparent;cursor:pointer}
-#fechaChart .line-tooltip{position:absolute;z-index:5;display:none;pointer-events:none;max-width:170px;padding:7px 9px;border-radius:7px;background:#173a35;color:#fff;font-size:10px;line-height:1.35;box-shadow:0 4px 12px rgba(23,58,53,.25);white-space:normal;transform:none}
-#fechaChart .line-tooltip.show{display:block}
-#fechaChart .line-tooltip strong{display:block;margin-bottom:2px;font-size:11px}
-@media(max-width:700px){#fechaChart{height:260px;min-height:260px}}
+/* Corrección definitiva de gráficas y tooltips */
+#fechaChart{height:330px;overflow:hidden}
+#fechaChart .fecha-scroll{width:100%;height:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+#fechaChart .line-chart{position:relative;height:310px;min-width:100%}
+#fechaChart svg{display:block;height:100%;max-width:none;overflow:visible}
+.chart{position:relative;overflow:hidden}
+.chart-local-tip{position:absolute;z-index:20;display:none;pointer-events:none;max-width:180px;padding:7px 9px;border-radius:7px;background:#173a35;color:#fff;font-size:10px;line-height:1.35;box-shadow:0 5px 14px rgba(23,58,53,.28);white-space:normal;overflow-wrap:anywhere}
+.chart-local-tip.show{display:block}.chart-local-tip strong{display:block;margin-bottom:2px;font-size:11px}
+.bar-tip{display:none!important}
+.bar-col,.hrow{cursor:pointer}
 </style>
 </head>
 <body>
@@ -159,53 +157,47 @@ function render(d){
   renderBars('semanaChart',(d.porSemana||[]).map(x=>({...x,semana:'S'+x.semana})),'semana',12);
   renderCortes(d.porCorte||[]); updateFilters(d);
 }
-function formatFechaGrafica(value){
-  const s=String(value??'').trim();
-  const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+function formatFechaDMY(value){
+  const s=String(value??'').trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m?`${m[3]}/${m[2]}/${m[1]}`:s;
 }
-function curvaSuave(points){
-  if(!points.length)return '';
-  if(points.length===1)return `M ${points[0][0]} ${points[0][1]}`;
+function pathSuave(points){
+  if(points.length<2)return points.length?`M ${points[0][0]} ${points[0][1]}`:'';
   let d=`M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
-  const tension=.30;
   for(let i=0;i<points.length-1;i++){
-    const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];
-    const c1x=p1[0]+(p2[0]-p0[0])*tension/3,c1y=p1[1]+(p2[1]-p0[1])*tension/3;
-    const c2x=p2[0]-(p3[0]-p1[0])*tension/3,c2y=p2[1]-(p3[1]-p1[1])*tension/3;
-    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
-  }
-  return d;
+    const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)],t=.12;
+    d+=` C ${(p1[0]+(p2[0]-p0[0])*t).toFixed(1)} ${(p1[1]+(p2[1]-p0[1])*t).toFixed(1)}, ${(p2[0]-(p3[0]-p1[0])*t).toFixed(1)} ${(p2[1]-(p3[1]-p1[1])*t).toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  } return d;
+}
+function activarTooltipLocal(el,selector,htmlFn){
+  let tip=el.querySelector('.chart-local-tip');if(!tip){tip=document.createElement('div');tip.className='chart-local-tip';tip.setAttribute('role','status');el.appendChild(tip)}
+  const show=(n,e)=>{tip.innerHTML=htmlFn(n);tip.classList.add('show');const b=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let left=(e?.clientX??b.left+b.width/2)-b.left+10,top=(e?.clientY??b.top+b.height/2)-b.top-th-10;left=Math.max(6,Math.min(left,b.width-tw-6));top=Math.max(6,Math.min(top,b.height-th-6));tip.style.left=left+'px';tip.style.top=top+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.querySelectorAll(selector).forEach(n=>{n.addEventListener('mousemove',e=>show(n,e));n.addEventListener('mouseenter',e=>show(n,e));n.addEventListener('mouseleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
 }
 function renderLineChart(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit).map(x=>({label:formatFechaGrafica(x[labelKey]),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';
-  const W=1000,H=280,p={l:62,r:24,t:16,b:44},plotW=W-p.l-p.r,plotH=H-p.t-p.b;
-  const maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4,yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
-  const x=i=>p.l+(rows.length===1?plotW/2:i*plotW/(rows.length-1));
-  const y=v=>p.t+plotH-(v/yMax)*plotH;
-  const points=rows.map((r,i)=>[x(i),y(r.value)]),line=curvaSuave(points),base=p.t+plotH;
-  const area=line+` L ${points.at(-1)[0].toFixed(1)} ${base} L ${points[0][0].toFixed(1)} ${base} Z`;
-  const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-(yMax/steps)*i,yy=p.t+(plotH/steps)*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join('');
-  const every=Math.max(1,Math.ceil(rows.length/8));
-  const labels=rows.map((r,i)=>(i%every===0||i===rows.length-1)?`<text class="line-axis-label" x="${x(i)}" y="${H-14}" text-anchor="middle">${escapeHtml(r.label)}</text>`:'').join('');
-  const dots=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="3.3"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="12" tabindex="0" data-i="${i}"></circle>`).join('');
-  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".20"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".03"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg><div class="line-tooltip" role="status"></div></div>`;
-  const wrap=el.querySelector('.line-chart'),tip=wrap.querySelector('.line-tooltip'),svg=wrap.querySelector('svg');
-  const show=target=>{const i=Number(target.dataset.i),r=rows[i],box=wrap.getBoundingClientRect(),sb=svg.getBoundingClientRect();tip.innerHTML=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;tip.classList.add('show');const tw=tip.offsetWidth,th=tip.offsetHeight;let left=(x(i)/W)*sb.width+(sb.left-box.left)+10,top=(y(r.value)/H)*sb.height+(sb.top-box.top)-th-10;left=Math.max(6,Math.min(left,box.width-tw-6));top=Math.max(6,Math.min(top,box.height-th-6));tip.style.left=left+'px';tip.style.top=top+'px'};
-  const hide=()=>tip.classList.remove('show');
-  wrap.querySelectorAll('.line-hit').forEach(n=>{n.addEventListener('mouseenter',()=>show(n));n.addEventListener('mouseleave',hide);n.addEventListener('focus',()=>show(n));n.addEventListener('blur',hide)});
+  const el=$(id),rows=items.slice(0,limit).map(x=>({label:formatFechaDMY(x[labelKey]),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return} el.className='chart';
+  const stepX=82,W=Math.max(1000,120+Math.max(0,rows.length-1)*stepX),H=300,p={l:62,r:30,t:18,b:68},plotW=W-p.l-p.r,plotH=H-p.t-p.b;
+  const maxValue=Math.max(1,...rows.map(r=>r.value)),steps=4,yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
+  const x=i=>p.l+(rows.length===1?plotW/2:i*plotW/(rows.length-1)),y=v=>p.t+plotH-(v/yMax)*plotH,points=rows.map((r,i)=>[x(i),y(r.value)]),line=pathSuave(points),base=p.t+plotH,area=line+` L ${points.at(-1)[0]} ${base} L ${points[0][0]} ${base} Z`;
+  const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-yMax/steps*i,yy=p.t+plotH/steps*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join('');
+  const labels=rows.map((r,i)=>`<text class="line-axis-label" x="${x(i)}" y="${H-18}" text-anchor="end" transform="rotate(-35 ${x(i)} ${H-18})">${escapeHtml(r.label)}</text>`).join('');
+  const pts=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="3.5"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="13" tabindex="0" data-i="${i}"></circle>`).join('');
+  el.innerHTML=`<div class="fecha-scroll"><div class="line-chart" style="width:${W}px"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".22"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".03"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${pts}${labels}</svg></div></div>`;
+  activarTooltipLocal(el,'.line-hit',n=>{const r=rows[Number(n.dataset.i)];return `<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`});
 }
 function renderBars(id,items,labelKey,limit){
-  const el=$(id), rows=items.slice(0,limit), max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart'; el.innerHTML='<div class="bar-chart">'+rows.map(x=>{const value=Number(x.piezas)||0;const h=Math.max(2,(value/max)*100);const label=escapeHtml(String(x[labelKey]??''));return `<div class="bar-col"><div class="bar" style="height:${h}%"><span class="bar-tip">${nf.format(value)} piezas · ${money.format(x.costo||0)}</span></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';
+  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return} el.className='chart';
+  el.innerHTML='<div class="bar-chart">'+rows.map((x,i)=>{const value=Number(x.piezas)||0,h=Math.max(2,value/max*100),label=escapeHtml(String(x[labelKey]??''));return `<div class="bar-col" tabindex="0" data-i="${i}"><div class="bar" style="height:${h}%"></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';
+  activarTooltipLocal(el,'.bar-col',n=>{const x=rows[Number(n.dataset.i)];return `<strong>${escapeHtml(String(x[labelKey]??''))}</strong>${nf.format(Number(x.piezas)||0)} piezas<br>${money.format(x.costo||0)}`});
 }
 function renderHbars(id,items,labelKey,limit){
   const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';el.innerHTML='<div class="hbars">'+rows.map(x=>`<div class="hrow"><div class="hlabel" title="${escapeHtml(String(x[labelKey]))}">${escapeHtml(String(x[labelKey]))}</div><div class="htrack"><div class="hfill" style="width:${((Number(x.piezas)||0)/max)*100}%"></div></div><div class="hvalue">${nf.format(x.piezas||0)}</div></div>`).join('')+'</div>';
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return} el.className='chart';
+  el.innerHTML='<div class="hbars">'+rows.map((x,i)=>`<div class="hrow" tabindex="0" data-i="${i}"><div class="hlabel">${escapeHtml(String(x[labelKey]??''))}</div><div class="htrack"><div class="hfill" style="width:${(Number(x.piezas)||0)/max*100}%"></div></div><div class="hvalue">${nf.format(Number(x.piezas)||0)}</div></div>`).join('')+'</div>';
+  activarTooltipLocal(el,'.hrow',n=>{const x=rows[Number(n.dataset.i)];return `<strong>${escapeHtml(String(x[labelKey]??''))}</strong>${nf.format(Number(x.piezas)||0)} piezas<br>${money.format(x.costo||0)}`});
 }
 function renderCortes(items){$('cortesBody').innerHTML=items.slice(0,15).map(x=>`<tr><td>${escapeHtml(String(x.corte||''))}</td><td>${nf.format(x.piezas||0)}</td><td>${nf.format(x.registros||0)}</td><td>${money.format(x.costo||0)}</td></tr>`).join('')||'<tr><td colspan="4">Sin datos</td></tr>'}
 function updateFilters(d){
