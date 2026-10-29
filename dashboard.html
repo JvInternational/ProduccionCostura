@@ -69,11 +69,34 @@
 .chart-tooltip,.chart-local-tip,.line-tooltip{max-width:min(180px,calc(100% - 16px))!important;box-sizing:border-box!important}
 @media(max-width:640px){#fechaChart{height:310px}.bi-tooltip{font-size:10px}.line-axis-label{font-size:9px}}
 
-/* Tooltips confinados: solo gráficas secundarias */
-.chart{position:relative;overflow:hidden}
-.secondary-tip{position:absolute;z-index:100;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#123b36;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}
-.secondary-tip.show{display:block}.secondary-tip strong{display:block;margin-bottom:2px;font-size:12px}.secondary-tip small{color:#bfe2dc;font-size:10px}
-.bar-tip{display:none!important}.bar-col,.hrow{cursor:pointer}
+/* FASE 1 — Jerarquía ejecutiva: KPIs, tarjetas y tabla */
+:root{--f1-brand:#08776b;--f1-ink:#102a2e;--f1-muted:#6b7f83;--f1-border:#dde8e6;--f1-surface:#ffffff;--f1-bg:#f3f7f6;--f1-shadow:0 8px 24px rgba(15,47,43,.07);--f1-shadow-hover:0 12px 30px rgba(15,47,43,.11)}
+body{background:var(--f1-bg)!important;color:var(--f1-ink)}
+/* KPI ejecutivos */
+.kpis{gap:14px!important;margin:14px 0!important}
+.kpis>.panel{position:relative;overflow:hidden;min-height:92px;padding:17px 18px 15px!important;border:1px solid var(--f1-border)!important;border-top:3px solid var(--f1-brand)!important;border-radius:12px!important;background:var(--f1-surface)!important;box-shadow:var(--f1-shadow)!important;transition:transform .18s ease,box-shadow .18s ease}
+.kpis>.panel:hover{transform:translateY(-2px);box-shadow:var(--f1-shadow-hover)!important}
+.kpis .label{margin-bottom:7px!important;color:var(--f1-muted)!important;font-size:10px!important;font-weight:800!important;letter-spacing:.06em!important;text-transform:uppercase}
+.kpis .value{color:var(--f1-ink)!important;font-size:clamp(22px,2.1vw,32px)!important;line-height:1!important;font-weight:800!important;letter-spacing:-.035em!important;font-variant-numeric:tabular-nums}
+.kpis .sub{margin-top:7px!important;color:#819296!important;font-size:10px!important;line-height:1.25!important}
+/* Tarjetas ejecutivas: solo marco, encabezado y jerarquía; no altera el área de las gráficas */
+.grid>.panel,.wide.panel{border:1px solid var(--f1-border)!important;border-radius:12px!important;background:var(--f1-surface)!important;box-shadow:var(--f1-shadow)!important}
+.card-head{min-height:48px;padding:15px 18px 11px!important;border-bottom:1px solid #edf3f2!important;background:linear-gradient(180deg,#fff 0%,#fcfefd 100%)}
+.card-head strong,.card-head h2,.card-head h3{color:var(--f1-ink)!important;font-size:14px!important;font-weight:800!important;letter-spacing:-.01em}
+.card-head span{color:var(--f1-muted)!important;font-size:10px!important;font-weight:600}
+/* Tabla ejecutiva */
+.table-wrap{margin:0 12px 14px!important;border:1px solid #e6eeec!important;border-radius:9px!important;background:#fff;overflow:auto!important;scrollbar-width:thin;scrollbar-color:#b8cbc7 transparent}
+table{width:100%;border-collapse:separate!important;border-spacing:0!important;font-variant-numeric:tabular-nums}
+thead th{position:sticky!important;top:0;z-index:2;padding:10px 11px!important;background:#f1f7f5!important;color:#526b70!important;border-bottom:1px solid #dce8e5!important;font-size:9px!important;font-weight:800!important;letter-spacing:.055em!important;text-transform:uppercase}
+tbody td{padding:9px 11px!important;color:#334b50!important;border-bottom:1px solid #edf2f1!important;font-size:10px!important;line-height:1.35}
+tbody tr:nth-child(even){background:#fbfdfc}
+tbody tr:hover{background:#eef7f5!important}
+tbody tr:last-child td{border-bottom:0!important}
+td:nth-child(n+2),th:nth-child(n+2){text-align:right}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.kpis>.panel{min-height:86px}.grid{gap:14px!important}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr!important}.kpis>.panel{min-height:80px}.kpis .value{font-size:25px!important}.card-head{padding:13px 14px 10px!important}.table-wrap{margin:0 8px 10px!important}}
+
+.chart{position:relative;overflow:hidden}.secondary-tip{position:absolute;z-index:100;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#123b36;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}.secondary-tip.show{display:block}.secondary-tip strong{display:block;margin-bottom:2px;font-size:12px}.secondary-tip small{color:#bfe2dc;font-size:10px}.bar-tip{display:none!important}.bar-col,.hrow{cursor:pointer}
 </style>
 </head>
 <body>
@@ -201,26 +224,12 @@ function renderLineChart(id,items,labelKey,limit){
   draw();if(window.ResizeObserver)new ResizeObserver(draw).observe(wrap);else window.addEventListener('resize',draw,{passive:true});
 }
 function activarTooltipSecundario(el,selector,rows,labelKey){
-  let tip=el.querySelector('.secondary-tip');
-  if(!tip){tip=document.createElement('div');tip.className='secondary-tip';tip.setAttribute('role','status');el.appendChild(tip)}
-  const show=(node,e)=>{const d=rows[Number(node.dataset.i)];if(!d)return;tip.innerHTML=`<strong>${escapeHtml(String(d[labelKey]??''))}</strong>${nf.format(Number(d.piezas)||0)} piezas<br><small>${money.format(Number(d.costo)||0)}</small>`;tip.classList.add('show');const b=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let left=(e?.clientX??b.left+b.width/2)-b.left+12,top=(e?.clientY??b.top+b.height/2)-b.top-th-12;left=Math.max(8,Math.min(left,b.width-tw-8));top=Math.max(8,Math.min(top,b.height-th-8));tip.style.left=left+'px';tip.style.top=top+'px'};
-  const hide=()=>tip.classList.remove('show');
-  el.querySelectorAll(selector).forEach(n=>{n.addEventListener('pointerenter',e=>show(n,e));n.addEventListener('pointermove',e=>show(n,e));n.addEventListener('pointerleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
+ let tip=el.querySelector('.secondary-tip');if(!tip){tip=document.createElement('div');tip.className='secondary-tip';tip.setAttribute('role','status');el.appendChild(tip)}
+ const show=(node,e)=>{const d=rows[Number(node.dataset.i)];if(!d)return;tip.innerHTML=`<strong>${escapeHtml(String(d[labelKey]??''))}</strong>${nf.format(Number(d.piezas)||0)} piezas<br><small>${money.format(Number(d.costo)||0)}</small>`;tip.classList.add('show');const b=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let left=(e?.clientX??b.left+b.width/2)-b.left+12,top=(e?.clientY??b.top+b.height/2)-b.top-th-12;left=Math.max(8,Math.min(left,b.width-tw-8));top=Math.max(8,Math.min(top,b.height-th-8));tip.style.left=left+'px';tip.style.top=top+'px'};
+ const hide=()=>tip.classList.remove('show');el.querySelectorAll(selector).forEach(n=>{n.addEventListener('pointerenter',e=>show(n,e));n.addEventListener('pointermove',e=>show(n,e));n.addEventListener('pointerleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
 }
-function renderBars(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';
-  el.innerHTML='<div class="bar-chart">'+rows.map((d,i)=>{const value=Number(d.piezas)||0,h=Math.max(2,value/max*100),label=escapeHtml(String(d[labelKey]??''));return `<div class="bar-col" tabindex="0" data-i="${i}" aria-label="${label}: ${nf.format(value)} piezas"><div class="bar" style="height:${h}%"></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';
-  activarTooltipSecundario(el,'.bar-col',rows,labelKey);
-}
-function renderHbars(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';
-  el.innerHTML='<div class="hbars">'+rows.map((d,i)=>`<div class="hrow" tabindex="0" data-i="${i}"><div class="hlabel" title="${escapeHtml(String(d[labelKey]??''))}">${escapeHtml(String(d[labelKey]??''))}</div><div class="htrack"><div class="hfill" style="width:${((Number(d.piezas)||0)/max)*100}%"></div></div><div class="hvalue">${nf.format(Number(d.piezas)||0)}</div></div>`).join('')+'</div>';
-  activarTooltipSecundario(el,'.hrow',rows,labelKey);
-}
+function renderBars(id,items,labelKey,limit){const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}el.className='chart';el.innerHTML='<div class="bar-chart">'+rows.map((d,i)=>{const value=Number(d.piezas)||0,h=Math.max(2,value/max*100),label=escapeHtml(String(d[labelKey]??''));return `<div class="bar-col" tabindex="0" data-i="${i}"><div class="bar" style="height:${h}%"></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';activarTooltipSecundario(el,'.bar-col',rows,labelKey)}
+function renderHbars(id,items,labelKey,limit){const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}el.className='chart';el.innerHTML='<div class="hbars">'+rows.map((d,i)=>`<div class="hrow" tabindex="0" data-i="${i}"><div class="hlabel" title="${escapeHtml(String(d[labelKey]??''))}">${escapeHtml(String(d[labelKey]??''))}</div><div class="htrack"><div class="hfill" style="width:${((Number(d.piezas)||0)/max)*100}%"></div></div><div class="hvalue">${nf.format(Number(d.piezas)||0)}</div></div>`).join('')+'</div>';activarTooltipSecundario(el,'.hrow',rows,labelKey)}
 function renderCortes(items){$('cortesBody').innerHTML=items.slice(0,15).map(x=>`<tr><td>${escapeHtml(String(x.corte||''))}</td><td>${nf.format(x.piezas||0)}</td><td>${nf.format(x.registros||0)}</td><td>${money.format(x.costo||0)}</td></tr>`).join('')||'<tr><td colspan="4">Sin datos</td></tr>'}
 function updateFilters(d){
   fillSelect('personal',(d.porOperador||[]).map(x=>x.operador));fillSelect('maquina',(d.porMaquina||[]).map(x=>x.maquina));fillSelect('estilo',(d.porEstilo||[]).map(x=>x.estilo));fillSelect('operacion',(d.porOperacion||[]).map(x=>x.operacion));
