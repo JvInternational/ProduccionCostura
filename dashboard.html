@@ -58,21 +58,22 @@
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static}.side-brand{display:inline-block;margin:0 10px 8px 0}.side-group{display:none}.side-nav{display:flex;gap:4px;overflow:auto}.side-nav a{white-space:nowrap}main.content{padding:14px}}
     @media(max-width:520px){.page-head{display:block}.head-status{margin-top:8px}}
 
-/* Sistema visual ejecutivo BI */
-:root{--brand:#08776b;--brand2:#13a89a;--ink:#102a2e;--muted:#64748b;--line:#dbe5e7;--surface:#fff;--bg:#f3f7f6;--shadow:0 8px 24px rgba(15,47,43,.08)}
-body{background:var(--bg)!important;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
-main,.main{max-width:1600px;margin:auto}.panel,.kpi{background:var(--surface)!important;border:1px solid #dfe9e7!important;border-radius:12px!important;box-shadow:var(--shadow)!important}
-.filters{padding:18px!important}.filters input,.filters select{min-height:40px;border-radius:8px!important;border-color:#d7e3e1!important;background:#fff!important}.filters button{min-height:40px;border-radius:8px!important;font-weight:700!important}
-.kpis{gap:14px!important}.kpi{padding:16px 18px!important;border-top:3px solid var(--brand)!important}.kpi-value{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.charts{gap:16px!important}.chart-card{overflow:hidden;min-width:0}.card-head{padding:16px 18px 10px!important;border-bottom:1px solid #edf2f1}.card-head h3,.card-head strong{font-size:14px!important;letter-spacing:-.01em}.chart{position:relative;overflow:hidden;min-width:0;padding:10px 12px 14px!important}
-.bar-chart{gap:8px!important}.bar{border-radius:7px 7px 2px 2px!important;background:linear-gradient(180deg,var(--brand2),var(--brand))!important;transition:filter .18s,transform .18s}.bar-col:hover .bar,.bar-col:focus-within .bar{filter:brightness(.94);transform:translateY(-2px)}
-.hfill{background:linear-gradient(90deg,var(--brand),var(--brand2))!important;border-radius:999px}.htrack{border-radius:999px!important;background:#e8f2f0!important}.hrow{border-radius:8px;padding:7px 5px!important}.hrow:hover,.hrow:focus{background:#f1f8f7;outline:none}
-.line-path{stroke:var(--brand)!important;stroke-width:2.5!important;vector-effect:non-scaling-stroke}.line-point{fill:var(--brand)!important;stroke:#fff!important;stroke-width:1.5!important;vector-effect:non-scaling-stroke}.line-axis-label{fill:var(--muted)!important;font-size:10px!important}
-.exec-tip{position:absolute;z-index:100;display:none;pointer-events:none;box-sizing:border-box;max-width:min(210px,calc(100% - 16px));padding:9px 11px;border-radius:9px;background:#123b36;color:#fff;font-size:11px;line-height:1.45;box-shadow:0 10px 28px rgba(15,47,43,.3);white-space:normal;overflow-wrap:anywhere}.exec-tip.show{display:block}.exec-tip strong{display:block;font-size:12px;margin-bottom:3px}.exec-tip .muted{color:#bfe2dc}
-.bar-tip{display:none!important}
-.table-wrap{overflow:auto;border-radius:8px}table{width:100%;border-collapse:collapse}th{position:sticky;top:0;background:#f4f8f7!important;color:#465e62!important;font-size:10px!important;text-transform:uppercase;letter-spacing:.04em}th,td{padding:9px 10px!important;border-bottom:1px solid #edf2f1!important}tbody tr:hover{background:#f2f8f7}
-@media(max-width:900px){.charts{grid-template-columns:1fr!important}.chart-card.wide{grid-column:auto!important}.chart{min-height:280px}.kpis{grid-template-columns:repeat(2,1fr)!important}}
-@media(max-width:560px){.kpis{grid-template-columns:1fr!important}.filters{padding:14px!important}.chart{padding:8px!important}.card-head{padding:14px!important}.bar-label,.line-axis-label{font-size:9px!important}}
+/* BI executive chart system */
+.chart-card{overflow:hidden}
+#fechaChart{position:relative;height:clamp(280px,32vw,390px);min-height:280px;overflow:hidden}
+#fechaChart .bi-wrap{position:relative;width:100%;height:100%;min-width:0}
+#fechaChart canvas{display:block;width:100%;height:100%}
+.bi-tooltip{position:absolute;z-index:50;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#0f2f2b;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}
+.bi-tooltip.show{display:block}.bi-tooltip strong{display:block;font-size:12px;margin-bottom:2px}
+.chart{position:relative;overflow:hidden;contain:paint}
+.chart-tooltip,.chart-local-tip,.line-tooltip{max-width:min(180px,calc(100% - 16px))!important;box-sizing:border-box!important}
+@media(max-width:640px){#fechaChart{height:310px}.bi-tooltip{font-size:10px}.line-axis-label{font-size:9px}}
+
+/* Tooltips confinados: solo gráficas secundarias */
+.chart{position:relative;overflow:hidden}
+.secondary-tip{position:absolute;z-index:100;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#123b36;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}
+.secondary-tip.show{display:block}.secondary-tip strong{display:block;margin-bottom:2px;font-size:12px}.secondary-tip small{color:#bfe2dc;font-size:10px}
+.bar-tip{display:none!important}.bar-col,.hrow{cursor:pointer}
 </style>
 </head>
 <body>
@@ -167,43 +168,58 @@ function formatFechaDMY(value){
   const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
 }
-function fechaEjecutiva(v){const s=String(v??'');const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;}
-function renderLineChart(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit).map(x=>({label:fechaEjecutiva(x[labelKey]),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';
-  const W=1000,H=300,p={l:58,r:16,t:18,b:52},plotW=W-p.l-p.r,plotH=H-p.t-p.b,maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4;
-  const yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
-  const x=i=>p.l+(rows.length===1?plotW/2:(i*plotW/(rows.length-1)));
-  const y=v=>p.t+plotH-(v/yMax)*plotH;
-  const points=rows.map((r,i)=>[x(i),y(r.value)]);
-  const line=points.map((pt,i)=>(i?'L':'M')+pt[0].toFixed(1)+' '+pt[1].toFixed(1)).join(' ');
-  const area=line+' L '+points[points.length-1][0].toFixed(1)+' '+(p.t+plotH)+' L '+points[0][0].toFixed(1)+' '+(p.t+plotH)+' Z';
-  const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-(yMax/steps)*i,yy=p.t+(plotH/steps)*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join('');
-  const every=Math.max(1,Math.ceil(rows.length/10));
-  const labels=rows.map((r,i)=>i%every===0||i===rows.length-1?`<text class="line-axis-label" x="${x(i)}" y="${H-18}" text-anchor="end" transform="rotate(-28 ${x(i)} ${H-18})">${escapeHtml(r.label)}</text>`:'').join('');
-  const dots=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="4" tabindex="0" data-i="${i}"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="11" data-i="${i}"></circle>`).join('');
-  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".24"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".04"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg><div class="line-tooltip" role="status"></div></div>`;
-  const wrap=el.querySelector('.line-chart'),tip=wrap.querySelector('.line-tooltip');
-  const show=(target)=>{const i=Number(target.dataset.i),r=rows[i],box=wrap.getBoundingClientRect(),svg=wrap.querySelector('svg').getBoundingClientRect();tip.innerHTML=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;tip.style.left=((x(i)/W)*svg.width+(svg.left-box.left))+'px';tip.style.top=((y(r.value)/H)*svg.height+(svg.top-box.top))+'px';tip.classList.add('show')};
-  const hide=()=>tip.classList.remove('show');
-  wrap.querySelectorAll('[data-i]').forEach(n=>{n.addEventListener('mouseenter',()=>show(n));n.addEventListener('mouseleave',hide);n.addEventListener('focus',()=>show(n));n.addEventListener('blur',hide)});
+function fechaDMY(v){
+  const s=String(v??'').trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;
 }
-function activarTooltipEjecutivo(el,selector,rows,labelKey){
- let tip=el.querySelector('.exec-tip');if(!tip){tip=document.createElement('div');tip.className='exec-tip';tip.setAttribute('role','status');el.appendChild(tip)}
- const show=(n,e)=>{const d=rows[Number(n.dataset.i)],label=String(d?.[labelKey]??'');tip.innerHTML=`<strong>${escapeHtml(label)}</strong><span>${nf.format(Number(d?.piezas)||0)} piezas</span><br><span class="muted">${money.format(Number(d?.costo)||0)}</span>`;tip.classList.add('show');const b=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let x=(e?.clientX??b.left+b.width/2)-b.left+12,y=(e?.clientY??b.top+b.height/2)-b.top-th-12;x=Math.max(8,Math.min(x,b.width-tw-8));y=Math.max(8,Math.min(y,b.height-th-8));tip.style.left=x+'px';tip.style.top=y+'px'};
- const hide=()=>tip.classList.remove('show');
- el.querySelectorAll(selector).forEach(n=>{n.addEventListener('pointerenter',e=>show(n,e));n.addEventListener('pointermove',e=>show(n,e));n.addEventListener('pointerleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
+function renderLineChart(id,items,labelKey,limit){
+  const host=$(id),rows=items.slice(0,limit).map(d=>({label:fechaDMY(d[labelKey]),value:Number(d.piezas)||0,costo:Number(d.costo)||0}));
+  if(!rows.length){host.innerHTML='<div class="loading">Sin datos</div>';return}
+  host.className='chart';host.innerHTML='<div class="bi-wrap"><canvas aria-label="Producción por fecha" role="img"></canvas><div class="bi-tooltip" role="status"></div></div>';
+  const wrap=host.querySelector('.bi-wrap'),canvas=wrap.querySelector('canvas'),tip=wrap.querySelector('.bi-tooltip'),ctx=canvas.getContext('2d');
+  let hit=[];
+  const draw=()=>{
+    const rect=wrap.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),W=Math.max(300,Math.round(rect.width)),H=Math.max(260,Math.round(rect.height));
+    canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+    const mobile=W<560,p={l:mobile?48:62,r:18,t:18,b:mobile?64:58},pw=W-p.l-p.r,ph=H-p.t-p.b;
+    const max=Math.max(1,...rows.map(r=>r.value)),steps=4,rough=max/steps,mag=10**Math.floor(Math.log10(rough)),nice=[1,2,2.5,5,10].find(n=>n*mag>=rough)||10,yMax=nice*mag*steps;
+    ctx.font=(mobile?'9px':'10px')+' system-ui,-apple-system,Segoe UI,sans-serif';ctx.textBaseline='middle';ctx.fillStyle='#64748b';ctx.strokeStyle='#dbe3ec';ctx.lineWidth=1;
+    for(let i=0;i<=steps;i++){const yy=p.t+ph*i/steps,v=yMax-yMax*i/steps;ctx.beginPath();ctx.moveTo(p.l,yy+.5);ctx.lineTo(W-p.r,yy+.5);ctx.stroke();ctx.textAlign='right';ctx.fillText(nf.format(v),p.l-9,yy)}
+    const x=i=>rows.length===1?p.l+pw/2:p.l+pw*i/(rows.length-1),y=v=>p.t+ph-(v/yMax)*ph;
+    const pts=rows.map((r,i)=>({x:x(i),y:y(r.value),...r}));hit=pts;
+    const path=new Path2D();path.moveTo(pts[0].x,pts[0].y);
+    for(let i=0;i<pts.length-1;i++){const a=pts[Math.max(0,i-1)],b=pts[i],c=pts[i+1],d=pts[Math.min(pts.length-1,i+2)],t=.14;path.bezierCurveTo(b.x+(c.x-a.x)*t,b.y+(c.y-a.y)*t,c.x-(d.x-b.x)*t,c.y-(d.y-b.y)*t,c.x,c.y)}
+    const area=new Path2D(path);area.lineTo(pts.at(-1).x,p.t+ph);area.lineTo(pts[0].x,p.t+ph);area.closePath();
+    const grad=ctx.createLinearGradient(0,p.t,0,p.t+ph);grad.addColorStop(0,'rgba(8,119,107,.24)');grad.addColorStop(1,'rgba(8,119,107,.03)');ctx.fillStyle=grad;ctx.fill(area);
+    ctx.strokeStyle='#08776b';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(path);
+    pts.forEach(q=>{ctx.beginPath();ctx.arc(q.x,q.y,3.5,0,Math.PI*2);ctx.fillStyle='#08776b';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle='#fff';ctx.stroke()});
+    const minLabel=mobile?76:88,maxLabels=Math.max(2,Math.floor(pw/minLabel)),every=Math.max(1,Math.ceil(rows.length/maxLabels));ctx.fillStyle='#64748b';ctx.font=(mobile?'9px':'10px')+' system-ui,-apple-system,Segoe UI,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+    pts.forEach((q,i)=>{if(i%every===0||i===pts.length-1){const label=mobile?q.label.slice(0,5):q.label;ctx.fillText(label,q.x,H-p.b+14)}});
+  };
+  const show=(q,clientX,clientY)=>{tip.innerHTML=`<strong>${escapeHtml(q.label)}</strong>${nf.format(q.value)} piezas<br>${money.format(q.costo)}`;tip.classList.add('show');const b=wrap.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let l=clientX-b.left+12,t=clientY-b.top-th-12;l=Math.max(8,Math.min(l,b.width-tw-8));t=Math.max(8,Math.min(t,b.height-th-8));tip.style.left=l+'px';tip.style.top=t+'px'};
+  canvas.addEventListener('pointermove',e=>{if(!hit.length)return;const b=canvas.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top;let q=hit.reduce((a,c)=>Math.hypot(c.x-mx,c.y-my)<Math.hypot(a.x-mx,a.y-my)?c:a);Math.hypot(q.x-mx,q.y-my)<24?show(q,e.clientX,e.clientY):tip.classList.remove('show')});
+  canvas.addEventListener('pointerleave',()=>tip.classList.remove('show'));
+  draw();if(window.ResizeObserver)new ResizeObserver(draw).observe(wrap);else window.addEventListener('resize',draw,{passive:true});
+}
+function activarTooltipSecundario(el,selector,rows,labelKey){
+  let tip=el.querySelector('.secondary-tip');
+  if(!tip){tip=document.createElement('div');tip.className='secondary-tip';tip.setAttribute('role','status');el.appendChild(tip)}
+  const show=(node,e)=>{const d=rows[Number(node.dataset.i)];if(!d)return;tip.innerHTML=`<strong>${escapeHtml(String(d[labelKey]??''))}</strong>${nf.format(Number(d.piezas)||0)} piezas<br><small>${money.format(Number(d.costo)||0)}</small>`;tip.classList.add('show');const b=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let left=(e?.clientX??b.left+b.width/2)-b.left+12,top=(e?.clientY??b.top+b.height/2)-b.top-th-12;left=Math.max(8,Math.min(left,b.width-tw-8));top=Math.max(8,Math.min(top,b.height-th-8));tip.style.left=left+'px';tip.style.top=top+'px'};
+  const hide=()=>tip.classList.remove('show');
+  el.querySelectorAll(selector).forEach(n=>{n.addEventListener('pointerenter',e=>show(n,e));n.addEventListener('pointermove',e=>show(n,e));n.addEventListener('pointerleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
 }
 function renderBars(id,items,labelKey,limit){
- const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}el.className='chart';
- el.innerHTML='<div class="bar-chart">'+rows.map((d,i)=>{const v=Number(d.piezas)||0;return `<div class="bar-col" tabindex="0" data-i="${i}" aria-label="${escapeHtml(String(d[labelKey]??''))}: ${nf.format(v)} piezas"><div class="bar" style="height:${Math.max(2,v/max*100)}%"></div><span class="bar-label">${escapeHtml(String(d[labelKey]??''))}</span></div>`}).join('')+'</div>';
- activarTooltipEjecutivo(el,'.bar-col',rows,labelKey);
+  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
+  el.className='chart';
+  el.innerHTML='<div class="bar-chart">'+rows.map((d,i)=>{const value=Number(d.piezas)||0,h=Math.max(2,value/max*100),label=escapeHtml(String(d[labelKey]??''));return `<div class="bar-col" tabindex="0" data-i="${i}" aria-label="${label}: ${nf.format(value)} piezas"><div class="bar" style="height:${h}%"></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';
+  activarTooltipSecundario(el,'.bar-col',rows,labelKey);
 }
 function renderHbars(id,items,labelKey,limit){
- const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}el.className='chart';
- el.innerHTML='<div class="hbars">'+rows.map((d,i)=>`<div class="hrow" tabindex="0" data-i="${i}"><div class="hlabel">${escapeHtml(String(d[labelKey]??''))}</div><div class="htrack"><div class="hfill" style="width:${(Number(d.piezas)||0)/max*100}%"></div></div><div class="hvalue">${nf.format(Number(d.piezas)||0)}</div></div>`).join('')+'</div>';
- activarTooltipEjecutivo(el,'.hrow',rows,labelKey);
+  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
+  el.className='chart';
+  el.innerHTML='<div class="hbars">'+rows.map((d,i)=>`<div class="hrow" tabindex="0" data-i="${i}"><div class="hlabel" title="${escapeHtml(String(d[labelKey]??''))}">${escapeHtml(String(d[labelKey]??''))}</div><div class="htrack"><div class="hfill" style="width:${((Number(d.piezas)||0)/max)*100}%"></div></div><div class="hvalue">${nf.format(Number(d.piezas)||0)}</div></div>`).join('')+'</div>';
+  activarTooltipSecundario(el,'.hrow',rows,labelKey);
 }
 function renderCortes(items){$('cortesBody').innerHTML=items.slice(0,15).map(x=>`<tr><td>${escapeHtml(String(x.corte||''))}</td><td>${nf.format(x.piezas||0)}</td><td>${nf.format(x.registros||0)}</td><td>${money.format(x.costo||0)}</td></tr>`).join('')||'<tr><td colspan="4">Sin datos</td></tr>'}
 function updateFilters(d){
@@ -219,6 +235,11 @@ function escapeHtml(value){return value.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':
   const headDot=document.getElementById('statusDotHead'),headText=document.getElementById('statusTextHead');
   const sourceDot=document.getElementById('statusDot'),sourceText=document.getElementById('statusText');
   if(sourceText&&headText){const syncStatus=()=>{headText.textContent=sourceText.textContent;headDot.className=sourceDot.className};new MutationObserver(syncStatus).observe(sourceText,{childList:true,subtree:true,characterData:true});new MutationObserver(syncStatus).observe(sourceDot,{attributes:true,attributeFilter:['class']});syncStatus()}
+
+function confinarTooltips(){
+ document.querySelectorAll('.chart').forEach(card=>{card.style.position='relative';card.style.overflow='hidden'});
+}
+window.addEventListener('pointermove',e=>{const card=e.target.closest&&e.target.closest('.chart');if(!card)return;card.querySelectorAll('.chart-tooltip,.chart-local-tip,.line-tooltip,.bar-tip').forEach(t=>{if(getComputedStyle(t).display==='none')return;const b=card.getBoundingClientRect(),r=t.getBoundingClientRect();let l=r.left-b.left,top=r.top-b.top;l=Math.max(6,Math.min(l,b.width-r.width-6));top=Math.max(6,Math.min(top,b.height-r.height-6));t.style.left=l+'px';t.style.top=top+'px';t.style.transform='none'})},true);
 </script>
 </body>
 </html>
