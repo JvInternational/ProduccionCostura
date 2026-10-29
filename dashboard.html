@@ -57,6 +57,12 @@
     .charts{gap:14px}.chart-card{border-radius:10px;padding:16px}
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static}.side-brand{display:inline-block;margin:0 10px 8px 0}.side-group{display:none}.side-nav{display:flex;gap:4px;overflow:auto}.side-nav a{white-space:nowrap}main.content{padding:14px}}
     @media(max-width:520px){.page-head{display:block}.head-status{margin-top:8px}}
+
+/* Tooltip corporativo unificado */
+.chart,.line-chart,.bar-chart,.hbars{position:relative}
+.chart-tooltip{position:absolute;z-index:20;display:none;pointer-events:none;max-width:190px;padding:7px 9px;border-radius:7px;background:#173a35;color:#fff;font-size:10px;line-height:1.35;box-shadow:0 5px 14px rgba(23,58,53,.28);white-space:normal;overflow-wrap:anywhere}
+.chart-tooltip.show{display:block}.chart-tooltip strong{display:block;margin-bottom:2px;font-size:11px}.bar-tip{display:none!important}
+.line-path{fill:none;stroke:#08776b;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}.line-point{fill:#08776b;stroke:#fff;stroke-width:1.7}.line-point:hover,.line-point:focus{r:5}.line-hit{fill:transparent;cursor:pointer}.line-area{fill:url(#lineAreaGradient)}
 </style>
 </head>
 <body>
@@ -146,36 +152,41 @@ function render(d){
   renderBars('semanaChart',(d.porSemana||[]).map(x=>({...x,semana:'S'+x.semana})),'semana',12);
   renderCortes(d.porCorte||[]); updateFilters(d);
 }
-function renderLineChart(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit).map(x=>({label:String(x[labelKey]??''),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';
-  const W=1000,H=300,p={l:58,r:16,t:18,b:52},plotW=W-p.l-p.r,plotH=H-p.t-p.b,maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4;
-  const yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
-  const x=i=>p.l+(rows.length===1?plotW/2:(i*plotW/(rows.length-1)));
-  const y=v=>p.t+plotH-(v/yMax)*plotH;
-  const points=rows.map((r,i)=>[x(i),y(r.value)]);
-  const line=points.map((pt,i)=>(i?'L':'M')+pt[0].toFixed(1)+' '+pt[1].toFixed(1)).join(' ');
-  const area=line+' L '+points[points.length-1][0].toFixed(1)+' '+(p.t+plotH)+' L '+points[0][0].toFixed(1)+' '+(p.t+plotH)+' Z';
-  const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-(yMax/steps)*i,yy=p.t+(plotH/steps)*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join('');
-  const every=Math.max(1,Math.ceil(rows.length/10));
-  const labels=rows.map((r,i)=>i%every===0||i===rows.length-1?`<text class="line-axis-label" x="${x(i)}" y="${H-18}" text-anchor="end" transform="rotate(-28 ${x(i)} ${H-18})">${escapeHtml(r.label)}</text>`:'').join('');
-  const dots=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="4" tabindex="0" data-i="${i}"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="11" data-i="${i}"></circle>`).join('');
-  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".24"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".04"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg><div class="line-tooltip" role="status"></div></div>`;
-  const wrap=el.querySelector('.line-chart'),tip=wrap.querySelector('.line-tooltip');
-  const show=(target)=>{const i=Number(target.dataset.i),r=rows[i],box=wrap.getBoundingClientRect(),svg=wrap.querySelector('svg').getBoundingClientRect();tip.innerHTML=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;tip.style.left=((x(i)/W)*svg.width+(svg.left-box.left))+'px';tip.style.top=((y(r.value)/H)*svg.height+(svg.top-box.top))+'px';tip.classList.add('show')};
+function formatDateDMY(value){
+  const s=String(value||'').trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?`${m[3]}/${m[2]}/${m[1]}`:s;
+}
+function smoothPath(points){
+  if(points.length<2)return points.length?`M ${points[0][0]} ${points[0][1]}`:'';
+  let d=`M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
+  for(let i=0;i<points.length-1;i++){
+    const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)],t=.16;
+    const c1=[p1[0]+(p2[0]-p0[0])*t,p1[1]+(p2[1]-p0[1])*t],c2=[p2[0]-(p3[0]-p1[0])*t,p2[1]-(p3[1]-p1[1])*t];
+    d+=` C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  } return d;
+}
+function attachChartTooltips(container){
+  let tip=container.querySelector('.chart-tooltip');if(!tip){tip=document.createElement('div');tip.className='chart-tooltip';tip.setAttribute('role','status');container.appendChild(tip)}
+  const show=(node,e)=>{tip.innerHTML=node.dataset.tip||'';tip.classList.add('show');const box=container.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let left=(e?.clientX??(box.left+box.width/2))-box.left+10,top=(e?.clientY??box.top)-box.top-th-10;left=Math.max(6,Math.min(left,box.width-tw-6));top=Math.max(6,Math.min(top,box.height-th-6));tip.style.left=left+'px';tip.style.top=top+'px'};
   const hide=()=>tip.classList.remove('show');
-  wrap.querySelectorAll('[data-i]').forEach(n=>{n.addEventListener('mouseenter',()=>show(n));n.addEventListener('mouseleave',hide);n.addEventListener('focus',()=>show(n));n.addEventListener('blur',hide)});
+  container.querySelectorAll('[data-tip]').forEach(n=>{n.addEventListener('mousemove',e=>show(n,e));n.addEventListener('mouseenter',e=>show(n,e));n.addEventListener('mouseleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
+}
+function renderLineChart(id,items,labelKey,limit){
+  const el=$(id),rows=items.slice(0,limit).map(x=>({label:formatDateDMY(x[labelKey]),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
+  el.className='chart';const W=1000,H=300,p={l:58,r:16,t:18,b:52},plotW=W-p.l-p.r,plotH=H-p.t-p.b,maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4;
+  const yMax=Math.ceil(maxValue/steps/100)*100*steps||steps,x=i=>p.l+(rows.length===1?plotW/2:i*plotW/(rows.length-1)),y=v=>p.t+plotH-(v/yMax)*plotH,points=rows.map((r,i)=>[x(i),y(r.value)]),line=smoothPath(points),base=p.t+plotH,area=line+` L ${points.at(-1)[0].toFixed(1)} ${base} L ${points[0][0].toFixed(1)} ${base} Z`;
+  const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-(yMax/steps)*i,yy=p.t+(plotH/steps)*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join(''),every=Math.max(1,Math.ceil(rows.length/10)),labels=rows.map((r,i)=>i%every===0||i===rows.length-1?`<text class="line-axis-label" x="${x(i)}" y="${H-16}" text-anchor="middle">${escapeHtml(r.label)}</text>`:'').join('');
+  const dots=rows.map((r,i)=>{const tip=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;return `<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="3.5"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="13" tabindex="0" data-tip="${escapeHtml(tip)}"></circle>`}).join('');
+  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".22"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".03"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg></div>`;attachChartTooltips(el);
 }
 function renderBars(id,items,labelKey,limit){
-  const el=$(id), rows=items.slice(0,limit), max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart'; el.innerHTML='<div class="bar-chart">'+rows.map(x=>{const value=Number(x.piezas)||0;const h=Math.max(2,(value/max)*100);const label=escapeHtml(String(x[labelKey]??''));return `<div class="bar-col"><div class="bar" style="height:${h}%"><span class="bar-tip">${nf.format(value)} piezas · ${money.format(x.costo||0)}</span></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';
+  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
+  el.className='chart';el.innerHTML='<div class="bar-chart">'+rows.map(x=>{const value=Number(x.piezas)||0,h=Math.max(2,(value/max)*100),label=escapeHtml(String(x[labelKey]??'')),tip=`<strong>${label}</strong>${nf.format(value)} piezas<br>${money.format(x.costo||0)}`;return `<div class="bar-col" tabindex="0" data-tip="${escapeHtml(tip)}"><div class="bar" style="height:${h}%"></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';attachChartTooltips(el);
 }
 function renderHbars(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
-  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
-  el.className='chart';el.innerHTML='<div class="hbars">'+rows.map(x=>`<div class="hrow"><div class="hlabel" title="${escapeHtml(String(x[labelKey]))}">${escapeHtml(String(x[labelKey]))}</div><div class="htrack"><div class="hfill" style="width:${((Number(x.piezas)||0)/max)*100}%"></div></div><div class="hvalue">${nf.format(x.piezas||0)}</div></div>`).join('')+'</div>';
+  const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
+  el.className='chart';el.innerHTML='<div class="hbars">'+rows.map(x=>{const label=escapeHtml(String(x[labelKey]??'')),value=Number(x.piezas)||0,tip=`<strong>${label}</strong>${nf.format(value)} piezas<br>${money.format(x.costo||0)}`;return `<div class="hrow" tabindex="0" data-tip="${escapeHtml(tip)}"><div class="hlabel">${label}</div><div class="htrack"><div class="hfill" style="width:${value/max*100}%"></div></div><b>${nf.format(value)}</b></div>`}).join('')+'</div>';attachChartTooltips(el);
 }
 function renderCortes(items){$('cortesBody').innerHTML=items.slice(0,15).map(x=>`<tr><td>${escapeHtml(String(x.corte||''))}</td><td>${nf.format(x.piezas||0)}</td><td>${nf.format(x.registros||0)}</td><td>${money.format(x.costo||0)}</td></tr>`).join('')||'<tr><td colspan="4">Sin datos</td></tr>'}
 function updateFilters(d){
