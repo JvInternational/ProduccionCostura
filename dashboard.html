@@ -58,12 +58,18 @@
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static}.side-brand{display:inline-block;margin:0 10px 8px 0}.side-group{display:none}.side-nav{display:flex;gap:4px;overflow:auto}.side-nav a{white-space:nowrap}main.content{padding:14px}}
     @media(max-width:520px){.page-head{display:block}.head-status{margin-top:8px}}
 
-/* Ajuste visual de la gráfica principal: proporción estable y centrada */
-#fechaChart{display:flex;justify-content:center;align-items:center;min-height:0}
-#fechaChart .line-chart{width:min(100%,1080px);height:auto;aspect-ratio:10/3;min-height:250px;max-height:330px;margin:0 auto;overflow:hidden}
-#fechaChart .line-chart svg{width:100%;height:100%;display:block}
-@media(max-width:900px){#fechaChart .line-chart{width:100%;aspect-ratio:16/6;min-height:240px}}
-@media(max-width:560px){#fechaChart .line-chart{aspect-ratio:4/3;min-height:260px;max-height:320px}}
+/* Producción por fecha: formato replicado del index de referencia */
+#fechaChart{height:280px;min-height:280px;overflow:hidden}
+#fechaChart .line-chart{position:relative;width:100%;height:100%;overflow:hidden}
+#fechaChart .line-chart svg{display:block;width:100%;height:100%;overflow:hidden}
+#fechaChart .line-path{fill:none;stroke:#08776b;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#fechaChart .line-area{fill:url(#lineAreaGradient)}
+#fechaChart .line-point{fill:#08776b;stroke:#fff;stroke-width:1.5;vector-effect:non-scaling-stroke}
+#fechaChart .line-hit{fill:transparent;cursor:pointer}
+#fechaChart .line-tooltip{position:absolute;z-index:5;display:none;pointer-events:none;max-width:170px;padding:7px 9px;border-radius:7px;background:#173a35;color:#fff;font-size:10px;line-height:1.35;box-shadow:0 4px 12px rgba(23,58,53,.25);white-space:normal;transform:none}
+#fechaChart .line-tooltip.show{display:block}
+#fechaChart .line-tooltip strong{display:block;margin-bottom:2px;font-size:11px}
+@media(max-width:700px){#fechaChart{height:260px;min-height:260px}}
 </style>
 </head>
 <body>
@@ -153,26 +159,43 @@ function render(d){
   renderBars('semanaChart',(d.porSemana||[]).map(x=>({...x,semana:'S'+x.semana})),'semana',12);
   renderCortes(d.porCorte||[]); updateFilters(d);
 }
+function formatFechaGrafica(value){
+  const s=String(value??'').trim();
+  const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?`${m[3]}/${m[2]}/${m[1]}`:s;
+}
+function curvaSuave(points){
+  if(!points.length)return '';
+  if(points.length===1)return `M ${points[0][0]} ${points[0][1]}`;
+  let d=`M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
+  const tension=.30;
+  for(let i=0;i<points.length-1;i++){
+    const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];
+    const c1x=p1[0]+(p2[0]-p0[0])*tension/3,c1y=p1[1]+(p2[1]-p0[1])*tension/3;
+    const c2x=p2[0]-(p3[0]-p1[0])*tension/3,c2y=p2[1]-(p3[1]-p1[1])*tension/3;
+    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
 function renderLineChart(id,items,labelKey,limit){
-  const el=$(id),rows=items.slice(0,limit).map(x=>({label:String(x[labelKey]??''),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
+  const el=$(id),rows=items.slice(0,limit).map(x=>({label:formatFechaGrafica(x[labelKey]),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
   if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
   el.className='chart';
-  const W=1000,H=300,p={l:58,r:16,t:18,b:52},plotW=W-p.l-p.r,plotH=H-p.t-p.b,maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4;
-  const yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
-  const x=i=>p.l+(rows.length===1?plotW/2:(i*plotW/(rows.length-1)));
+  const W=1000,H=280,p={l:62,r:24,t:16,b:44},plotW=W-p.l-p.r,plotH=H-p.t-p.b;
+  const maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4,yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
+  const x=i=>p.l+(rows.length===1?plotW/2:i*plotW/(rows.length-1));
   const y=v=>p.t+plotH-(v/yMax)*plotH;
-  const points=rows.map((r,i)=>[x(i),y(r.value)]);
-  const line=points.map((pt,i)=>(i?'L':'M')+pt[0].toFixed(1)+' '+pt[1].toFixed(1)).join(' ');
-  const area=line+' L '+points[points.length-1][0].toFixed(1)+' '+(p.t+plotH)+' L '+points[0][0].toFixed(1)+' '+(p.t+plotH)+' Z';
+  const points=rows.map((r,i)=>[x(i),y(r.value)]),line=curvaSuave(points),base=p.t+plotH;
+  const area=line+` L ${points.at(-1)[0].toFixed(1)} ${base} L ${points[0][0].toFixed(1)} ${base} Z`;
   const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-(yMax/steps)*i,yy=p.t+(plotH/steps)*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join('');
-  const every=Math.max(1,Math.ceil(rows.length/10));
-  const labels=rows.map((r,i)=>i%every===0||i===rows.length-1?`<text class="line-axis-label" x="${x(i)}" y="${H-18}" text-anchor="end" transform="rotate(-28 ${x(i)} ${H-18})">${escapeHtml(r.label)}</text>`:'').join('');
-  const dots=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="4" tabindex="0" data-i="${i}"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="11" data-i="${i}"></circle>`).join('');
-  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".24"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".04"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg><div class="line-tooltip" role="status"></div></div>`;
-  const wrap=el.querySelector('.line-chart'),tip=wrap.querySelector('.line-tooltip');
-  const show=(target)=>{const i=Number(target.dataset.i),r=rows[i],box=wrap.getBoundingClientRect(),svg=wrap.querySelector('svg').getBoundingClientRect();tip.innerHTML=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;tip.style.left=((x(i)/W)*svg.width+(svg.left-box.left))+'px';tip.style.top=((y(r.value)/H)*svg.height+(svg.top-box.top))+'px';tip.classList.add('show')};
+  const every=Math.max(1,Math.ceil(rows.length/8));
+  const labels=rows.map((r,i)=>(i%every===0||i===rows.length-1)?`<text class="line-axis-label" x="${x(i)}" y="${H-14}" text-anchor="middle">${escapeHtml(r.label)}</text>`:'').join('');
+  const dots=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="3.3"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="12" tabindex="0" data-i="${i}"></circle>`).join('');
+  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".20"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".03"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg><div class="line-tooltip" role="status"></div></div>`;
+  const wrap=el.querySelector('.line-chart'),tip=wrap.querySelector('.line-tooltip'),svg=wrap.querySelector('svg');
+  const show=target=>{const i=Number(target.dataset.i),r=rows[i],box=wrap.getBoundingClientRect(),sb=svg.getBoundingClientRect();tip.innerHTML=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;tip.classList.add('show');const tw=tip.offsetWidth,th=tip.offsetHeight;let left=(x(i)/W)*sb.width+(sb.left-box.left)+10,top=(y(r.value)/H)*sb.height+(sb.top-box.top)-th-10;left=Math.max(6,Math.min(left,box.width-tw-6));top=Math.max(6,Math.min(top,box.height-th-6));tip.style.left=left+'px';tip.style.top=top+'px'};
   const hide=()=>tip.classList.remove('show');
-  wrap.querySelectorAll('[data-i]').forEach(n=>{n.addEventListener('mouseenter',()=>show(n));n.addEventListener('mouseleave',hide);n.addEventListener('focus',()=>show(n));n.addEventListener('blur',hide)});
+  wrap.querySelectorAll('.line-hit').forEach(n=>{n.addEventListener('mouseenter',()=>show(n));n.addEventListener('mouseleave',hide);n.addEventListener('focus',()=>show(n));n.addEventListener('blur',hide)});
 }
 function renderBars(id,items,labelKey,limit){
   const el=$(id), rows=items.slice(0,limit), max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
