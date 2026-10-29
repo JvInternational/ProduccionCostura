@@ -30,7 +30,7 @@
     .status{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted)}.dot{width:9px;height:9px;border-radius:50%;background:#f59e0b}.dot.ok{background:var(--success)}.dot.bad{background:var(--danger)}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.kpi{padding:18px}.kpi .label{font-size:.78rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.05em}.kpi .value{font-size:1.8rem;font-weight:900;margin-top:7px}.kpi .note{font-size:.78rem;color:var(--muted);margin-top:4px}
     .charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.chart-card{padding:18px;min-height:390px}.chart-card.wide{grid-column:1/-1}.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.card-head h3{margin:0;font-size:1rem}.card-head span{font-size:.78rem;color:var(--muted)}
-    .chart{width:100%;height:310px;overflow:hidden}.bar-chart{height:100%;display:flex;align-items:end;gap:7px;padding:12px 4px 34px;border-bottom:1px solid var(--border);position:relative}.bar-col{flex:1;min-width:0;height:100%;display:flex;align-items:end;position:relative}.bar{width:100%;background:linear-gradient(180deg,#21a99a,var(--primary));border-radius:7px 7px 2px 2px;min-height:2px;position:relative}.bar:hover{filter:brightness(.92)}.bar-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%) rotate(-28deg);transform-origin:top center;white-space:nowrap;font-size:.68rem;color:var(--muted);max-width:85px;overflow:hidden;text-overflow:ellipsis}.bar-tip{position:absolute;left:50%;bottom:calc(100% + 5px);transform:translateX(-50%);background:var(--secondary);color:#fff;border-radius:6px;padding:4px 6px;font-size:.68rem;white-space:nowrap;opacity:0;pointer-events:none;z-index:3}.bar:hover .bar-tip{opacity:1}
+    .line-chart{height:100%;min-height:270px;position:relative;overflow:hidden}.line-chart svg{display:block;width:100%;height:100%}.line-grid{stroke:#dfe7e4;stroke-width:1}.line-axis-label{fill:#72817e;font-size:10px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}.line-area{fill:url(#lineAreaGradient)}.line-path{fill:none;stroke:#08776b;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.line-point{fill:#08776b;stroke:#fff;stroke-width:2;cursor:pointer}.line-point:hover,.line-point:focus{r:5.5;fill:#075e55}.line-hit{fill:transparent;cursor:pointer}.line-tooltip{position:absolute;z-index:4;pointer-events:none;display:none;min-width:130px;padding:8px 10px;border-radius:7px;background:#173a35;color:#fff;font-size:11px;box-shadow:0 5px 14px #173a3540;transform:translate(-50%,-115%);white-space:nowrap}.line-tooltip strong{display:block;margin-bottom:2px}.line-tooltip.show{display:block}@media(max-width:620px){.line-axis-label{font-size:8px}.line-chart{min-height:245px}}.chart{width:100%;height:310px;overflow:hidden}.bar-chart{height:100%;display:flex;align-items:end;gap:7px;padding:12px 4px 34px;border-bottom:1px solid var(--border);position:relative}.bar-col{flex:1;min-width:0;height:100%;display:flex;align-items:end;position:relative}.bar{width:100%;background:linear-gradient(180deg,#21a99a,var(--primary));border-radius:7px 7px 2px 2px;min-height:2px;position:relative}.bar:hover{filter:brightness(.92)}.bar-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%) rotate(-28deg);transform-origin:top center;white-space:nowrap;font-size:.68rem;color:var(--muted);max-width:85px;overflow:hidden;text-overflow:ellipsis}.bar-tip{position:absolute;left:50%;bottom:calc(100% + 5px);transform:translateX(-50%);background:var(--secondary);color:#fff;border-radius:6px;padding:4px 6px;font-size:.68rem;white-space:nowrap;opacity:0;pointer-events:none;z-index:3}.bar:hover .bar-tip{opacity:1}
     .hbars{height:100%;overflow:auto;padding-right:5px}.hrow{display:grid;grid-template-columns:minmax(95px,150px) 1fr 82px;gap:9px;align-items:center;margin:10px 0}.hlabel{font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.htrack{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}.hfill{height:100%;background:linear-gradient(90deg,var(--primary),#34d399);border-radius:999px}.hvalue{text-align:right;font-size:.74rem;font-weight:800}
     .table-wrap{overflow:auto;max-height:400px}table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{padding:10px;border-bottom:1px solid var(--border);text-align:right}th{position:sticky;top:0;background:#f8fafc;color:var(--muted)}th:first-child,td:first-child{text-align:left}
     .loading{min-height:180px;display:grid;place-items:center;color:var(--muted)}.error{padding:14px;border-radius:10px;background:#fee2e2;color:#991b1b;margin-bottom:16px;display:none}
@@ -138,13 +138,34 @@ function render(d){
   const k=d.kpis||{};
   $('kReg').textContent=nf.format(k.registros||0);$('kPiezas').textContent=nf.format(k.piezas||0);$('kCosto').textContent=money.format(k.costoTotal||0);$('kOperadores').textContent=nf.format(k.operadores||0);
   $('kExtra').textContent=`${k.estilos||0} estilos · ${k.maquinas||0} máquinas`;
-  renderBars('fechaChart',d.porFecha||[],'fecha',18);
+  renderLineChart('fechaChart',d.porFecha||[],'fecha',31);
   renderHbars('operadorChart',d.porOperador||[],'operador',12);
   renderHbars('operacionChart',d.porOperacion||[],'operacion',12);
   renderBars('estiloChart',d.porEstilo||[],'estilo',12);
   renderBars('maquinaChart',d.porMaquina||[],'maquina',8);
   renderBars('semanaChart',(d.porSemana||[]).map(x=>({...x,semana:'S'+x.semana})),'semana',12);
   renderCortes(d.porCorte||[]); updateFilters(d);
+}
+function renderLineChart(id,items,labelKey,limit){
+  const el=$(id),rows=items.slice(0,limit).map(x=>({label:String(x[labelKey]??''),value:Number(x.piezas)||0,costo:Number(x.costo)||0}));
+  if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}
+  el.className='chart';
+  const W=1000,H=300,p={l:58,r:16,t:18,b:52},plotW=W-p.l-p.r,plotH=H-p.t-p.b,maxValue=Math.max(1,...rows.map(x=>x.value)),steps=4;
+  const yMax=Math.ceil(maxValue/steps/100)*100*steps||steps;
+  const x=i=>p.l+(rows.length===1?plotW/2:(i*plotW/(rows.length-1)));
+  const y=v=>p.t+plotH-(v/yMax)*plotH;
+  const points=rows.map((r,i)=>[x(i),y(r.value)]);
+  const line=points.map((pt,i)=>(i?'L':'M')+pt[0].toFixed(1)+' '+pt[1].toFixed(1)).join(' ');
+  const area=line+' L '+points[points.length-1][0].toFixed(1)+' '+(p.t+plotH)+' L '+points[0][0].toFixed(1)+' '+(p.t+plotH)+' Z';
+  const grid=Array.from({length:steps+1},(_,i)=>{const v=yMax-(yMax/steps)*i,yy=p.t+(plotH/steps)*i;return `<line class="line-grid" x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}"></line><text class="line-axis-label" x="${p.l-9}" y="${yy+4}" text-anchor="end">${nf.format(v)}</text>`}).join('');
+  const every=Math.max(1,Math.ceil(rows.length/10));
+  const labels=rows.map((r,i)=>i%every===0||i===rows.length-1?`<text class="line-axis-label" x="${x(i)}" y="${H-18}" text-anchor="end" transform="rotate(-28 ${x(i)} ${H-18})">${escapeHtml(r.label)}</text>`:'').join('');
+  const dots=rows.map((r,i)=>`<circle class="line-point" cx="${x(i)}" cy="${y(r.value)}" r="4" tabindex="0" data-i="${i}"></circle><circle class="line-hit" cx="${x(i)}" cy="${y(r.value)}" r="11" data-i="${i}"></circle>`).join('');
+  el.innerHTML=`<div class="line-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Producción por fecha"><defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08776b" stop-opacity=".24"></stop><stop offset="100%" stop-color="#08776b" stop-opacity=".04"></stop></linearGradient></defs>${grid}<path class="line-area" d="${area}"></path><path class="line-path" d="${line}"></path>${dots}${labels}</svg><div class="line-tooltip" role="status"></div></div>`;
+  const wrap=el.querySelector('.line-chart'),tip=wrap.querySelector('.line-tooltip');
+  const show=(target)=>{const i=Number(target.dataset.i),r=rows[i],box=wrap.getBoundingClientRect(),svg=wrap.querySelector('svg').getBoundingClientRect();tip.innerHTML=`<strong>${escapeHtml(r.label)}</strong>${nf.format(r.value)} piezas<br>${money.format(r.costo)}`;tip.style.left=((x(i)/W)*svg.width+(svg.left-box.left))+'px';tip.style.top=((y(r.value)/H)*svg.height+(svg.top-box.top))+'px';tip.classList.add('show')};
+  const hide=()=>tip.classList.remove('show');
+  wrap.querySelectorAll('[data-i]').forEach(n=>{n.addEventListener('mouseenter',()=>show(n));n.addEventListener('mouseleave',hide);n.addEventListener('focus',()=>show(n));n.addEventListener('blur',hide)});
 }
 function renderBars(id,items,labelKey,limit){
   const el=$(id), rows=items.slice(0,limit), max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));
