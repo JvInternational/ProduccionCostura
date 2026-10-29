@@ -38,15 +38,36 @@
     @media(max-width:1050px){.grid-filters{grid-template-columns:repeat(3,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:760px){.topbar-inner{align-items:flex-start;flex-direction:column}.nav{width:100%}.nav a{flex:1;text-align:center}.grid-filters{grid-template-columns:1fr 1fr}.charts{grid-template-columns:1fr}.chart-card.wide{grid-column:auto}.kpis{grid-template-columns:1fr 1fr}.chart-card{min-height:350px}}
     @media(max-width:480px){main{padding:12px}.grid-filters,.kpis{grid-template-columns:1fr}.actions{grid-column:1/-1}.kpi .value{font-size:1.55rem}.bar-label{display:none}}
-  </style>
+  
+    /* Layout corporativo homologado JV */
+    :root{--nav:#0d1b22;--nav2:#173a35;--bg:#f3f6f5;--border:#dfe7e4;--shadow:0 5px 14px rgba(23,58,53,.06)}
+    .app{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100vh}
+    .sidebar{background:var(--nav);color:#dbe7e4;padding:10px 9px}
+    .side-brand{background:#fff;color:#18312d;border-radius:6px;padding:13px 10px;margin-bottom:18px;font-weight:900;font-style:italic;font-size:13px}
+    .side-brand small{display:block;font-size:8px;color:#77847f;margin-top:2px}
+    .side-group{font-size:8px;color:#6f8380;letter-spacing:.12em;margin:12px 6px 7px}
+    .side-nav a{display:block;color:#c9d7d4;text-decoration:none;padding:9px 10px;border-radius:6px;margin:2px 0;font-size:12px}
+    .side-nav a:hover,.side-nav a.active{background:var(--nav2);color:#fff}
+    main.content{max-width:none;margin:0;padding:20px 24px;min-width:0}
+    .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+    .page-head h1{font-size:25px;margin:0;color:#18312d}.page-head p{color:#72817e;margin:4px 0}
+    .head-status{padding-top:7px}.panel{border-radius:10px}.filters{padding:16px;margin-bottom:14px}
+    .kpis{gap:12px;margin-bottom:14px}.kpi{padding:15px;border-top:3px solid var(--primary)}
+    .kpi .label{font-size:9px}.kpi .value{font-size:21px;margin-top:4px}.kpi .note{font-size:9px}
+    .charts{gap:14px}.chart-card{border-radius:10px;padding:16px}
+    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static}.side-brand{display:inline-block;margin:0 10px 8px 0}.side-group{display:none}.side-nav{display:flex;gap:4px;overflow:auto}.side-nav a{white-space:nowrap}main.content{padding:14px}}
+    @media(max-width:520px){.page-head{display:block}.head-status{margin-top:8px}}
+</style>
 </head>
 <body>
 <div class="app">
-  <header class="topbar"><div class="topbar-inner">
-    <div class="brand"><div class="logo">JV</div><div><h1>JV International</h1><p>Producción Costura · Dashboard Ejecutivo</p></div></div>
-    <nav class="nav"><a href="index.html">Captura</a><a href="dashboard.html" class="active">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav>
-  </div></header>
-  <main>
+  <aside class="sidebar">
+    <div class="side-brand">JV INTERNATIONAL<small>SOLUTIONS INC.</small></div>
+    <div class="side-group">PRODUCCIÓN COSTURA</div>
+    <nav class="side-nav"><a href="index.html">Captura</a><a href="dashboard.html" class="active">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav>
+  </aside>
+  <main class="content">
+    <header class="page-head"><div><h1>Dashboard de Producción</h1><p>Indicadores y desempeño de costura.</p></div><div class="status head-status"><span id="statusDotHead" class="dot"></span><span id="statusTextHead">Conectando…</span></div></header>
     <section class="panel filters">
       <div class="filters-head"><h2>Filtros</h2><div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Conectando…</span></div></div>
       <div class="grid-filters">
@@ -145,6 +166,10 @@ function setLoading(on){$('applyBtn').disabled=on;$('applyBtn').textContent=on?'
 function setStatus(ok,text){$('statusDot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=text}
 function showError(msg){$('errorBox').textContent=msg;$('errorBox').style.display='block'}function hideError(){$('errorBox').style.display='none'}
 function escapeHtml(value){return value.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
+  const headDot=document.getElementById('statusDotHead'),headText=document.getElementById('statusTextHead');
+  const sourceDot=document.getElementById('statusDot'),sourceText=document.getElementById('statusText');
+  if(sourceText&&headText){const syncStatus=()=>{headText.textContent=sourceText.textContent;headDot.className=sourceDot.className};new MutationObserver(syncStatus).observe(sourceText,{childList:true,subtree:true,characterData:true});new MutationObserver(syncStatus).observe(sourceDot,{attributes:true,attributeFilter:['class']});syncStatus()}
 </script>
 </body>
 </html>
