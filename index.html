@@ -1,19 +1,39 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Captura | JV International</title><style>
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Captura | JV International</title><style>
 :root{--nav:#0d1b22;--nav2:#173a35;--teal:#08776b;--bg:#f3f6f5;--card:#fff;--text:#18312d;--muted:#72817e;--line:#dfe7e4;--bad:#b42318;--ok:#08776b}*{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}button,input,select{font:inherit}.app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}aside{background:var(--nav);color:#dbe7e4;padding:10px 9px}.brand{background:#fff;color:#18312d;border-radius:6px;padding:13px 10px;margin-bottom:18px;font-weight:900;font-style:italic;font-size:13px}.brand small{display:block;font-size:8px;color:#77847f;margin-top:2px}.group{font-size:8px;color:#6f8380;letter-spacing:.12em;margin:12px 6px 7px}nav a{display:block;color:#c9d7d4;text-decoration:none;padding:9px 10px;border-radius:6px;margin:2px 0;font-size:12px}nav a:hover,nav a.active{background:var(--nav2);color:#fff}main{padding:20px 24px;min-width:0}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}.top h1{font-size:25px;margin:0}.top p{color:var(--muted);margin:4px 0}.status{font-size:12px;color:var(--muted);padding-top:7px}.status.ok{color:var(--ok);font-weight:700}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 5px 14px #173a3510;overflow:hidden}.head{padding:16px;border-bottom:1px solid var(--line)}.head h2{font-size:14px;margin:0 0 4px}.head p{font-size:11px;color:var(--muted);margin:0}form{padding:16px}.msg{display:none;padding:10px 12px;border-radius:7px;margin-bottom:12px;font-size:12px;font-weight:700}.msg.error{display:block;background:#fff1f1;color:var(--bad);border:1px solid #ffd4d4}.msg.success{display:block;background:#edfdf5;color:var(--ok);border:1px solid #b7ead7}.grid{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:11px}.field label{display:block;font-size:10px;font-weight:800;color:#536661;margin-bottom:5px}.field input,.field select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text)}.field input:focus,.field select:focus,button:focus{outline:3px solid #08776b25;border-color:var(--teal)}.variant{display:none}.variant.show{display:block}.summary{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.summary>div{background:#f7faf9;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:14px}.sl{font-size:9px;color:var(--muted);font-weight:800}.sv{font-size:20px;color:var(--text);font-weight:850;margin-top:4px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}button{border:0;border-radius:6px;padding:10px 13px;font-weight:750;cursor:pointer}.light{background:#e7eeec;color:#294640}.primary{background:var(--teal);color:#fff}button:disabled{opacity:.55;cursor:wait}@media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:900px){.app{grid-template-columns:1fr}aside{position:static}.brand{display:inline-block;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}}@media(max-width:520px){.top{display:block}.grid{grid-template-columns:1fr}.summary{grid-template-columns:1fr}.actions{flex-wrap:wrap}.actions button{flex:1}}
-</style></head><body><div class="app"><aside><div class="brand">JV INTERNATIONAL<small>SOLUTIONS INC.</small></div><div class="group">PRODUCCIÓN COSTURA</div><nav><a class="active" href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav></aside><main>
-<header class="top"><div><h1>Captura de Producción</h1><p>Registra operaciones de costura con la tarifa oficial.</p></div><div id="status" class="status">Conectando…</div></header>
+
+/* Corrección quirúrgica del sidebar: branding y navegación únicamente */
+.brand{
+  height:72px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:#fff;
+}
+.brand img{
+  display:block;
+  width:100%;
+  max-width:190px;
+  max-height:54px;
+  height:auto;
+  object-fit:contain;
+}
+</style></head><body><div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div><nav><a class="active" href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav></aside><main>
+<header class="top"><div><h1>Captura de Producción</h1><p>Registra operaciones de costura con la tarifa oficial.</p></div><div class="status" id="status">Conectando…</div></header>
 <section class="card"><div class="head"><h2>Nueva captura</h2><p>La tarifa se consulta directamente del catálogo oficial.</p></div>
-<form id="form"><div id="msg" class="msg"></div><div class="grid">
-<div class="field"><label for="fecha">FECHA *</label><input id="fecha" type="date" required></div>
-<div class="field"><label for="personal">PERSONAL *</label><select id="personal" required disabled><option>Cargando…</option></select></div>
-<div class="field"><label for="maquina">MÁQUINA *</label><select id="maquina" required disabled><option>Cargando…</option></select></div>
-<div class="field"><label for="corte">NO. DE CORTE *</label><input id="corte" required placeholder="Ej. 185393"></div>
-<div class="field"><label for="estilo">ESTILO *</label><select id="estilo" required disabled><option>Cargando…</option></select></div>
-<div id="variantBox" class="field variant"><label for="variante">VARIANTE *</label><select id="variante"><option>GENERAL</option><option>DC</option></select></div>
-<div class="field"><label for="operacion">OPERACIÓN *</label><select id="operacion" required disabled><option>Selecciona primero un estilo</option></select></div>
-<div class="field"><label for="cantidad">CANTIDAD *</label><input id="cantidad" type="number" min="1" step="1" value="1" required></div>
-</div><div class="summary"><div><div class="sl">COSTO UNITARIO</div><div id="unit" class="sv">$0.00</div></div><div><div class="sl">CANTIDAD</div><div id="qty" class="sv">1</div></div><div><div class="sl">COSTO TOTAL</div><div id="total" class="sv">$0.00</div></div></div>
-<div class="actions"><button type="button" id="clear" class="light">Limpiar</button><button id="save" class="primary" disabled>Guardar captura</button></div></form></section></main></div><script>
+<form id="form"><div class="msg" id="msg"></div><div class="grid">
+<div class="field"><label for="fecha">FECHA *</label><input id="fecha" required="" type="date"/></div>
+<div class="field"><label for="personal">PERSONAL *</label><select disabled="" id="personal" required=""><option>Cargando…</option></select></div>
+<div class="field"><label for="maquina">MÁQUINA *</label><select disabled="" id="maquina" required=""><option>Cargando…</option></select></div>
+<div class="field"><label for="corte">NO. DE CORTE *</label><input id="corte" placeholder="Ej. 185393" required=""/></div>
+<div class="field"><label for="estilo">ESTILO *</label><select disabled="" id="estilo" required=""><option>Cargando…</option></select></div>
+<div class="field variant" id="variantBox"><label for="variante">VARIANTE *</label><select id="variante"><option>GENERAL</option><option>DC</option></select></div>
+<div class="field"><label for="operacion">OPERACIÓN *</label><select disabled="" id="operacion" required=""><option>Selecciona primero un estilo</option></select></div>
+<div class="field"><label for="cantidad">CANTIDAD *</label><input id="cantidad" min="1" required="" step="1" type="number" value="1"/></div>
+</div><div class="summary"><div><div class="sl">COSTO UNITARIO</div><div class="sv" id="unit">$0.00</div></div><div><div class="sl">CANTIDAD</div><div class="sv" id="qty">1</div></div><div><div class="sl">COSTO TOTAL</div><div class="sv" id="total">$0.00</div></div></div>
+<div class="actions"><button class="light" id="clear" type="button">Limpiar</button><button class="primary" disabled="" id="save">Guardar captura</button></div></form></section></main></div><script>
 'use strict';
 const API_URL='https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec';
 const $=id=>document.getElementById(id), state={ops:[],cost:0,ready:false}; const mxn=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
