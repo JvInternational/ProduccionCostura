@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Dashboard de Producción Costura - JV International">
-  <title>Dashboard | JV International</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Dashboard de Producción Costura - JV International" name="description"/>
+<title>Dashboard | JV International</title>
+<style>
     :root {
       --primary:#08776b; --primary-dark:#065b53; --secondary:#0f172a;
       --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b;
@@ -97,49 +98,53 @@ td:nth-child(n+2),th:nth-child(n+2){text-align:right}
 @media(max-width:560px){.kpis{grid-template-columns:1fr!important}.kpis>.panel{min-height:80px}.kpis .value{font-size:25px!important}.card-head{padding:13px 14px 10px!important}.table-wrap{margin:0 8px 10px!important}}
 
 .chart{position:relative;overflow:hidden}.secondary-tip{position:absolute;z-index:100;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#123b36;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}.secondary-tip.show{display:block}.secondary-tip strong{display:block;margin-bottom:2px;font-size:12px}.secondary-tip small{color:#bfe2dc;font-size:10px}.bar-tip{display:none!important}.bar-col,.hrow{cursor:pointer}
+
+/* Corrección quirúrgica del sidebar: branding y navegación únicamente */
+.side-brand{height:72px;padding:8px 10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;color:inherit}
+.side-brand img{display:block;width:100%;max-width:190px;max-height:54px;height:auto;object-fit:contain}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
-    <div class="side-brand">JV INTERNATIONAL<small>SOLUTIONS INC.</small></div>
-    <div class="side-group">PRODUCCIÓN COSTURA</div>
-    <nav class="side-nav"><a href="index.html">Captura</a><a href="dashboard.html" class="active">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav><a href="reportes.html">Reportes</a>
-  </aside>
-  <main class="content">
-    <header class="page-head"><div><h1>Dashboard de Producción</h1><p>Indicadores y desempeño de costura.</p></div><div class="status head-status"><span id="statusDotHead" class="dot"></span><span id="statusTextHead">Conectando…</span></div></header>
-    <section class="panel filters">
-      <div class="filters-head"><h2>Filtros</h2><div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Conectando…</span></div></div>
-      <div class="grid-filters">
-        <div class="field"><label for="desde">Fecha desde</label><input type="date" id="desde"></div>
-        <div class="field"><label for="hasta">Fecha hasta</label><input type="date" id="hasta"></div>
-        <div class="field"><label for="semana">Semana</label><input type="number" id="semana" min="1" max="53" placeholder="Todas"></div>
-        <div class="field"><label for="personal">Operador</label><select id="personal"><option value="">Todos</option></select></div>
-        <div class="field"><label for="maquina">Máquina</label><select id="maquina"><option value="">Todas</option></select></div>
-        <div class="field"><label for="estilo">Estilo</label><select id="estilo"><option value="">Todos</option></select></div>
-        <div class="field"><label for="operacion">Operación</label><select id="operacion"><option value="">Todas</option></select></div>
-        <div class="field"><label for="corte">Corte</label><input id="corte" placeholder="Todos"></div>
-        <div class="actions"><button class="btn btn-primary" id="applyBtn" type="button">Aplicar filtros</button><button class="btn btn-light" id="clearBtn" type="button">Limpiar</button></div>
-      </div>
-    </section>
-    <div id="errorBox" class="error" role="alert"></div>
-    <section class="kpis">
-      <article class="panel kpi"><div class="label">Registros</div><div class="value" id="kReg">—</div><div class="note">Operaciones registradas</div></article>
-      <article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note">Producción acumulada</div></article>
-      <article class="panel kpi"><div class="label">Costo total</div><div class="value" id="kCosto">—</div><div class="note">Costo de destajo</div></article>
-      <article class="panel kpi"><div class="label">Operadores</div><div class="value" id="kOperadores">—</div><div class="note" id="kExtra">—</div></article>
-    </section>
-    <section class="charts">
-      <article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Piezas</span></div><div id="fechaChart" class="chart loading">Cargando…</div></article>
-      <article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Top 12</span></div><div id="operadorChart" class="chart loading">Cargando…</div></article>
-      <article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Top 12</span></div><div id="operacionChart" class="chart loading">Cargando…</div></article>
-      <article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Piezas</span></div><div id="estiloChart" class="chart loading">Cargando…</div></article>
-      <article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas</span></div><div id="maquinaChart" class="chart loading">Cargando…</div></article>
-      <article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Piezas</span></div><div id="semanaChart" class="chart loading">Cargando…</div></article>
-      <article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
-    </section>
-  </main>
-  <footer>JV International · Sistema de Producción Costura</footer>
+<aside class="sidebar">
+<div class="side-brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div>
+<div class="side-group">PRODUCCIÓN COSTURA</div>
+<nav class="side-nav"><a href="index.html">Captura</a><a class="active" href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav>
+</aside>
+<main class="content">
+<header class="page-head"><div><h1>Dashboard de Producción</h1><p>Indicadores y desempeño de costura.</p></div><div class="status head-status"><span class="dot" id="statusDotHead"></span><span id="statusTextHead">Conectando…</span></div></header>
+<section class="panel filters">
+<div class="filters-head"><h2>Filtros</h2><div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Conectando…</span></div></div>
+<div class="grid-filters">
+<div class="field"><label for="desde">Fecha desde</label><input id="desde" type="date"/></div>
+<div class="field"><label for="hasta">Fecha hasta</label><input id="hasta" type="date"/></div>
+<div class="field"><label for="semana">Semana</label><input id="semana" max="53" min="1" placeholder="Todas" type="number"/></div>
+<div class="field"><label for="personal">Operador</label><select id="personal"><option value="">Todos</option></select></div>
+<div class="field"><label for="maquina">Máquina</label><select id="maquina"><option value="">Todas</option></select></div>
+<div class="field"><label for="estilo">Estilo</label><select id="estilo"><option value="">Todos</option></select></div>
+<div class="field"><label for="operacion">Operación</label><select id="operacion"><option value="">Todas</option></select></div>
+<div class="field"><label for="corte">Corte</label><input id="corte" placeholder="Todos"/></div>
+<div class="actions"><button class="btn btn-primary" id="applyBtn" type="button">Aplicar filtros</button><button class="btn btn-light" id="clearBtn" type="button">Limpiar</button></div>
+</div>
+</section>
+<div class="error" id="errorBox" role="alert"></div>
+<section class="kpis">
+<article class="panel kpi"><div class="label">Registros</div><div class="value" id="kReg">—</div><div class="note">Operaciones registradas</div></article>
+<article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note">Producción acumulada</div></article>
+<article class="panel kpi"><div class="label">Costo total</div><div class="value" id="kCosto">—</div><div class="note">Costo de destajo</div></article>
+<article class="panel kpi"><div class="label">Operadores</div><div class="value" id="kOperadores">—</div><div class="note" id="kExtra">—</div></article>
+</section>
+<section class="charts">
+<article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Piezas</span></div><div class="chart loading" id="fechaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Top 12</span></div><div class="chart loading" id="operadorChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Top 12</span></div><div class="chart loading" id="operacionChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Piezas</span></div><div class="chart loading" id="estiloChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas</span></div><div class="chart loading" id="maquinaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Piezas</span></div><div class="chart loading" id="semanaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
+</section>
+</main>
+<footer>JV International · Sistema de Producción Costura</footer>
 </div>
 <script>
 'use strict';
