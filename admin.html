@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
  <head>
   <meta charset="utf-8"/>
@@ -7,351 +10,30 @@
    Administración | JV International
   </title>
   <style>
-   :root {
-  --nav: #0d1b22;
-  --nav2: #173a35;
-  --teal: #08776b;
-  --bg: #f3f6f5;
-  --card: #ffffff;
-  --text: #18312d;
-  --muted: #72817e;
-  --line: #dfe7e4;
-  --orange: #f47b20;
-}
+   :root{--nav:#0d1b22;--nav2:#173a35;--teal:#08776b;--bg:#f3f6f5;--card:#fff;--text:#18312d;--muted:#72817e;--line:#dfe7e4;--orange:#f47b20}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+.app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}aside{background:var(--nav);color:#dbe7e4;padding:10px 9px}
+.brand{background:#fff;color:#18312d;border-radius:6px;padding:13px 10px;margin-bottom:18px;font-weight:900;font-style:italic;font-size:13px}.brand img{display:block;width:100%;max-width:190px;max-height:54px;height:auto;object-fit:contain}.brand small{display:block;font-size:8px;color:#77847f;margin-top:2px}
+.group{font-size:8px;color:#6f8380;letter-spacing:.12em;margin:12px 6px 7px}nav a{display:block;color:#c9d7d4;text-decoration:none;padding:9px 10px;border-radius:6px;margin:2px 0;font-size:12px}nav a:hover,nav a.active{background:var(--nav2);color:#fff}
+main{padding:20px 24px;min-width:0}header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}h1{font-size:25px;margin:0}header p{color:var(--muted);margin:4px 0}.status{font-size:12px;color:var(--muted);padding-top:7px}.status.ok{color:var(--teal);font-weight:700}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 5px 14px #173a3510}.form{padding:16px;margin-bottom:14px}.form h2,.head h2{font-size:14px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:11px}
+label{font-size:10px;font-weight:700;color:#536661;display:block;margin-bottom:5px}input,select{width:100%;height:38px;border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:#fff;color:var(--text)}input:focus,select:focus,button:focus{outline:3px solid #08776b25;border-color:var(--teal)}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}button{border:0;border-radius:6px;padding:10px 13px;font-weight:700;cursor:pointer}.primary{background:var(--teal);color:#fff}.secondary{background:#e7eeec;color:#294640}.danger{background:#fff0ef;color:#a32b2b;padding:7px 10px}.message{display:none;padding:10px 12px;border-radius:7px;margin-bottom:12px}.message.show{display:block}.message.err{background:#fff1f1;color:#a32b2b}.message.good{background:#edfdf5;color:var(--teal)}
+.head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}.head h2{margin:0}.head input{max-width:320px}.wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:10px;border-bottom:1px solid #edf2f0;text-align:left;font-size:11px}th{font-size:9px;background:#f5f8f7}.num{text-align:right}.empty{padding:30px;text-align:center;color:var(--muted)}[hidden]{display:none!important}
 
-* {
-  box-sizing: border-box;
-}
-
-/* Database currently has enough content to show a vertical scrollbar.
-   Force the same reserved viewport width in Admin to prevent a page-change jump. */
-html {
-  overflow-y: scroll;
-}
-
-body {
-  margin: 0;
-  font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* Shared application shell: identical to database.html */
-.app {
-  display: grid;
-  grid-template-columns: 210px 1fr;
-  min-height: 100vh;
-}
-
-aside {
-  background: var(--nav);
-  color: #dbe7e4;
-  padding: 10px 9px;
-}
-
+/* Geometría corporativa del logotipo: idéntica a database.html e index.html */
 .brand {
-  background: #ffffff;
-  color: #18312d;
-  border-radius: 6px;
-  padding: 13px 10px;
-  margin-bottom: 18px;
-  font-weight: 900;
-  font-style: italic;
-  font-size: 13px;
-}
-
-.brand img {
-  display: block;
-  width: 100%;
-  max-width: 190px;
-  max-height: 54px;
-  height: auto;
-  object-fit: contain;
-}
-
-.brand small {
-  display: block;
-  margin-top: 2px;
-  color: #77847f;
-  font-size: 8px;
-}
-
-.group {
-  margin: 12px 6px 7px;
-  color: #6f8380;
-  font-size: 8px;
-  letter-spacing: 0.12em;
-}
-
-nav a {
-  display: block;
-  margin: 2px 0;
-  padding: 9px 10px;
-  border-radius: 6px;
-  color: #c9d7d4;
-  font-size: 12px;
-  text-decoration: none;
-}
-
-nav a:hover,
-nav a.active {
-  background: var(--nav2);
-  color: #ffffff;
-}
-
-main {
-  min-width: 0;
-  padding: 20px 24px;
-}
-
-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-h1 {
-  margin: 0;
-  font-size: 25px;
-}
-
-header p {
-  margin: 4px 0;
-  color: var(--muted);
-}
-
-.status {
-  padding-top: 7px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.status.ok {
-  color: var(--teal);
-  font-weight: 700;
-}
-
-/* Admin module */
-.panel {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: 0 5px 14px #173a3510;
-}
-
-.form {
-  margin-bottom: 14px;
-  padding: 16px;
-}
-
-.form h2,
-.head h2 {
-  margin: 0 0 12px;
-  font-size: 14px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(125px, 1fr));
-  gap: 11px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-  color: #536661;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-input,
-select {
-  width: 100%;
-  height: 38px;
-  padding: 7px 9px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #ffffff;
-  color: var(--text);
-}
-
-input:focus,
-select:focus,
-button:focus {
-  outline: 3px solid #08776b25;
-  border-color: var(--teal);
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-button {
-  padding: 10px 13px;
-  border: 0;
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary {
-  background: var(--teal);
-  color: #ffffff;
-}
-
-.secondary {
-  background: #e7eeec;
-  color: #294640;
-}
-
-.danger {
-  padding: 7px 10px;
-  background: #fff0ef;
-  color: #a32b2b;
-}
-
-.message {
-  display: none;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border-radius: 7px;
-}
-
-.message.show {
-  display: block;
-}
-
-.message.err {
-  background: #fff1f1;
-  color: #a32b2b;
-}
-
-.message.good {
-  background: #edfdf5;
-  color: var(--teal);
-}
-
-.head {
+  height: 72px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--line);
+  justify-content: center;
+  overflow: hidden;
+  background: #ffffff;
 }
 
-.head h2 {
-  margin: 0;
-}
-
-.head input {
-  max-width: 320px;
-}
-
-.wrap {
-  overflow: auto;
-}
-
-table {
-  width: 100%;
-  min-width: 760px;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 10px;
-  border-bottom: 1px solid #edf2f0;
-  font-size: 11px;
-  text-align: left;
-}
-
-th {
-  background: #f5f8f7;
-  font-size: 9px;
-}
-
-.num {
-  text-align: right;
-}
-
-.empty {
-  padding: 30px;
-  color: var(--muted);
-  text-align: center;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-@media (max-width: 900px) {
-  html {
-    overflow-y: auto;
-  }
-
-  .app {
-    grid-template-columns: 1fr;
-  }
-
-  aside {
-    position: static;
-  }
-
-  .brand {
-    display: inline-block;
-    margin: 0 10px 8px 0;
-  }
-
-  nav {
-    display: flex;
-    gap: 4px;
-    overflow: auto;
-  }
-
-  .group {
-    display: none;
-  }
-
-  nav a {
-    white-space: nowrap;
-  }
-
-  main {
-    padding: 14px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 520px) {
-  header {
-    display: block;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
-  }
-
-  .actions {
-    flex-wrap: wrap;
-  }
-
-  .head {
-    display: block;
-  }
-
-  .head input {
-    max-width: none;
-    margin-top: 9px;
-  }
-}
+@media(max-width:900px){.app{grid-template-columns:1fr}aside{position:static}.brand{display:inline-block;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){header{display:block}.grid{grid-template-columns:1fr}.actions{flex-wrap:wrap}.head{display:block}.head input{max-width:none;margin-top:9px}}
   </style>
  </head>
  <body>
