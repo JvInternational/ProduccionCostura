@@ -1,38 +1,648 @@
 <!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Reportes | JV International</title>
-<style>
-:root{--nav:#0d1b22;--teal:#08776b;--bg:#f3f6f5;--line:#dfe7e4;--text:#18312d;--muted:#697b77}*{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}.app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}aside{background:var(--nav);padding:10px;color:#fff}.brand{background:#fff;color:#173a35;padding:14px 10px;border-radius:6px;font-weight:900;margin-bottom:18px}nav a{display:block;color:#cbd8d5;text-decoration:none;padding:9px 10px;border-radius:6px}nav a.active,nav a:hover{background:#173a35;color:#fff}main{padding:20px 24px;min-width:0}header{display:flex;justify-content:space-between;gap:16px}h1{margin:0;font-size:25px}header p{margin:4px 0 16px;color:var(--muted)}.status{color:var(--muted);white-space:nowrap}.status.ok{color:var(--teal);font-weight:700}.panel{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 5px 14px #173a3510;margin-bottom:14px}.form{padding:16px}h2{font-size:14px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px}label{display:block;font-size:10px;font-weight:800;margin-bottom:5px;color:#52645f}input,select{width:100%;height:38px;border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:#fff;color:var(--text)}button{border:0;border-radius:6px;padding:10px 13px;font-weight:750;cursor:pointer}.primary{background:var(--teal);color:#fff}.secondary{background:#e7eeec;color:#294640}.actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:12px}.msg{display:none;padding:10px;border-radius:7px;margin-bottom:12px}.msg.show{display:block}.msg.err{background:#fff1f1;color:#a32b2b}.msg.good{background:#edfdf5;color:#08776b}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.kpi{padding:15px}.kpi span{display:block;color:var(--muted);font-size:10px;font-weight:800}.kpi strong{display:block;margin-top:6px;font-size:22px}.head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}.head small{color:var(--muted)}.wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1050px}th,td{padding:10px;border-bottom:1px solid #edf2f0;text-align:left;font-size:11px}th{font-size:9px;background:#f5f8f7;text-transform:uppercase}.num{text-align:right}.empty{padding:30px;text-align:center;color:var(--muted)}[hidden]{display:none!important}.report-header{display:none}
-@media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.app{grid-template-columns:1fr}nav{display:flex;overflow:auto}nav a{white-space:nowrap}main{padding:14px}.summary{grid-template-columns:1fr 1fr 1fr}}@media(max-width:520px){.grid,.summary{grid-template-columns:1fr}.actions button{width:100%}header{display:block}.status{margin-bottom:12px}}
-@media print{@page{size:A4 landscape;margin:10mm}body{background:#fff}.app{display:block}aside,.no-print{display:none!important}main{padding:0}.report-header{display:block;border-bottom:2px solid var(--teal);margin-bottom:12px;padding-bottom:8px}.report-header h1{font-size:20px}.panel{box-shadow:none;break-inside:avoid}.wrap{overflow:visible}table{min-width:0;font-size:8px}th,td{padding:5px;font-size:8px}.summary{grid-template-columns:repeat(3,1fr)}}
-</style>
-</head>
-<body>
-<div class="app">
-<aside><div class="brand">JV INTERNATIONAL<br/><small>SOLUTIONS INC.</small></div><nav><a href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a aria-current="page" class="active" href="reportes.html">Reportes</a></nav></aside>
-<main>
-<div class="report-header"><h1>JV International · Reporte de producción</h1><div id="printMeta"></div></div>
-<header><div><h1>Reportes</h1><p>Filtra la producción y exporta los resultados en PDF o Excel.</p></div><div class="status" id="status">Conectando…</div></header>
-<div class="msg" id="msg" role="status"></div>
-<section class="panel form no-print"><h2>Filtros del reporte</h2><div class="grid">
-<div><label for="fechaDesde">DESDE</label><input id="fechaDesde" type="date"/></div>
-<div><label for="fechaHasta">HASTA</label><input id="fechaHasta" type="date"/></div>
-<div><label for="semana">SEMANA ISO</label><input id="semana" max="53" min="1" placeholder="Todas" type="number"/></div>
-<div><label for="personal">PERSONAL</label><select id="personal"><option value="">Todos</option></select></div>
-<div><label for="maquina">MÁQUINA</label><select id="maquina"><option value="">Todas</option></select></div>
-<div><label for="estilo">ESTILO</label><select id="estilo"><option value="">Todos</option></select></div>
-<div><label for="operacion">OPERACIÓN</label><input id="operacion" placeholder="Todas" type="text"/></div>
-<div><label for="corte">NO. CORTE</label><input id="corte" placeholder="Todos" type="text"/></div>
-</div><div class="actions"><button class="secondary" id="clear" type="button">Limpiar filtros</button><button class="primary" id="apply" type="button">Aplicar filtros</button><button class="primary" id="pdf" type="button">Generar PDF</button><button class="secondary" id="excel" type="button">Exportar Excel</button></div></section>
-<section class="summary"><article class="panel kpi"><span>REGISTROS</span><strong id="kRecords">0</strong></article><article class="panel kpi"><span>PIEZAS</span><strong id="kPieces">0</strong></article><article class="panel kpi"><span>COSTO TOTAL</span><strong id="kCost">$0.00</strong></article></section>
-<section class="panel"><div class="head"><div><h2>Vista previa</h2><small id="previewMeta">Sin datos</small></div></div><div class="wrap"><table><thead><tr><th>Folio</th><th>Fecha</th><th>Semana</th><th>Personal</th><th>Máquina</th><th>Corte</th><th>Estilo</th><th>Variante</th><th>Operación</th><th class="num">Cantidad</th><th class="num">Costo unit.</th><th class="num">Costo total</th></tr></thead><tbody id="rows"></tbody></table><div class="empty" id="empty">No hay registros para mostrar.</div></div></section>
-</main></div>
-<script>
-const API_URL='https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec';
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Reportes | JV International
+  </title>
+  <style>
+   :root {
+  --nav: #0d1b22;
+  --nav2: #173a35;
+  --teal: #08776b;
+  --bg: #f3f6f5;
+  --card: #ffffff;
+  --text: #18312d;
+  --muted: #72817e;
+  --line: #dfe7e4;
+  --orange: #f47b20;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Estructura visual compartida con Database y Admin */
+.app {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  min-height: 100vh;
+}
+
+aside {
+  padding: 10px 9px;
+  background: var(--nav);
+  color: #dbe7e4;
+}
+
+.brand {
+  height: 72px;
+  margin-bottom: 18px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #18312d;
+}
+
+.brand img {
+  display: block;
+  width: 100%;
+  max-width: 190px;
+  max-height: 54px;
+  height: auto;
+  object-fit: contain;
+}
+
+.group {
+  margin: 12px 6px 7px;
+  color: #6f8380;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+nav a {
+  display: block;
+  margin: 2px 0;
+  padding: 9px 10px;
+  border-radius: 6px;
+  color: #c9d7d4;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+nav a:hover,
+nav a.active {
+  background: var(--nav2);
+  color: #ffffff;
+}
+
+main {
+  min-width: 0;
+  padding: 20px 24px;
+}
+
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 25px;
+}
+
+header p {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.status {
+  padding-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.status.ok {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+/* Componentes propios del módulo Reportes */
+.panel {
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 5px 14px #173a3510;
+}
+
+.form {
+  padding: 16px;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: #52645f;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+input,
+select {
+  width: 100%;
+  height: 38px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+button:focus {
+  outline: 3px solid #08776b25;
+  border-color: var(--teal);
+}
+
+button {
+  padding: 10px 13px;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--teal);
+  color: #ffffff;
+}
+
+.secondary {
+  background: #e7eeec;
+  color: #294640;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.msg {
+  display: none;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 7px;
+}
+
+.msg.show {
+  display: block;
+}
+
+.msg.err {
+  background: #fff1f1;
+  color: #a32b2b;
+}
+
+.msg.good {
+  background: #edfdf5;
+  color: var(--teal);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.kpi {
+  padding: 15px;
+}
+
+.kpi span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.kpi strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.head small {
+  color: var(--muted);
+}
+
+.wrap {
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid #edf2f0;
+  font-size: 11px;
+  text-align: left;
+}
+
+th {
+  background: #f5f8f7;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.num {
+  text-align: right;
+}
+
+.empty {
+  padding: 30px;
+  color: var(--muted);
+  text-align: center;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.report-header {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  aside {
+    position: static;
+  }
+
+  .brand {
+    display: inline-flex;
+    margin: 0 10px 8px 0;
+  }
+
+  .group {
+    display: none;
+  }
+
+  nav {
+    display: flex;
+    gap: 4px;
+    overflow: auto;
+  }
+
+  nav a {
+    white-space: nowrap;
+  }
+
+  main {
+    padding: 14px;
+  }
+
+  .summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  header {
+    display: block;
+  }
+
+  .status {
+    margin-bottom: 12px;
+  }
+
+  .grid,
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  .app {
+    display: block;
+  }
+
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  .report-header {
+    display: block;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--teal);
+  }
+
+  .report-header h1 {
+    font-size: 20px;
+  }
+
+  .panel {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .wrap {
+    overflow: visible;
+  }
+
+  table {
+    min-width: 0;
+    font-size: 8px;
+  }
+
+  th,
+  td {
+    padding: 5px;
+    font-size: 8px;
+  }
+
+  .summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+  </style>
+ </head>
+ <body>
+  <div class="app">
+   <aside>
+    <div class="brand">
+     <img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/>
+    </div>
+    <div class="group">
+     PRODUCCIÓN COSTURA
+    </div>
+    <nav>
+     <a href="index.html">
+      Captura
+     </a>
+     <a href="dashboard.html">
+      Dashboard
+     </a>
+     <a href="database.html">
+      Base de datos
+     </a>
+     <a href="admin.html">
+      Administración
+     </a>
+     <a aria-current="page" class="active" href="reportes.html">
+      Reportes
+     </a>
+    </nav>
+   </aside>
+   <main>
+    <div class="report-header">
+     <h1>
+      JV International · Reporte de producción
+     </h1>
+     <div id="printMeta">
+     </div>
+    </div>
+    <header>
+     <div>
+      <h1>
+       Reportes
+      </h1>
+      <p>
+       Filtra la producción y exporta los resultados en PDF o Excel.
+      </p>
+     </div>
+     <div class="status" id="status">
+      Conectando…
+     </div>
+    </header>
+    <div class="msg" id="msg" role="status">
+    </div>
+    <section class="panel form no-print">
+     <h2>
+      Filtros del reporte
+     </h2>
+     <div class="grid">
+      <div>
+       <label for="fechaDesde">
+        DESDE
+       </label>
+       <input id="fechaDesde" type="date"/>
+      </div>
+      <div>
+       <label for="fechaHasta">
+        HASTA
+       </label>
+       <input id="fechaHasta" type="date"/>
+      </div>
+      <div>
+       <label for="semana">
+        SEMANA ISO
+       </label>
+       <input id="semana" max="53" min="1" placeholder="Todas" type="number"/>
+      </div>
+      <div>
+       <label for="personal">
+        PERSONAL
+       </label>
+       <select id="personal">
+        <option value="">
+         Todos
+        </option>
+       </select>
+      </div>
+      <div>
+       <label for="maquina">
+        MÁQUINA
+       </label>
+       <select id="maquina">
+        <option value="">
+         Todas
+        </option>
+       </select>
+      </div>
+      <div>
+       <label for="estilo">
+        ESTILO
+       </label>
+       <select id="estilo">
+        <option value="">
+         Todos
+        </option>
+       </select>
+      </div>
+      <div>
+       <label for="operacion">
+        OPERACIÓN
+       </label>
+       <input id="operacion" placeholder="Todas" type="text"/>
+      </div>
+      <div>
+       <label for="corte">
+        NO. CORTE
+       </label>
+       <input id="corte" placeholder="Todos" type="text"/>
+      </div>
+     </div>
+     <div class="actions">
+      <button class="secondary" id="clear" type="button">
+       Limpiar filtros
+      </button>
+      <button class="primary" id="apply" type="button">
+       Aplicar filtros
+      </button>
+      <button class="primary" id="pdf" type="button">
+       Generar PDF
+      </button>
+      <button class="secondary" id="excel" type="button">
+       Exportar Excel
+      </button>
+     </div>
+    </section>
+    <section class="summary">
+     <article class="panel kpi">
+      <span>
+       REGISTROS
+      </span>
+      <strong id="kRecords">
+       0
+      </strong>
+     </article>
+     <article class="panel kpi">
+      <span>
+       PIEZAS
+      </span>
+      <strong id="kPieces">
+       0
+      </strong>
+     </article>
+     <article class="panel kpi">
+      <span>
+       COSTO TOTAL
+      </span>
+      <strong id="kCost">
+       $0.00
+      </strong>
+     </article>
+    </section>
+    <section class="panel">
+     <div class="head">
+      <div>
+       <h2>
+        Vista previa
+       </h2>
+       <small id="previewMeta">
+        Sin datos
+       </small>
+      </div>
+     </div>
+     <div class="wrap">
+      <table>
+       <thead>
+        <tr>
+         <th>
+          Folio
+         </th>
+         <th>
+          Fecha
+         </th>
+         <th>
+          Semana
+         </th>
+         <th>
+          Personal
+         </th>
+         <th>
+          Máquina
+         </th>
+         <th>
+          Corte
+         </th>
+         <th>
+          Estilo
+         </th>
+         <th>
+          Variante
+         </th>
+         <th>
+          Operación
+         </th>
+         <th class="num">
+          Cantidad
+         </th>
+         <th class="num">
+          Costo unit.
+         </th>
+         <th class="num">
+          Costo total
+         </th>
+        </tr>
+       </thead>
+       <tbody id="rows">
+       </tbody>
+      </table>
+      <div class="empty" id="empty">
+       No hay registros para mostrar.
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+  <script>
+   const API_URL='https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec';
 const $=id=>document.getElementById(id),state={records:[],total:0};
 const integer=new Intl.NumberFormat('es-MX'),money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
 document.addEventListener('DOMContentLoaded',init);
@@ -48,5 +658,7 @@ function exportPdf(){if(!state.records.length)return show('No hay registros para
 function exportExcel(){if(!state.records.length)return show('No hay registros para exportar.',true);const headers=['Folio','Fecha','Semana','Personal','Máquina','Corte','Estilo','Variante','Operación','Cantidad','Costo unitario','Costo total'];const keys=['folio','fecha','semana','personal','maquina','corte','estilo','variante','operacion','cantidad','costoUnitario','costoTotal'];const csv=[headers,...state.records.map(r=>keys.map(k=>r[k]??''))].map(row=>row.map(csvCell).join(',')).join('\r\n');const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='reporte_produccion_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function filterSummary(){const f=filters(),parts=[];if(f.fechaDesde||f.fechaHasta)parts.push(`Periodo ${f.fechaDesde||'inicio'} a ${f.fechaHasta||'hoy'}`);if(f.semana)parts.push('Semana '+f.semana);if(f.personal)parts.push('Personal: '+f.personal);if(f.maquina)parts.push('Máquina: '+f.maquina);if(f.estilo)parts.push('Estilo: '+f.estilo);if(f.operacion)parts.push('Operación: '+f.operacion);if(f.corte)parts.push('Corte: '+f.corte);return parts.join(' · ')||'Todos los registros'}
 function csvCell(v){return '"'+String(v).replace(/"/g,'""')+'"'}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function toggle(on){['apply','clear','pdf','excel'].forEach(id=>$(id).disabled=on)}function show(t,err){const m=$('msg');m.textContent=t;m.className='msg show '+(err?'err':'good')}function hide(){$('msg').className='msg'}
-</script>
-</body></html>
+  </script>
+ </body>
+</html>
+
