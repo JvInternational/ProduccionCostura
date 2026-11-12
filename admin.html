@@ -193,7 +193,7 @@ label{font-size:10px;font-weight:700;color:#536661;display:block;margin-bottom:5
     </section>
    </main>
   </div>
-  <script>
+  <script src="auth.js"></script><script>
    'use strict';const API='https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec',$=id=>document.getElementById(id);let rates=[];const money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});document.addEventListener('DOMContentLoaded',init);
 async function req(action,params={},post=false){let r;if(post){const body=new URLSearchParams({action,payload:JSON.stringify(params)});r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body})}else{r=await fetch(API+'?'+new URLSearchParams({action,...params}),{cache:'no-store'})}const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
 async function init(){$('tipo').addEventListener('change',mode);$('estilo').addEventListener('change',loadOps);$('aplicacion').addEventListener('change',loadOps);$('form').addEventListener('submit',save);$('clear').addEventListener('click',reset);$('search').addEventListener('input',render);await Promise.all([catalogs(),loadRates()]);mode()}
