@@ -35,7 +35,7 @@
 </div><div class="summary"><div><div class="sl">COSTO UNITARIO</div><div class="sv" id="unit">$0.00</div></div><div><div class="sl">CANTIDAD</div><div class="sv" id="qty">1</div></div><div><div class="sl">COSTO TOTAL</div><div class="sv" id="total">$0.00</div></div></div>
 <div class="actions"><button class="light" id="clear" type="button">Limpiar</button><button class="primary" disabled="" id="save">Guardar captura</button></div></form></section></main></div><script src="auth.js"></script><script>
 'use strict';
-const API_URL='https://script.google.com/macros/s/AKfycbyiN8WA6qxJlK0s3X6trL_-sI6KTseDezjQ-5LWYyBsA2P5NvK5cf8yAeK-KruRaQ3r1A/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec';
 const $=id=>document.getElementById(id), state={ops:[],cost:0,ready:false,captureId:newCaptureId()}; const mxn=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
 document.addEventListener('DOMContentLoaded',()=>{const d=new Date();$('fecha').value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');$('estilo').addEventListener('change',styleChanged);$('variante').addEventListener('change',loadOps);$('operacion').addEventListener('change',calc);$('cantidad').addEventListener('input',calc);$('clear').addEventListener('click',reset);$('form').addEventListener('submit',save);loadCatalogs()});
 async function get(action,params={}){const q=new URLSearchParams({action,...params});const r=await fetch(API_URL+'?'+q,{cache:'no-store',redirect:'follow'});if(!r.ok)throw Error('Error HTTP '+r.status);const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
