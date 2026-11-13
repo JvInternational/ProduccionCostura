@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Captura por ticket | JV International</title>
+<style>
+:root{--nav:#0d1b22;--nav2:#173a35;--teal:#08776b;--bg:#f3f6f5;--card:#fff;--text:#18312d;--muted:#72817e;--line:#dfe7e4;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}button,input,select{font:inherit}
+.app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}aside{background:var(--nav);color:#dbe7e4;padding:10px 9px}
+.brand{background:#fff;border-radius:6px;height:72px;padding:8px 10px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;overflow:hidden}.brand img{display:block;width:100%;max-width:190px;max-height:54px;height:auto;object-fit:contain}
+.group{font-size:8px;color:#6f8380;letter-spacing:.12em;margin:12px 6px 7px}nav a{display:block;color:#c9d7d4;text-decoration:none;padding:9px 10px;border-radius:6px;margin:2px 0;font-size:12px}nav a:hover,nav a.active{background:var(--nav2);color:#fff}
+main{padding:20px 24px;min-width:0}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}.top h1{font-size:25px;margin:0}.top p{color:var(--muted);margin:4px 0}.status{font-size:12px;color:var(--muted);padding-top:7px}.status.ok{color:var(--teal);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 5px 14px #173a3510;overflow:hidden}.head{padding:16px;border-bottom:1px solid var(--line)}.head h2{font-size:14px;margin:0 0 4px}.head p{font-size:11px;color:var(--muted);margin:0}form{padding:16px}
+.msg{display:none;padding:10px 12px;border-radius:7px;margin-bottom:12px;font-size:12px;font-weight:700}.msg.error{display:block;background:#fff1f1;color:var(--bad);border:1px solid #ffd4d4}.msg.success{display:block;background:#edfdf5;color:var(--teal);border:1px solid #b7ead7}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:11px}.field label{display:block;font-size:10px;font-weight:800;color:#536661;margin-bottom:5px}.span2{grid-column:span 2}
+input,select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text)}input:focus,select:focus,button:focus{outline:3px solid #08776b25;border-color:var(--teal)}input[readonly]{background:#f5f8f7}
+.summary{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.summary>div{background:#f7faf9;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:14px}.sl{font-size:9px;color:var(--muted);font-weight:800}.sv{font-size:19px;font-weight:850;margin-top:4px;overflow-wrap:anywhere}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}button{border:0;border-radius:6px;padding:10px 13px;font-weight:750;cursor:pointer}.light{background:#e7eeec;color:#294640}.primary{background:var(--teal);color:#fff}button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:900px){.app{grid-template-columns:1fr}.brand{display:inline-flex;width:210px;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}}@media(max-width:520px){.top{display:block}.grid,.summary{grid-template-columns:1fr}.span2{grid-column:auto}.actions button{flex:1}}
+</style></head><body>
+<div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div>
+<nav><a href="index.html">Captura</a><a class="active" href="ticket.html">Captura por ticket</a><a href="cortes.html">Programa de corte</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav></aside>
+<main>
+<header class="top"><div><h1>Captura por ticket</h1><p>Registra las piezas de un ticket del programa de corte. No se puede capturar más de lo solicitado.</p></div><div class="status" id="status">Conectando…</div></header>
+<section class="card"><div class="head"><h2>Nueva captura</h2><p>El estilo, la operación y el costo vienen del ticket.</p></div>
+<form id="form" autocomplete="off"><div class="msg" id="msg"></div><div class="grid">
+<div class="field span2"><label for="find">FOLIO DE TICKET (opcional: escríbelo o escanéalo)</label><input id="find" placeholder="Ej. CT-000001-T045"/></div>
+<div class="field"><label for="corte">CORTE *</label><select id="corte" disabled><option>Cargando…</option></select></div>
+<div class="field"><label for="ticket">TICKET *</label><select id="ticket" disabled><option>Selecciona primero un corte</option></select></div>
+<div class="field"><label for="fecha">FECHA *</label><input id="fecha" type="date" required/></div>
+<div class="field"><label for="personal">PERSONAL *</label><select id="personal" disabled><option>Cargando…</option></select></div>
+<div class="field"><label for="maquina">MÁQUINA *</label><select id="maquina" disabled><option>Cargando…</option></select></div>
+<div class="field"><label for="cantidad" id="cantLabel">PIEZAS *</label><input id="cantidad" type="number" min="1" step="1" placeholder="Piezas" disabled/></div>
+</div>
+<div class="summary"><div><div class="sl">ESTILO / TALLA</div><div class="sv" id="vEst">—</div></div><div><div class="sl">OPERACIÓN</div><div class="sv" id="vOp">—</div></div><div><div class="sl">COSTO UNITARIO</div><div class="sv" id="vUnit">$0.00</div></div><div><div class="sl">SOLICITADAS · RESTANTES</div><div class="sv" id="vRest">—</div></div></div>
+<div class="summary" style="grid-template-columns:repeat(2,1fr)"><div><div class="sl">PIEZAS A CAPTURAR</div><div class="sv" id="vQty">0</div></div><div><div class="sl">COSTO TOTAL</div><div class="sv" id="vTotal">$0.00</div></div></div>
+<div class="actions"><button class="light" id="clear" type="button">Limpiar</button><button class="primary" id="save" disabled>Guardar captura</button></div></form></section>
+</main></div>
+<script src="auth.js"></script><script>
+'use strict';
+const API='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec';
+const $=id=>document.getElementById(id),mxn=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}),nf=new Intl.NumberFormat('es-MX');
+const state={cuts:[],tickets:[],ready:false,captureId:newId(),current:null};
+function newId(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function get(action,params={}){const r=await fetch(API+'?'+new URLSearchParams({action,...params}),{cache:'no-store',redirect:'follow'});const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
+async function post(action,payload){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:new URLSearchParams({action,payload:JSON.stringify(payload)}).toString(),redirect:'follow'});const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
+function show(t,type){$('msg').textContent=t;$('msg').className='msg '+type}function hide(){$('msg').className='msg';$('msg').textContent=''}
+function fill(id,items,label){const s=$(id);s.innerHTML='<option value="">'+esc(label)+'</option>'+items.map(i=>`<option value="${esc(i.v)}">${esc(i.t)}</option>`).join('');s.disabled=!items.length}
+
+document.addEventListener('DOMContentLoaded',()=>{const d=new Date();$('fecha').value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+  $('corte').addEventListener('change',()=>loadTickets($('corte').value));$('ticket').addEventListener('change',pick);$('cantidad').addEventListener('input',calc);$('find').addEventListener('change',findTicket);
+  $('clear').addEventListener('click',()=>reset());$('form').addEventListener('submit',save);init()});
+async function init(){try{const [c,k]=await Promise.all([get('catalogs'),get('cortes')]);const cat=c.catalogs||{};fill('personal',(cat.personal||[]).map(x=>({v:x,t:x})),'Selecciona personal');fill('maquina',(cat.maquinas||[]).map(x=>({v:x,t:x})),'Selecciona máquina');loadCuts(k.cortes||[]);state.ready=true;$('save').disabled=false;$('status').textContent='● Conectado';$('status').className='status ok'}catch(e){show(e.message,'error');$('status').textContent='● Sin conexión'}}
+function loadCuts(list){state.cuts=list.filter(c=>c.estado==='ACTIVO'&&c.piezasCapturadas<c.piezasSolicitadas);fill('corte',state.cuts.map(c=>({v:c.folioCorte,t:`${c.folioCorte} · Orden ${c.orden} · ${c.estilo}${c.variante==='DC'?' DC':''}`})),state.cuts.length?'Selecciona corte':'No hay cortes con tickets pendientes')}
+async function loadTickets(folio,selected){state.tickets=[];state.current=null;showTicket();fill('ticket',[],'Selecciona primero un corte');if(!folio)return;
+  try{const d=await get('tickets',{corte:folio});state.tickets=(d.tickets||[]).filter(t=>t.estado==='PENDIENTE'||t.estado==='PARCIAL');fill('ticket',state.tickets.map(t=>({v:t.folio,t:`${t.folio.split('-').pop()} · ${t.talla} · ${t.operacion} · restan ${nf.format(t.restantes)}`})),state.tickets.length?'Selecciona ticket':'Sin tickets pendientes');if(selected){$('ticket').value=selected;pick()}}catch(e){show(e.message,'error')}}
+function pick(){hide();state.current=state.tickets.find(t=>t.folio===$('ticket').value)||null;showTicket()}
+function showTicket(){const t=state.current;$('vEst').textContent=t?t.estilo+(t.variante==='DC'?' DC':'')+' · '+t.talla:'—';$('vOp').textContent=t?t.operacion:'—';$('vUnit').textContent=mxn.format(t?t.costoUnitario:0);$('vRest').textContent=t?nf.format(t.piezas)+' · '+nf.format(t.restantes):'—';const q=$('cantidad');q.disabled=!t;q.value='';q.max=t?t.restantes:'';q.placeholder=t?'Máximo '+nf.format(t.restantes):'Piezas';$('cantLabel').textContent=t?'PIEZAS * (MÁX. '+nf.format(t.restantes)+')':'PIEZAS *';calc()}
+function calc(){const t=state.current,q=parseInt($('cantidad').value,10)||0;$('vQty').textContent=nf.format(q);$('vTotal').textContent=mxn.format(t?q*t.costoUnitario:0)}
+async function findTicket(){const v=$('find').value.trim().toUpperCase();if(!v)return;const m=v.match(/^(CT-\d+)-T\d+$/);if(!m){show('Folio de ticket no válido. Formato: CT-000001-T045.','error');return}
+  if(!state.cuts.some(c=>c.folioCorte===m[1])){show('El corte '+m[1]+' no tiene tickets pendientes o no existe.','error');return}hide();$('corte').value=m[1];await loadTickets(m[1],v);if($('ticket').value!==v)show('El ticket '+v+' no está pendiente (completo o anulado).','error')}
+async function save(e){e.preventDefault();hide();const t=state.current,q=Number($('cantidad').value);
+  const p={folioTicket:t?t.folio:'',fecha:$('fecha').value,personal:$('personal').value,maquina:$('maquina').value,cantidad:q,captureId:state.captureId};
+  if(!t||!p.fecha||!p.personal||!p.maquina||!Number.isInteger(q)||q<1){show('Completa correctamente todos los campos.','error');return}
+  if(q>t.restantes){show('Excede lo solicitado: este ticket admite máximo '+nf.format(t.restantes)+' piezas.','error');return}
+  $('save').disabled=true;$('save').textContent='Guardando…';
+  try{const d=await post('saveTicket',p);show((d.duplicado?'Esta captura ya estaba registrada. Folio: ':'Captura guardada. Folio: ')+d.folio+(d.restantes!==undefined?'. Restan '+nf.format(d.restantes)+' piezas en el ticket.':'.'),'success');state.captureId=newId();const folio=$('corte').value;const k=await get('cortes');loadCuts(k.cortes||[]);if(state.cuts.some(c=>c.folioCorte===folio)){$('corte').value=folio;await loadTickets(folio)}else{await loadTickets('')}$('find').value=''}
+  catch(err){show(err.message,'error')}finally{$('save').disabled=!state.ready;$('save').textContent='Guardar captura'}}
+function reset(){hide();$('find').value='';$('corte').value='';state.captureId=newId();loadTickets('')}
+</script></body></html>
