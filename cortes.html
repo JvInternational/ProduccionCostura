@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Programa de corte | JV International</title>
+<style>
+:root{--nav:#0d1b22;--nav2:#173a35;--teal:#08776b;--bg:#f3f6f5;--card:#fff;--text:#18312d;--muted:#72817e;--line:#dfe7e4;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}button,input,select{font:inherit}
+.app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}aside{background:var(--nav);color:#dbe7e4;padding:10px 9px}
+.brand{background:#fff;border-radius:6px;height:72px;padding:8px 10px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;overflow:hidden}.brand img{display:block;width:100%;max-width:190px;max-height:54px;height:auto;object-fit:contain}
+.group{font-size:8px;color:#6f8380;letter-spacing:.12em;margin:12px 6px 7px}nav a{display:block;color:#c9d7d4;text-decoration:none;padding:9px 10px;border-radius:6px;margin:2px 0;font-size:12px}nav a:hover,nav a.active{background:var(--nav2);color:#fff}
+main{padding:20px 24px;min-width:0}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}.top h1{font-size:25px;margin:0}.top p{color:var(--muted);margin:4px 0}.status{font-size:12px;color:var(--muted);padding-top:7px}.status.ok{color:var(--teal);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 5px 14px #173a3510;margin-bottom:14px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}.head h2{font-size:14px;margin:0}.body{padding:16px}
+.msg{display:none;padding:10px 12px;border-radius:7px;margin-bottom:12px;font-size:12px;font-weight:700}.msg.error{display:block;background:#fff1f1;color:var(--bad);border:1px solid #ffd4d4}.msg.success{display:block;background:#edfdf5;color:var(--teal);border:1px solid #b7ead7}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:11px}.field label,.lab{display:block;font-size:10px;font-weight:800;color:#536661;margin-bottom:5px}
+input,select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--text)}input:focus,select:focus,button:focus{outline:3px solid #08776b25;border-color:var(--teal)}
+button{border:0;border-radius:6px;padding:10px 13px;font-weight:750;cursor:pointer}.light{background:#e7eeec;color:#294640}.primary{background:var(--teal);color:#fff}.danger{background:#fff0ef;color:#a32b2b;padding:6px 9px}.small{padding:6px 9px;font-size:12px}button:disabled{opacity:.5;cursor:not-allowed}
+.ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-top:6px}.ops label{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:600;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 9px;margin:0}.ops input{width:auto;height:auto}
+table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;border-bottom:1px solid #edf2f0;font-size:12px;text-align:left}th{font-size:9px;background:#f5f8f7;color:#596b67}.num{text-align:right}.run input{height:34px}.wrap{overflow:auto}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}.summary>div{background:#f7faf9;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:12px}.sl{font-size:9px;color:var(--muted);font-weight:800}.sv{font-size:19px;font-weight:850;margin-top:3px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}.row{display:flex;gap:6px;flex-wrap:wrap}.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:99px;background:#e7eeec}.tag.bad{background:#fff0ef;color:#a32b2b}
+#printArea{display:none}.lbl{width:2in;height:1.5in;padding:.08in;border:1px dashed #9fb3ae;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.lf{font:700 11pt/1 "Courier New",monospace}.le{font:700 14pt/1 Arial,sans-serif}.lo{font:700 11pt/1.1 Arial,sans-serif}.lc{font:10pt/1 Arial,sans-serif}.lp{display:flex;align-items:flex-end;gap:6px;font:700 12pt/1 Arial,sans-serif}.lp i{flex:1;border-bottom:1.5px solid #000;height:15pt}
+.prev{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:900px){.app{grid-template-columns:1fr}.brand{display:inline-flex;width:210px;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}}@media(max-width:520px){.top{display:block}.grid,.summary{grid-template-columns:1fr}}
+/* Etiqueta imprimible 2 in x 1.5 in (ancho x alto). Para otro tamaño cambia aquí y en .lbl. */
+@page{size:2in 1.5in;margin:0}
+@media print{html,body{margin:0;padding:0;background:#fff}.app{display:none!important}#printArea{display:block}#printArea .lbl{border:0;break-after:page;page-break-after:always}#printArea .lbl:last-child{break-after:auto;page-break-after:auto}}
+</style></head><body>
+<div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div>
+<nav><a href="index.html">Captura</a><a href="ticket.html">Captura por ticket</a><a class="active" href="cortes.html">Programa de corte</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav></aside>
+<main>
+<header class="top"><div><h1>Programa de corte</h1><p>Un folio principal por corte y un ticket con folio independiente por talla y operación.</p></div><div class="status" id="status">Conectando…</div></header>
+<div class="msg" id="msg"></div>
+
+<section class="card"><div class="head"><h2 id="formTitle">Nuevo corte</h2><span class="tag" id="folioShown">Folio principal: se asigna al guardar</span></div>
+<div class="body"><div class="grid">
+<div class="field"><label for="orden">ORDEN *</label><input id="orden" maxlength="40" placeholder="Ej. 297071"/></div>
+<div class="field"><label for="estilo">ESTILO *</label><select id="estilo"><option value="">Cargando…</option></select></div>
+<div class="field"><label for="variante">VARIANTE</label><select id="variante"><option>GENERAL</option><option>DC</option></select></div>
+<div class="field"><label for="lienzosAll">LIENZOS (aplicar a todas las tallas)</label><input id="lienzosAll" type="number" min="1" step="1" placeholder="Ej. 152"/></div>
+</div>
+<div style="margin-top:14px"><div class="lab">OPERACIONES DEL CORTE * (tomadas de Tarifas)</div><div class="row"><button class="light small" id="opsAll" type="button">Seleccionar todas</button><button class="light small" id="opsNone" type="button">Quitar todas</button></div><div class="ops" id="ops"><span style="color:var(--muted);font-size:12px">Selecciona un estilo.</span></div></div>
+<div style="margin-top:14px"><div class="lab">CORRIDA DE TALLAS *</div><div class="wrap"><table class="run"><thead><tr><th>TALLA</th><th>PIEZAS POR LIENZO (PROPORCIÓN)</th><th>LIENZOS</th><th class="num">TOTAL PIEZAS</th><th></th></tr></thead><tbody id="runBody"></tbody></table></div><button class="light small" id="addRow" type="button" style="margin-top:8px">+ Agregar talla</button></div>
+<div class="summary"><div><div class="sl">TOTAL ORDEN (PIEZAS)</div><div class="sv" id="sPiezas">0</div></div><div><div class="sl">TICKETS A GENERAR</div><div class="sv" id="sTickets">0</div></div><div><div class="sl">PIEZAS-OPERACIÓN</div><div class="sv" id="sOps">0</div></div><div><div class="sl">OPERACIONES</div><div class="sv" id="sNOps">0</div></div></div>
+<div class="actions"><button class="light" id="cancelEdit" type="button" hidden>Cancelar edición</button><button class="light" id="reset" type="button">Limpiar</button><button class="primary" id="save" type="button">Guardar corte</button></div></div></section>
+
+<section class="card"><div class="head"><h2>Cortes programados</h2></div><div class="wrap"><table><thead><tr><th>FOLIO</th><th>ORDEN</th><th>ESTILO</th><th class="num">PIEZAS</th><th class="num">TICKETS</th><th class="num">COMPLETOS</th><th class="num">CAPTURADAS</th><th>ESTADO</th><th></th></tr></thead><tbody id="cuts"></tbody></table><div style="padding:24px;text-align:center;color:var(--muted)" id="noCuts" hidden>Aún no hay cortes.</div></div></section>
+
+<section class="card" id="labelPanel" hidden><div class="head"><h2 id="labelTitle">Etiquetas</h2><button class="primary" id="printBtn" type="button">Imprimir etiquetas</button></div><div class="body"><p style="margin:0;color:var(--muted);font-size:12px" id="labelInfo"></p><div class="prev" id="prev"></div></div></section>
+</main></div>
+<div id="printArea"></div>
+<script src="auth.js"></script><script>
+'use strict';
+const API='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec';
+const $=id=>document.getElementById(id),mxn=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}),nf=new Intl.NumberFormat('es-MX');
+const state={cuts:[],editing:'',clave:newId(),busy:false};
+function newId(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function get(action,params={}){const r=await fetch(API+'?'+new URLSearchParams({action,...params}),{cache:'no-store',redirect:'follow'});const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
+async function post(action,payload){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:new URLSearchParams({action,payload:JSON.stringify(payload)}).toString(),redirect:'follow'});const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
+function show(t,type){$('msg').textContent=t;$('msg').className='msg '+type;window.scrollTo({top:0,behavior:'smooth'})}function hide(){$('msg').className='msg';$('msg').textContent=''}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  $('estilo').addEventListener('change',()=>loadOps([]));$('variante').addEventListener('change',()=>loadOps([]));
+  $('opsAll').addEventListener('click',()=>{document.querySelectorAll('#ops input').forEach(i=>i.checked=true);recalc()});
+  $('opsNone').addEventListener('click',()=>{document.querySelectorAll('#ops input').forEach(i=>i.checked=false);recalc()});
+  $('addRow').addEventListener('click',()=>addRow('',1,''));
+  $('lienzosAll').addEventListener('input',()=>{const v=$('lienzosAll').value;document.querySelectorAll('.rl').forEach(i=>i.value=v);recalc()});
+  $('save').addEventListener('click',save);$('reset').addEventListener('click',()=>resetForm());$('cancelEdit').addEventListener('click',()=>resetForm());
+  $('printBtn').addEventListener('click',()=>window.print());
+  defaultRows();
+  try{const c=await get('catalogs');fillStyles(c.catalogs.estilos||[]);await loadCuts();$('status').textContent='● Conectado';$('status').className='status ok'}
+  catch(e){show(e.message,'error');$('status').textContent='● Sin conexión'}
+});
+function fillStyles(a){$('estilo').innerHTML='<option value="">Selecciona estilo</option>'+a.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}
+function defaultRows(){$('runBody').innerHTML='';[['XS',3],['SM',6],['MD',6],['LG',3],['XL',3]].forEach(r=>addRow(r[0],r[1],''));recalc()}
+function addRow(t,p,l){const tr=document.createElement('tr');tr.innerHTML=`<td><input class="rt" maxlength="10" value="${esc(t)}" placeholder="Talla"/></td><td><input class="rp" type="number" min="1" step="1" value="${esc(p)}"/></td><td><input class="rl" type="number" min="1" step="1" value="${esc(l)}"/></td><td class="num rtot">0</td><td><button class="danger" type="button">Quitar</button></td>`;tr.querySelectorAll('input').forEach(i=>i.addEventListener('input',recalc));tr.querySelector('button').addEventListener('click',()=>{tr.remove();recalc()});$('runBody').appendChild(tr);recalc()}
+function readRun(){return [...document.querySelectorAll('#runBody tr')].map(tr=>({talla:tr.querySelector('.rt').value.trim().toUpperCase(),proporcion:Number(tr.querySelector('.rp').value),lienzos:Number(tr.querySelector('.rl').value)}))}
+function checkedOps(){return [...document.querySelectorAll('#ops input:checked')].map(i=>i.value)}
+function recalc(){let piezas=0,props=0;document.querySelectorAll('#runBody tr').forEach(tr=>{const p=Number(tr.querySelector('.rp').value)||0,l=Number(tr.querySelector('.rl').value)||0;tr.querySelector('.rtot').textContent=nf.format(p*l);piezas+=p*l;props+=p});const n=checkedOps().length;$('sPiezas').textContent=nf.format(piezas);$('sTickets').textContent=nf.format(props*n);$('sOps').textContent=nf.format(piezas*n);$('sNOps').textContent=n}
+async function loadOps(pre){const e=$('estilo').value;if(!e){$('ops').innerHTML='<span style="color:var(--muted);font-size:12px">Selecciona un estilo.</span>';recalc();return}
+  try{const d=await get('operations',{estilo:e,variante:$('variante').value});const list=d.operaciones||[];$('ops').innerHTML=list.length?list.map(o=>`<label><input type="checkbox" value="${esc(o.operacion)}" ${pre.includes(o.operacion)?'checked':''}/>${esc(o.operacion)} <span style="color:var(--muted);margin-left:auto">${mxn.format(o.costo)}</span></label>`).join(''):'<span style="color:var(--muted);font-size:12px">Este estilo no tiene tarifas para la variante elegida.</span>';document.querySelectorAll('#ops input').forEach(i=>i.addEventListener('change',recalc));recalc()}catch(err){show(err.message,'error')}}
+
+async function save(){hide();if(state.busy)return;const payload={folioCorte:state.editing,orden:$('orden').value.trim(),estilo:$('estilo').value,variante:$('variante').value,corrida:readRun(),operaciones:checkedOps(),clave:state.clave};
+  if(!payload.orden||!payload.estilo){show('Captura la orden y el estilo.','error');return}
+  if(!payload.operaciones.length){show('Selecciona al menos una operación.','error');return}
+  if(payload.corrida.some(c=>!c.talla||!(c.proporcion>=1)||!(c.lienzos>=1))){show('Completa talla, proporción y lienzos de cada fila de la corrida.','error');return}
+  state.busy=true;$('save').disabled=true;$('save').textContent='Guardando…';
+  try{const d=await post('saveCorte',payload);show((d.duplicado?'Este corte ya estaba registrado. ':'Corte guardado. ')+'Folio principal '+d.folioCorte+' con '+d.tickets+' tickets.','success');resetForm(true);await loadCuts();showLabels(d.folioCorte)}
+  catch(e){show(e.message,'error')}finally{state.busy=false;$('save').disabled=false;$('save').textContent=state.editing?'Guardar cambios':'Guardar corte'}}
+function resetForm(keepMsg){state.editing='';state.clave=newId();$('orden').value='';$('estilo').value='';$('variante').value='GENERAL';$('lienzosAll').value='';$('ops').innerHTML='<span style="color:var(--muted);font-size:12px">Selecciona un estilo.</span>';defaultRows();$('formTitle').textContent='Nuevo corte';$('folioShown').textContent='Folio principal: se asigna al guardar';$('save').textContent='Guardar corte';$('cancelEdit').hidden=true;if(!keepMsg)hide()}
+
+async function loadCuts(){const d=await get('cortes');state.cuts=d.cortes||[];renderCuts()}
+function renderCuts(){$('noCuts').hidden=state.cuts.length>0;$('cuts').innerHTML=state.cuts.map(c=>{const open=c.estado==='ACTIVO',free=open&&!(c.piezasCapturadas>0);return `<tr><td><b>${esc(c.folioCorte)}</b></td><td>${esc(c.orden)}</td><td>${esc(c.estilo)}${c.variante==='DC'?' DC':''}</td><td class="num">${nf.format(c.piezasOrden)}</td><td class="num">${nf.format(c.tickets)}</td><td class="num">${nf.format(c.ticketsCompletos)}</td><td class="num">${nf.format(c.piezasCapturadas)} / ${nf.format(c.piezasSolicitadas)}</td><td><span class="tag ${open?'':'bad'}">${esc(c.estado)}</span></td><td><div class="row"><button class="light small" data-a="lab" data-f="${esc(c.folioCorte)}" ${open?'':'disabled'}>Etiquetas</button><button class="light small" data-a="edit" data-f="${esc(c.folioCorte)}" ${free?'':'disabled'}>Editar</button><button class="danger" data-a="del" data-f="${esc(c.folioCorte)}" ${free?'':'disabled'}>Anular</button></div></td></tr>`}).join('');
+  document.querySelectorAll('#cuts button').forEach(b=>b.addEventListener('click',()=>{const f=b.dataset.f;if(b.dataset.a==='lab')showLabels(f);else if(b.dataset.a==='edit')editCut(f);else cancelCut(f)}))}
+async function editCut(folio){const c=state.cuts.find(x=>x.folioCorte===folio);if(!c)return;hide();state.editing=folio;state.clave=newId();$('orden').value=c.orden;$('estilo').value=c.estilo;$('variante').value=c.variante||'GENERAL';$('lienzosAll').value='';$('runBody').innerHTML='';(c.corrida||[]).forEach(r=>addRow(r.talla,r.proporcion,r.lienzos));await loadOps(c.operaciones||[]);$('formTitle').textContent='Reprogramar corte';$('folioShown').textContent='Folio principal: '+folio;$('save').textContent='Guardar cambios';$('cancelEdit').hidden=false;window.scrollTo({top:0,behavior:'smooth'});show('Al guardar se regeneran los tickets con los mismos folios. Vuelve a imprimir las etiquetas.','success')}
+async function cancelCut(folio){if(!confirm('¿Anular el corte '+folio+' y todos sus tickets? Esta acción no se puede deshacer.'))return;hide();try{await post('anularCorte',{folioCorte:folio});show('Corte '+folio+' anulado.','success');await loadCuts();$('labelPanel').hidden=true;$('printArea').innerHTML=''}catch(e){show(e.message,'error')}}
+
+function labelHtml(t){return `<div class="lbl"><div class="lf">${esc(t.folio)}</div><div class="le">${esc(t.estilo)}${t.variante==='DC'?' DC':''} · ${esc(t.talla)}</div><div class="lo">${esc(t.operacion)}</div><div class="lc">COSTO ${mxn.format(t.costoUnitario)} / pza</div><div class="lp">PIEZAS<i></i></div></div>`}
+async function showLabels(folio){try{const d=await get('tickets',{corte:folio});const list=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');$('printArea').innerHTML=list.map(labelHtml).join('');$('prev').innerHTML=list.slice(0,4).map(labelHtml).join('');$('labelTitle').textContent='Etiquetas del corte '+folio;$('labelInfo').textContent=list.length+' etiquetas de 2 × 1.5 in, con la línea de piezas en blanco. Vista previa de las primeras 4. En el diálogo de impresión elige el tamaño de papel 2 × 1.5 in, márgenes ninguno y escala 100%.';$('printBtn').disabled=!list.length;$('labelPanel').hidden=false;$('labelPanel').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){show(e.message,'error')}}
+</script></body></html>
