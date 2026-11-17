@@ -18,26 +18,27 @@ input,select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--line)
 <div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div>
 <nav><a href="cortes.html">Programa de corte</a><a class="active" href="ticket.html">Captura por ticket</a><a href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav></aside>
 <main>
-<header class="top"><div><h1>Captura por ticket</h1><p>Registra las piezas de un ticket del programa de corte. No se puede capturar más de lo solicitado.</p></div><div class="status" id="status">Conectando…</div></header>
-<section class="card"><div class="head"><h2>Nueva captura</h2><p>El estilo, la operación y el costo vienen del ticket.</p></div>
+<header class="top"><div><h1>Captura por ticket</h1><p>Registra piezas por talla y operación del programa de corte. No se puede capturar más de lo solicitado.</p></div><div class="status" id="status">Conectando…</div></header>
+<section class="card"><div class="head"><h2>Nueva captura</h2><p>El máximo es lo que falta de la talla y operación (proporción × lienzos); se reparte solo entre sus tickets.</p></div>
 <form id="form" autocomplete="off"><div class="msg" id="msg"></div><div class="grid">
-<div class="field span2"><label for="find">FOLIO DE TICKET (opcional: escríbelo o escanéalo)</label><input id="find" placeholder="Ej. CT-000001-T045"/></div>
-<div class="field"><label for="corte">CORTE *</label><select id="corte" disabled><option>Cargando…</option></select></div>
-<div class="field"><label for="ticket">TICKET *</label><select id="ticket" disabled><option>Selecciona primero un corte</option></select></div>
+<div class="field span2"><label for="find">FOLIO DE TICKET (opcional: escríbelo o escanéalo para iniciar en ese ticket)</label><input id="find" placeholder="Ej. CT-000001-T045"/></div>
+<div class="field span2"><label for="corte">CORTE *</label><select id="corte" disabled><option>Cargando…</option></select></div>
+<div class="field"><label for="talla">TALLA *</label><select id="talla" disabled><option>Selecciona primero un corte</option></select></div>
+<div class="field span2"><label for="operacion">OPERACIÓN *</label><select id="operacion" disabled><option>Selecciona primero una talla</option></select></div>
 <div class="field"><label for="fecha">FECHA *</label><input id="fecha" type="date" required/></div>
 <div class="field"><label for="personal">PERSONAL *</label><select id="personal" disabled><option>Cargando…</option></select></div>
 <div class="field"><label for="maquina">MÁQUINA *</label><select id="maquina" disabled><option>Cargando…</option></select></div>
 <div class="field"><label for="cantidad" id="cantLabel">PIEZAS *</label><input id="cantidad" type="number" min="1" step="1" placeholder="Piezas" disabled/></div>
 </div>
 <div class="summary"><div><div class="sl">ESTILO / TALLA</div><div class="sv" id="vEst">—</div></div><div><div class="sl">OPERACIÓN</div><div class="sv" id="vOp">—</div></div><div><div class="sl">COSTO UNITARIO</div><div class="sv" id="vUnit">$0.00</div></div><div><div class="sl">SOLICITADAS · RESTANTES</div><div class="sv" id="vRest">—</div></div></div>
-<div class="summary" style="grid-template-columns:repeat(2,1fr)"><div><div class="sl">PIEZAS A CAPTURAR</div><div class="sv" id="vQty">0</div></div><div><div class="sl">COSTO TOTAL</div><div class="sv" id="vTotal">$0.00</div></div></div>
+<div class="summary" style="grid-template-columns:repeat(3,1fr)"><div><div class="sl">PIEZAS A CAPTURAR</div><div class="sv" id="vQty">0</div></div><div><div class="sl">COSTO TOTAL</div><div class="sv" id="vTotal">$0.00</div></div><div><div class="sl">TALLA COMPLETA · TODAS LAS OPERACIONES</div><div class="sv" id="vSize">—</div></div></div>
 <div class="actions"><button class="light" id="clear" type="button">Limpiar</button><button class="primary" id="save" disabled>Guardar captura</button></div></form></section>
 </main></div>
 <script src="auth.js"></script><script>
 'use strict';
 const API='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec';
 const $=id=>document.getElementById(id),mxn=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}),nf=new Intl.NumberFormat('es-MX');
-const state={cuts:[],tickets:[],ready:false,captureId:newId(),current:null};
+const state={cuts:[],cut:null,tickets:[],ready:false,captureId:newId(),start:''};
 function newId(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function get(action,params={}){const r=await fetch(API+'?'+new URLSearchParams({action,...params}),{cache:'no-store',redirect:'follow'});const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
@@ -46,23 +47,40 @@ function show(t,type){$('msg').textContent=t;$('msg').className='msg '+type}func
 function fill(id,items,label){const s=$(id);s.innerHTML='<option value="">'+esc(label)+'</option>'+items.map(i=>`<option value="${esc(i.v)}">${esc(i.t)}</option>`).join('');s.disabled=!items.length}
 
 document.addEventListener('DOMContentLoaded',()=>{const d=new Date();$('fecha').value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
-  $('corte').addEventListener('change',()=>loadTickets($('corte').value));$('ticket').addEventListener('change',pick);$('cantidad').addEventListener('input',calc);$('find').addEventListener('change',findTicket);
-  $('clear').addEventListener('click',()=>reset());$('form').addEventListener('submit',save);init()});
+  $('corte').addEventListener('change',()=>{state.start='';loadTickets($('corte').value)});$('talla').addEventListener('change',()=>{state.start='';fillOps()});$('operacion').addEventListener('change',()=>{state.start='';showGroup()});
+  $('cantidad').addEventListener('input',calc);$('find').addEventListener('change',findTicket);$('clear').addEventListener('click',()=>reset());$('form').addEventListener('submit',save);init()});
 async function init(){try{const [c,k]=await Promise.all([get('catalogs'),get('cortes')]);const cat=c.catalogs||{};fill('personal',(cat.personal||[]).map(x=>({v:x,t:x})),'Selecciona personal');fill('maquina',(cat.maquinas||[]).map(x=>({v:x,t:x})),'Selecciona máquina');loadCuts(k.cortes||[]);state.ready=true;$('save').disabled=false;$('status').textContent='● Conectado';$('status').className='status ok'}catch(e){show(e.message,'error');$('status').textContent='● Sin conexión'}}
-function loadCuts(list){state.cuts=list.filter(c=>c.estado==='ACTIVO'&&c.piezasCapturadas<c.piezasSolicitadas);fill('corte',state.cuts.map(c=>({v:c.folioCorte,t:`${c.folioCorte} · Orden ${c.orden} · ${c.estilo}${c.variante==='DC'?' DC':''}`})),state.cuts.length?'Selecciona corte':'No hay cortes con tickets pendientes')}
-async function loadTickets(folio,selected){state.tickets=[];state.current=null;showTicket();fill('ticket',[],'Selecciona primero un corte');if(!folio)return;
-  try{const d=await get('tickets',{corte:folio});state.tickets=(d.tickets||[]).filter(t=>t.estado==='PENDIENTE'||t.estado==='PARCIAL');fill('ticket',state.tickets.map(t=>({v:t.folio,t:`${t.folio.split('-').pop()} · ${t.talla} · ${t.operacion} · restan ${nf.format(t.restantes)}`})),state.tickets.length?'Selecciona ticket':'Sin tickets pendientes');if(selected){$('ticket').value=selected;pick()}}catch(e){show(e.message,'error')}}
-function pick(){hide();state.current=state.tickets.find(t=>t.folio===$('ticket').value)||null;showTicket()}
-function showTicket(){const t=state.current;$('vEst').textContent=t?t.estilo+(t.variante==='DC'?' DC':'')+' · '+t.talla:'—';$('vOp').textContent=t?t.operacion:'—';$('vUnit').textContent=mxn.format(t?t.costoUnitario:0);$('vRest').textContent=t?nf.format(t.piezas)+' · '+nf.format(t.restantes):'—';const q=$('cantidad');q.disabled=!t;q.value='';q.max=t?t.restantes:'';q.placeholder=t?'Máximo '+nf.format(t.restantes):'Piezas';$('cantLabel').textContent=t?'PIEZAS * (MÁX. '+nf.format(t.restantes)+')':'PIEZAS *';calc()}
-function calc(){const t=state.current,q=parseInt($('cantidad').value,10)||0;$('vQty').textContent=nf.format(q);$('vTotal').textContent=mxn.format(t?q*t.costoUnitario:0)}
+function loadCuts(list){state.cuts=list.filter(c=>c.estado==='ACTIVO'&&c.piezasCapturadas<c.piezasSolicitadas);fill('corte',state.cuts.map(c=>({v:c.folioCorte,t:`${c.folioCorte} · Orden ${c.orden} · ${c.estilo}${c.variante==='DC'?' DC':''}`})),state.cuts.length?'Selecciona corte':'No hay cortes con piezas pendientes')}
+const rest=t=>t.restantes;
+function clearGroups(){state.cut=null;state.tickets=[];fill('talla',[],'Selecciona primero un corte');fill('operacion',[],'Selecciona primero una talla');showGroup()}
+async function loadTickets(folio,after){const cut=state.cuts.find(c=>c.folioCorte===folio)||null;if(!cut){clearGroups();return}
+  $('save').disabled=true;
+  try{const d=await get('tickets',{corte:folio});state.cut=cut;state.tickets=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');fillSizes();if(after)after()}catch(e){clearGroups();show(e.message,'error')}finally{$('save').disabled=!state.ready}}
+function sizeOrder(){return (state.cut.corrida||[]).map(r=>r.talla)}
+function fillSizes(){const items=sizeOrder().map(z=>{const g=state.tickets.filter(t=>t.talla===z);return{z,rest:g.reduce((s,t)=>s+rest(t),0)}}).filter(x=>x.rest>0);fill('talla',items.map(x=>({v:x.z,t:`${x.z} · restan ${nf.format(x.rest)}`})),items.length?'Selecciona talla':'Sin piezas pendientes');fill('operacion',[],'Selecciona primero una talla');showGroup()}
+function fillOps(){const z=$('talla').value;if(!z){fill('operacion',[],'Selecciona primero una talla');showGroup();return}
+  const items=(state.cut.operaciones||[]).map(o=>({o,rest:state.tickets.filter(t=>t.talla===z&&t.operacion===o).reduce((s,t)=>s+rest(t),0)})).filter(x=>x.rest>0);
+  fill('operacion',items.map(x=>({v:x.o,t:`${x.o} · restan ${nf.format(x.rest)}`})),items.length?'Selecciona operación':'Sin piezas pendientes');showGroup()}
+function group(){const z=$('talla').value,o=$('operacion').value;if(!z||!o)return null;const g=state.tickets.filter(t=>t.talla===z&&t.operacion===o);if(!g.length)return null;return{g,piezas:g.reduce((s,t)=>s+t.piezas,0),capt:g.reduce((s,t)=>s+t.capturadas,0),rest:g.reduce((s,t)=>s+rest(t),0),unit:g[0].costoUnitario,estilo:g[0].estilo,variante:g[0].variante,z,o}}
+function showGroup(){hide();const G=group(),z=$('talla').value;$('vEst').textContent=G?G.estilo+(G.variante==='DC'?' DC':'')+' · '+G.z:(z?z:'—');$('vOp').textContent=G?G.o:'—';$('vUnit').textContent=mxn.format(G?G.unit:0);$('vRest').textContent=G?nf.format(G.piezas)+' · '+nf.format(G.rest):'—';
+  if(z&&state.tickets.length){const all=state.tickets.filter(t=>t.talla===z);$('vSize').textContent=nf.format(all.reduce((s,t)=>s+t.capturadas,0))+' de '+nf.format(all.reduce((s,t)=>s+t.piezas,0))}else $('vSize').textContent='—';
+  const q=$('cantidad');q.disabled=!G;q.value='';q.max=G?G.rest:'';q.placeholder=G?'Máximo '+nf.format(G.rest):'Piezas';$('cantLabel').textContent=G?'PIEZAS * (MÁX. '+nf.format(G.rest)+')':'PIEZAS *';calc()}
+function calc(){const G=group(),q=parseInt($('cantidad').value,10)||0;$('vQty').textContent=nf.format(q);$('vTotal').textContent=mxn.format(G?q*G.unit:0)}
 async function findTicket(){const v=$('find').value.trim().toUpperCase();if(!v)return;const m=v.match(/^(CT-\d+)-T\d+$/);if(!m){show('Folio de ticket no válido. Formato: CT-000001-T045.','error');return}
-  if(!state.cuts.some(c=>c.folioCorte===m[1])){show('El corte '+m[1]+' no tiene tickets pendientes o no existe.','error');return}hide();$('corte').value=m[1];await loadTickets(m[1],v);if($('ticket').value!==v)show('El ticket '+v+' no está pendiente (completo o anulado).','error')}
-async function save(e){e.preventDefault();hide();const t=state.current,q=Number($('cantidad').value);
-  const p={folioTicket:t?t.folio:'',fecha:$('fecha').value,personal:$('personal').value,maquina:$('maquina').value,cantidad:q,captureId:state.captureId};
-  if(!t||!p.fecha||!p.personal||!p.maquina||!Number.isInteger(q)||q<1){show('Completa correctamente todos los campos.','error');return}
-  if(q>t.restantes){show('Excede lo solicitado: este ticket admite máximo '+nf.format(t.restantes)+' piezas.','error');return}
+  if(!state.cuts.some(c=>c.folioCorte===m[1])){show('El corte '+m[1]+' no tiene piezas pendientes o no existe.','error');return}$('corte').value=m[1];
+  const apply=()=>{const t=state.tickets.find(x=>x.folio===v);if(!t){show('El ticket '+v+' no existe en el corte.','error');return}if(t.restantes<=0){show('El ticket '+v+' ya está completo.','error');return}$('talla').value=t.talla;fillOps();$('operacion').value=t.operacion;showGroup();state.start=v;show('La captura iniciará en el ticket '+v+' y, si excede sus piezas, continuará con los siguientes de la misma talla y operación.','success')};
+  if(state.cut&&state.cut.folioCorte===m[1]&&state.tickets.length)apply();else await loadTickets(m[1],apply)}
+async function save(e){e.preventDefault();hide();const G=group(),q=Number($('cantidad').value);
+  const p={folioCorte:$('corte').value,talla:$('talla').value,operacion:$('operacion').value,folioTicket:state.start,fecha:$('fecha').value,personal:$('personal').value,maquina:$('maquina').value,cantidad:q,captureId:state.captureId};
+  if(!G||!p.fecha||!p.personal||!p.maquina||!Number.isInteger(q)||q<1){show('Completa correctamente todos los campos.','error');return}
+  if(q>G.rest){show('Excede lo solicitado: '+G.z+' / '+G.o+' admite máximo '+nf.format(G.rest)+' piezas.','error');return}
   $('save').disabled=true;$('save').textContent='Guardando…';
-  try{const d=await post('saveTicket',p);show((d.duplicado?'Esta captura ya estaba registrada. Folio: ':'Captura guardada. Folio: ')+d.folio+(d.restantes!==undefined?'. Restan '+nf.format(d.restantes)+' piezas en el ticket.':'.'),'success');state.captureId=newId();const folio=$('corte').value;const k=await get('cortes');loadCuts(k.cortes||[]);if(state.cuts.some(c=>c.folioCorte===folio)){$('corte').value=folio;await loadTickets(folio)}else{await loadTickets('')}$('find').value=''}
+  try{const d=await post('saveTicket',p);const n=(d.asignaciones||[]).length;
+    const text=(d.duplicado?'Esta captura ya estaba registrada. Folios: ':'Captura guardada. Folios: ')+(d.folios||[d.folio]).join(', ')+(n>1?' ('+n+' tickets)':'')+(d.restantes!==undefined?'. Restan '+nf.format(d.restantes)+' piezas de '+d.talla+' / '+d.operacion+'.':'.');
+    state.captureId=newId();state.start='';const folio=$('corte').value,z=$('talla').value,o=$('operacion').value;
+    try{const k=await get('cortes');loadCuts(k.cortes||[]);
+      if(state.cuts.some(c=>c.folioCorte===folio)){$('corte').value=folio;await loadTickets(folio,()=>{if([...$('talla').options].some(x=>x.value===z)){$('talla').value=z;fillOps();if([...$('operacion').options].some(x=>x.value===o)){$('operacion').value=o;showGroup()}}})}else{await loadTickets('')}}catch(_){}
+    $('find').value='';show(text,'success')}
   catch(err){show(err.message,'error')}finally{$('save').disabled=!state.ready;$('save').textContent='Guardar captura'}}
-function reset(){hide();$('find').value='';$('corte').value='';state.captureId=newId();loadTickets('')}
+function reset(){hide();$('find').value='';$('corte').value='';state.start='';state.captureId=newId();loadTickets('')}
 </script></body></html>
