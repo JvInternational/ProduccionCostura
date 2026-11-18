@@ -1,15 +1,6 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-<!DOCTYPE html>
-<!DOCTYPE html>
-<html lang="es">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width,initial-scale=1" name="viewport"/>
-  <title>
-   Administración | JV International
-  </title>
-  <style>
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Administración | JV International</title>
+<style>
    :root{--nav:#0d1b22;--nav2:#173a35;--teal:#08776b;--bg:#f3f6f5;--card:#fff;--text:#18312d;--muted:#72817e;--line:#dfe7e4;--orange:#f47b20}
 *{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
 .app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}aside{background:var(--nav);color:#dbe7e4;padding:10px 9px}
@@ -34,180 +25,64 @@ label{font-size:10px;font-weight:700;color:#536661;display:block;margin-bottom:5
 
 @media(max-width:900px){.app{grid-template-columns:1fr}aside{position:static}.brand{display:inline-block;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){header{display:block}.grid{grid-template-columns:1fr}.actions{flex-wrap:wrap}.head{display:block}.head input{max-width:none;margin-top:9px}}
-  </style>
- </head>
- <body>
-  <div class="app">
-   <aside>
-    <div class="brand">
-     <img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/>
-    </div>
-    <div class="group">
-     PRODUCCIÓN COSTURA
-    </div>
-    <nav>
-     <a href="cortes.html">Programa de corte</a>
-     <a href="ticket.html">Captura por ticket</a>
-     <a href="index.html">
-      Captura
-     </a>
-     <a href="dashboard.html">
-      Dashboard
-     </a>
-     <a href="database.html">
-      Base de datos
-     </a>
-     <a class="active" href="admin.html">
-      Administración
-     </a>
-     <a href="reportes.html">
-      Reportes
-     </a>
-    </nav>
-   </aside>
-   <main>
-    <header>
-     <div>
-      <h1>
-       Administración de tarifas
-      </h1>
-      <p>
-       Registra tarifas para estilos existentes o nuevos.
-      </p>
-     </div>
-     <div class="status" id="status">
-      Conectando…
-     </div>
-    </header>
-    <div class="message" id="msg">
-    </div>
-    <section class="panel form">
-     <h2>
-      Nueva tarifa o actualización
-     </h2>
-     <form id="form">
-      <div class="grid">
-       <div>
-        <label>
-         APLICACIÓN
-        </label>
-        <select id="aplicacion">
-         <option>
-          TIENDAS EN GENERAL
-         </option>
-         <option>
-          DC
-         </option>
-        </select>
-       </div>
-       <div>
-        <label>
-         TIPO DE ESTILO
-        </label>
-        <select id="tipo">
-         <option value="existente">
-          ESTILO EXISTENTE
-         </option>
-         <option value="nuevo">
-          ESTILO NUEVO
-         </option>
-        </select>
-       </div>
-       <div id="boxExistente">
-        <label>
-         ESTILO EXISTENTE · SELECCIÓN ÚNICA
-        </label>
-        <select id="estilo">
-         <option value="">
-          Cargando…
-         </option>
-        </select>
-       </div>
-       <div hidden="" id="boxNuevo">
-        <label>
-         NUEVO ESTILO
-        </label>
-        <input id="estiloNuevo" maxlength="50" placeholder="Ej. JR200"/>
-       </div>
-       <div>
-        <label>
-         OPERACIÓN
-        </label>
-        <input id="operacion" list="ops" placeholder="Selecciona o escribe" required=""/>
-        <datalist id="ops">
-        </datalist>
-       </div>
-       <div>
-        <label>
-         COSTO
-        </label>
-        <input id="costo" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
-       </div>
-      </div>
-      <div class="actions">
-       <button class="secondary" id="clear" type="button">
-        Limpiar
-       </button>
-       <button class="primary" id="save">
-        Guardar tarifa
-       </button>
-      </div>
-     </form>
-    </section>
-    <section class="panel">
-     <div class="head">
-      <h2>
-       Tarifas registradas
-      </h2>
-      <input id="search" placeholder="Buscar estilo u operación…" type="search"/>
-     </div>
-     <div class="wrap">
-      <table>
-       <thead>
-        <tr>
-         <th>
-          APLICACIÓN
-         </th>
-         <th>
-          ESTILO
-         </th>
-         <th>
-          VARIANTE
-         </th>
-         <th>
-          OPERACIÓN
-         </th>
-         <th class="num">
-          COSTO
-         </th>
-         <th>
-          ACCIÓN
-         </th>
-        </tr>
-       </thead>
-       <tbody id="rows">
-       </tbody>
-      </table>
-      <div class="empty" hidden="" id="empty">
-       No hay tarifas.
-      </div>
-     </div>
-    </section>
-   </main>
-  </div>
-  <script src="auth.js"></script><script>
-   'use strict';const API='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec',$=id=>document.getElementById(id);let rates=[];const money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});document.addEventListener('DOMContentLoaded',init);
+  
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{background:#e7eeec;color:#294640}.tabs button.on{background:var(--teal);color:#fff}
+.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:99px;background:#e7eeec}.tag.off{background:#fff0ef;color:#a32b2b}.row{display:flex;gap:6px;flex-wrap:wrap}.small{padding:6px 9px;font-size:12px}
+.two{display:grid;grid-template-columns:1fr 2fr auto;gap:11px;align-items:end}.one{display:grid;grid-template-columns:2fr auto;gap:11px;align-items:end}
+table.t2{min-width:0}@media(max-width:700px){.two,.one{grid-template-columns:1fr}}
+</style></head><body>
+<div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div><nav><a href="cortes.html">Programa de corte</a><a href="ticket.html">Captura por ticket</a><a href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a class="active" href="admin.html">Administración</a></nav></aside>
+<main>
+<header><div><h1>Administración</h1><p>Tarifas, personal, máquinas, colores y cortes. Todo se guarda en la web y Sheets queda como respaldo.</p></div><div class="status" id="status">Conectando…</div></header>
+<div class="message" id="msg"></div>
+<div class="tabs" id="tabs"><button class="on" data-t="tarifas" type="button">Tarifas</button><button data-t="personal" type="button">Personal</button><button data-t="maquinas" type="button">Máquinas</button><button data-t="colores" type="button">Colores</button><button data-t="cortes" type="button">Cortes</button></div>
+
+<div id="p-tarifas"><section class="panel form"><h2> Nueva tarifa o actualización </h2><form id="form"><div class="grid"><div><label> APLICACIÓN </label><select id="aplicacion"><option> TIENDAS EN GENERAL </option><option> DC </option></select></div><div><label> TIPO DE ESTILO </label><select id="tipo"><option value="existente"> ESTILO EXISTENTE </option><option value="nuevo"> ESTILO NUEVO </option></select></div><div id="boxExistente"><label> ESTILO EXISTENTE · SELECCIÓN ÚNICA </label><select id="estilo"><option value=""> Cargando… </option></select></div><div hidden="" id="boxNuevo"><label> NUEVO ESTILO </label><input id="estiloNuevo" maxlength="50" placeholder="Ej. JR200"/></div><div><label> OPERACIÓN </label><input id="operacion" list="ops" placeholder="Selecciona o escribe" required=""/><datalist id="ops"></datalist></div><div><label> COSTO </label><input id="costo" min="0" placeholder="0.00" required="" step="0.01" type="number"/></div></div><div class="actions"><button class="secondary" id="clear" type="button"> Limpiar </button><button class="primary" id="save"> Guardar tarifa </button></div></form></section><section class="panel"><div class="head"><h2> Tarifas registradas </h2><input id="search" placeholder="Buscar estilo u operación…" type="search"/></div><div class="wrap"><table><thead><tr><th> APLICACIÓN </th><th> ESTILO </th><th> VARIANTE </th><th> OPERACIÓN </th><th class="num"> COSTO </th><th> ACCIÓN </th></tr></thead><tbody id="rows"></tbody></table><div class="empty" hidden="" id="empty"> No hay tarifas. </div></div></section></div>
+
+<div id="p-personal" hidden><section class="panel form"><h2 id="pt-personal">Operador</h2><form id="f-personal"><div class="one"><div><label>NOMBRE</label><input id="n-personal" maxlength="60" required placeholder="Nombre completo"/></div><div class="row"><button class="secondary" type="button" id="c-personal">Limpiar</button><button class="primary">Guardar</button></div></div></form></section>
+<section class="panel"><div class="head"><h2>Personal registrado</h2><input id="q-personal" type="search" placeholder="Buscar…"/></div><div class="wrap"><table class="t2"><thead><tr><th>NOMBRE</th><th>ESTADO</th><th>ACCIÓN</th></tr></thead><tbody id="r-personal"></tbody></table><div class="empty" id="e-personal" hidden>Sin registros.</div></div></section></div>
+
+<div id="p-maquinas" hidden><section class="panel form"><h2>Máquina</h2><form id="f-maquinas"><div class="one"><div><label>NOMBRE</label><input id="n-maquinas" maxlength="60" required placeholder="Ej. PLANA 01"/></div><div class="row"><button class="secondary" type="button" id="c-maquinas">Limpiar</button><button class="primary">Guardar</button></div></div></form></section>
+<section class="panel"><div class="head"><h2>Máquinas registradas</h2><input id="q-maquinas" type="search" placeholder="Buscar…"/></div><div class="wrap"><table class="t2"><thead><tr><th>NOMBRE</th><th>ESTADO</th><th>ACCIÓN</th></tr></thead><tbody id="r-maquinas"></tbody></table><div class="empty" id="e-maquinas" hidden>Sin registros.</div></div></section></div>
+
+<div id="p-colores" hidden><section class="panel form"><h2>Color</h2><form id="f-colores"><div class="two"><div><label>ID (2 A 5 LETRAS)</label><input id="i-colores" maxlength="5" required placeholder="BLK" style="text-transform:uppercase"/></div><div><label>COLOR</label><input id="n-colores" maxlength="40" required placeholder="BLACK"/></div><div class="row"><button class="secondary" type="button" id="c-colores">Limpiar</button><button class="primary">Guardar</button></div></div></form></section>
+<section class="panel"><div class="head"><h2>Colores registrados</h2><input id="q-colores" type="search" placeholder="Buscar…"/></div><div class="wrap"><table class="t2"><thead><tr><th>ID</th><th>COLOR</th><th>ESTADO</th><th>ACCIÓN</th></tr></thead><tbody id="r-colores"></tbody></table><div class="empty" id="e-colores" hidden>Sin registros.</div></div></section></div>
+
+<div id="p-cortes" hidden><section class="panel"><div class="head"><h2>Cortes programados</h2><a href="cortes.html" style="font-size:12px;color:var(--teal);font-weight:700">Ir a Programa de corte →</a></div><div class="wrap"><table class="t2"><thead><tr><th>FOLIO</th><th>ORDEN</th><th>ESTILO</th><th>COLOR</th><th class="num">PIEZAS</th><th class="num">CAPTURADAS</th><th>ESTADO</th><th>ACCIÓN</th></tr></thead><tbody id="r-cortes"></tbody></table><div class="empty" id="e-cortes" hidden>Sin cortes.</div></div></section></div>
+</main></div>
+<script src="auth.js"></script><script>
+const API='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec',$=id=>document.getElementById(id);let rates=[];const money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
 async function req(action,params={},post=false){let r;if(post){const body=new URLSearchParams({action,payload:JSON.stringify(params)});r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body})}else{r=await fetch(API+'?'+new URLSearchParams({action,...params}),{cache:'no-store'})}const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
-async function init(){$('tipo').addEventListener('change',mode);$('estilo').addEventListener('change',loadOps);$('aplicacion').addEventListener('change',loadOps);$('form').addEventListener('submit',save);$('clear').addEventListener('click',reset);$('search').addEventListener('input',render);await Promise.all([catalogs(),loadRates()]);mode()}
+async function initTarifas(){$('tipo').addEventListener('change',mode);$('estilo').addEventListener('change',loadOps);$('aplicacion').addEventListener('change',loadOps);$('form').addEventListener('submit',save);$('clear').addEventListener('click',reset);$('search').addEventListener('input',render);await Promise.all([catalogs(),loadRates()]);mode()}
 async function catalogs(){try{const d=await req('catalogs'),a=[...new Set((d.catalogs?.estilos||[]).filter(Boolean))].sort();$('estilo').innerHTML='<option value="">Selecciona un estilo</option>'+a.map(x=>`<option>${esc(x)}</option>`).join('');connected()}catch(e){show(e.message,false)}}
 function mode(){const n=$('tipo').value==='nuevo';$('boxNuevo').hidden=!n;$('boxExistente').hidden=n;$('estilo').required=!n;$('estiloNuevo').required=n;if(n){$('estilo').value='';$('ops').innerHTML=''}else $('estiloNuevo').value=''}
 async function loadOps(){const s=$('estilo').value;if(!s)return $('ops').innerHTML='';try{const d=await req('operations',{estilo:s,variante:$('aplicacion').value==='DC'?'DC':'GENERAL'});$('ops').innerHTML=[...new Set((d.operaciones||[]).map(x=>x.operacion).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}catch(e){show(e.message,false)}}
 async function loadRates(){try{const d=await req('rates');rates=d.tarifas||[];render();connected()}catch(e){show(e.message,false)}}
 async function save(e){e.preventDefault();const nuevo=$('tipo').value==='nuevo',estilo=(nuevo?$('estiloNuevo').value:$('estilo').value).trim().toUpperCase(),payload={aplicacion:$('aplicacion').value,estilo,operacion:$('operacion').value.trim(),costo:Number($('costo').value)};if(!estilo||!payload.operacion||!Number.isFinite(payload.costo)||payload.costo<0)return show('Completa estilo, operación y costo válido.',false);try{$('save').disabled=true;await req('saveRate',payload,true);show(nuevo?'Tarifa y estilo nuevo guardados.':'Tarifa guardada.',true);reset();await Promise.all([catalogs(),loadRates()])}catch(x){show(x.message,false)}finally{$('save').disabled=false}}
 async function del(s,o,v){if(!confirm(`¿Eliminar ${s} / ${o} / ${v}?`))return;try{await req('deleteRate',{estilo:s,operacion:o,variante:v},true);show('Tarifa eliminada.',true);await loadRates()}catch(e){show(e.message,false)}}
-function render(){const q=$('search').value.trim().toUpperCase(),a=rates.filter(r=>!q||[r.estilo,r.operacion,r.aplicacion].some(v=>String(v||'').toUpperCase().includes(q)));$('rows').innerHTML=a.map(r=>`<tr><td>${esc(r.aplicacion||'TIENDAS EN GENERAL')}</td><td>${esc(r.estilo)}</td><td>${esc(r.variante||'GENERAL')}</td><td>${esc(r.operacion)}</td><td class="num">${money.format(Number(r.costo)||0)}</td><td><button type="button" class="danger" data-s="${esc(r.estilo)}" data-o="${esc(r.operacion)}" data-v="${esc(r.variante||'GENERAL')}">Eliminar</button></td></tr>`).join('');$('empty').hidden=!!a.length;document.querySelectorAll('.danger').forEach(b=>b.onclick=()=>del(b.dataset.s,b.dataset.o,b.dataset.v))}
-function reset(){$('form').reset();$('ops').innerHTML='';mode()}function connected(){$('status').textContent='● Conectado';$('status').className='ok'}function show(t,g){$('msg').textContent=t;$('msg').className='message show '+(g?'good':'err')}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-  </script>
- </body>
-</html>
-
+function render(){const q=$('search').value.trim().toUpperCase(),a=rates.filter(r=>!q||[r.estilo,r.operacion,r.aplicacion].some(v=>String(v||'').toUpperCase().includes(q)));$('rows').innerHTML=a.map(r=>`<tr><td>${esc(r.aplicacion||'TIENDAS EN GENERAL')}</td><td>${esc(r.estilo)}</td><td>${esc(r.variante||'GENERAL')}</td><td>${esc(r.operacion)}</td><td class="num">${money.format(Number(r.costo)||0)}</td><td><button type="button" class="danger" data-s="${esc(r.estilo)}" data-o="${esc(r.operacion)}" data-v="${esc(r.variante||'GENERAL')}">Eliminar</button></td></tr>`).join('');$('empty').hidden=!!a.length;document.querySelectorAll('#rows .danger').forEach(b=>b.onclick=()=>del(b.dataset.s,b.dataset.o,b.dataset.v))}
+function reset(){$('form').reset();$('ops').innerHTML='';mode()}function connected(){$('status').textContent='● Conectado';$('status').className='status ok'}function show(t,g){$('msg').textContent=t;$('msg').className='message show '+(g?'good':'err')}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+/* ===== Pestañas y catálogos ===== */
+const adm={personal:[],maquinas:[],colores:[],cortes:[],loaded:false,edit:{personal:'',maquinas:'',colores:''}};
+function tab(t){['tarifas','personal','maquinas','colores','cortes'].forEach(k=>{$('p-'+k).hidden=k!==t});document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('msg').className='message';if(t!=='tarifas'&&!adm.loaded)loadAdmin();if(t==='cortes')loadCortes()}
+async function loadAdmin(){try{const d=await req('adminCatalogs');adm.personal=d.personal||[];adm.maquinas=d.maquinas||[];adm.colores=d.colores||[];adm.loaded=true;['personal','maquinas','colores'].forEach(renderCat);connected()}catch(e){show(e.message,false)}}
+function renderCat(k){const q=$('q-'+k).value.trim().toUpperCase(),list=adm[k].filter(x=>!q||(x.nombre+' '+(x.id||'')).toUpperCase().includes(q));
+  $('r-'+k).innerHTML=list.map(x=>{const key=k==='colores'?x.id:x.nombre;return `<tr>${k==='colores'?'<td><b>'+esc(x.id)+'</b></td>':''}<td>${esc(x.nombre)}</td><td><span class="tag ${x.activo?'':'off'}">${x.activo?'ACTIVO':'INACTIVO'}</span></td><td><div class="row"><button class="secondary small" data-k="${k}" data-a="edit" data-v="${esc(key)}" type="button">Editar</button><button class="secondary small" data-k="${k}" data-a="tog" data-v="${esc(key)}" type="button">${x.activo?'Desactivar':'Activar'}</button>${k==='colores'?'<button class="danger" data-k="colores" data-a="del" data-v="'+esc(key)+'" type="button">Eliminar</button>':''}</div></td></tr>`}).join('');
+  $('e-'+k).hidden=!!list.length;document.querySelectorAll('#r-'+k+' button').forEach(b=>b.onclick=()=>catAction(b.dataset.k,b.dataset.a,b.dataset.v))}
+function resetCat(k){adm.edit[k]='';$('n-'+k).value='';if(k==='colores'){$('i-colores').value=''}}
+async function catAction(k,a,v){
+  const item=adm[k].find(x=>(k==='colores'?x.id:x.nombre)===v);if(!item)return;
+  try{
+    if(a==='edit'){adm.edit[k]=v;$('n-'+k).value=item.nombre;if(k==='colores')$('i-colores').value=item.id;$('n-'+k).focus();show('Editando '+v+'. Guarda para aplicar el cambio.',true)}
+    else if(a==='tog'){const d=k==='colores'?await req('toggleColor',{id:v,activo:!item.activo},true):await req('toggleCatalogItem',{kind:k,nombre:v,activo:!item.activo},true);adm[k]=k==='colores'?d.colores:d.items;renderCat(k);show((item.activo?'Desactivado: ':'Activado: ')+v,true)}
+    else if(a==='del'){if(!confirm('¿Eliminar el color '+v+'? Solo es posible si ningún corte lo usa.'))return;const d=await req('deleteColor',{id:v},true);adm.colores=d.colores;renderCat('colores');show('Color eliminado.',true)}
+  }catch(e){show(e.message,false)}}
+async function saveCat(k,ev){ev.preventDefault();const nombre=$('n-'+k).value.trim();if(!nombre)return;
+  try{let d;if(k==='colores'){d=await req('saveColor',{id:$('i-colores').value.trim().toUpperCase(),nombre,original:adm.edit.colores},true);adm.colores=d.colores}
+    else{d=await req('saveCatalogItem',{kind:k,nombre,original:adm.edit[k]},true);adm[k]=d.items}
+    resetCat(k);renderCat(k);show('Guardado.',true)}catch(e){show(e.message,false)}}
+async function loadCortes(){try{const d=await req('cortes');adm.cortes=d.cortes||[];renderCortes()}catch(e){show(e.message,false)}}
+function renderCortes(){const nf=new Intl.NumberFormat('es-MX');$('r-cortes').innerHTML=adm.cortes.map(c=>{const open=c.estado==='ACTIVO',free=open&&!(c.piezasCapturadas>0);return `<tr><td><b>${esc(c.folioCorte)}</b></td><td>${esc(c.orden)}</td><td>${esc(c.estilo)}${c.variante==='DC'?' DC':''}</td><td>${esc(c.colorId)}${c.color?' · '+esc(c.color):''}</td><td class="num">${nf.format(c.piezasOrden)}</td><td class="num">${nf.format(c.piezasCapturadas)} / ${nf.format(c.piezasSolicitadas)}</td><td><span class="tag ${open?'':'off'}">${esc(c.estado)}</span></td><td><button class="danger" data-f="${esc(c.folioCorte)}" ${free?'':'disabled'} type="button">Anular</button></td></tr>`}).join('');$('e-cortes').hidden=adm.cortes.length>0;
+  document.querySelectorAll('#r-cortes button').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;if(!confirm('¿Anular el corte '+f+' y todos sus tickets? No se puede deshacer.'))return;try{await req('anularCorte',{folioCorte:f},true);show('Corte '+f+' anulado.',true);loadCortes()}catch(e){show(e.message,false)}})}
+document.addEventListener('DOMContentLoaded',()=>{initTarifas();document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));['personal','maquinas','colores'].forEach(k=>{$('f-'+k).addEventListener('submit',e=>saveCat(k,e));$('c-'+k).onclick=()=>resetCat(k);$('q-'+k).addEventListener('input',()=>renderCat(k))})});
+</script></body></html>
