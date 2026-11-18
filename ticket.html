@@ -14,9 +14,15 @@ input,select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--line)
 .summary{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.summary>div{background:#f7faf9;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:14px}.sl{font-size:9px;color:var(--muted);font-weight:800}.sv{font-size:19px;font-weight:850;margin-top:4px;overflow-wrap:anywhere}
 .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}button{border:0;border-radius:6px;padding:10px 13px;font-weight:750;cursor:pointer}.light{background:#e7eeec;color:#294640}.primary{background:var(--teal);color:#fff}button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:900px){.app{grid-template-columns:1fr}.brand{display:inline-flex;width:210px;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}}@media(max-width:520px){.top{display:block}.grid,.summary{grid-template-columns:1fr}.span2{grid-column:auto}.actions button{flex:1}}
+
+.sec{margin-top:14px}.sec .head{display:flex;justify-content:space-between;align-items:center;gap:10px}.wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;border-bottom:1px solid #edf2f0;font-size:12px;text-align:left}th{font-size:9px;background:#f5f8f7;color:#596b67}.num{text-align:right}
+.bar{height:8px;border-radius:99px;background:#e7eeec;overflow:hidden;min-width:70px}.bar i{display:block;height:100%;background:var(--teal)}
+tr.pick{cursor:pointer}tr.pick:hover{background:#f5f8f7}tr.sel{background:#e9f5f2}
+.cell{white-space:nowrap}.cell small{display:block;color:var(--muted);font-size:10px}.c0{color:#9aa9a5}.c1{background:#fff8e6}.c2{background:#e7f6ef;color:#08776b;font-weight:700}
+.empty{padding:22px;text-align:center;color:var(--muted)}
 </style></head><body>
 <div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div>
-<nav><a href="cortes.html">Programa de corte</a><a class="active" href="ticket.html">Captura por ticket</a><a href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a><a href="reportes.html">Reportes</a></nav></aside>
+<nav><a href="cortes.html">Programa de corte</a><a class="active" href="ticket.html">Captura por ticket</a><a href="index.html">Captura</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav></aside>
 <main>
 <header class="top"><div><h1>Captura por ticket</h1><p>Registra piezas por talla y operación del programa de corte. No se puede capturar más de lo solicitado.</p></div><div class="status" id="status">Conectando…</div></header>
 <section class="card"><div class="head"><h2>Nueva captura</h2><p>El máximo es lo que falta de la talla y operación (proporción × lienzos); se reparte solo entre sus tickets.</p></div>
@@ -33,12 +39,14 @@ input,select{width:100%;height:38px;padding:7px 9px;border:1px solid var(--line)
 <div class="summary"><div><div class="sl">ESTILO / TALLA</div><div class="sv" id="vEst">—</div></div><div><div class="sl">OPERACIÓN</div><div class="sv" id="vOp">—</div></div><div><div class="sl">COSTO UNITARIO</div><div class="sv" id="vUnit">$0.00</div></div><div><div class="sl">SOLICITADAS · RESTANTES</div><div class="sv" id="vRest">—</div></div></div>
 <div class="summary" style="grid-template-columns:repeat(3,1fr)"><div><div class="sl">PIEZAS A CAPTURAR</div><div class="sv" id="vQty">0</div></div><div><div class="sl">COSTO TOTAL</div><div class="sv" id="vTotal">$0.00</div></div><div><div class="sl">TALLA COMPLETA · TODAS LAS OPERACIONES</div><div class="sv" id="vSize">—</div></div></div>
 <div class="actions"><button class="light" id="clear" type="button">Limpiar</button><button class="primary" id="save" disabled>Guardar captura</button></div></form></section>
+<section class="card sec"><div class="head"><div><h2>Avance de cortes</h2><p>Toca un corte para capturarlo.</p></div></div><div class="wrap"><table><thead><tr><th>CORTE</th><th>ORDEN</th><th>ESTILO</th><th>COLOR</th><th class="num">CAPTURADAS / SOLICITADAS</th><th style="width:140px">AVANCE</th></tr></thead><tbody id="progBody"></tbody></table><div class="empty" id="progEmpty" hidden>No hay cortes activos.</div></div></section>
+<section class="card sec"><div class="head"><div><h2 id="matTitle">Avance por talla y operación</h2><p>Capturadas / solicitadas de cada talla en cada operación del corte seleccionado.</p></div></div><div class="wrap"><table id="mat"><thead></thead><tbody></tbody></table><div class="empty" id="matEmpty">Selecciona un corte para ver su avance.</div></div></section>
 </main></div>
 <script src="auth.js"></script><script>
 'use strict';
 const API='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec';
 const $=id=>document.getElementById(id),mxn=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}),nf=new Intl.NumberFormat('es-MX');
-const state={cuts:[],cut:null,tickets:[],ready:false,captureId:newId(),start:''};
+const state={all:[],cuts:[],cut:null,tickets:[],ready:false,captureId:newId(),start:''};
 function newId(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function get(action,params={}){const r=await fetch(API+'?'+new URLSearchParams({action,...params}),{cache:'no-store',redirect:'follow'});const d=await r.json();if(!d.ok)throw Error(d.error||'Error de API');return d}
@@ -50,12 +58,23 @@ document.addEventListener('DOMContentLoaded',()=>{const d=new Date();$('fecha').
   $('corte').addEventListener('change',()=>{state.start='';loadTickets($('corte').value)});$('talla').addEventListener('change',()=>{state.start='';fillOps()});$('operacion').addEventListener('change',()=>{state.start='';showGroup()});
   $('cantidad').addEventListener('input',calc);$('find').addEventListener('change',findTicket);$('clear').addEventListener('click',()=>reset());$('form').addEventListener('submit',save);init()});
 async function init(){try{const [c,k]=await Promise.all([get('catalogs'),get('cortes')]);const cat=c.catalogs||{};fill('personal',(cat.personal||[]).map(x=>({v:x,t:x})),'Selecciona personal');fill('maquina',(cat.maquinas||[]).map(x=>({v:x,t:x})),'Selecciona máquina');loadCuts(k.cortes||[]);state.ready=true;$('save').disabled=false;$('status').textContent='● Conectado';$('status').className='status ok'}catch(e){show(e.message,'error');$('status').textContent='● Sin conexión'}}
-function loadCuts(list){state.cuts=list.filter(c=>c.estado==='ACTIVO'&&c.piezasCapturadas<c.piezasSolicitadas);fill('corte',state.cuts.map(c=>({v:c.folioCorte,t:`${c.folioCorte} · Orden ${c.orden} · ${c.estilo}${c.variante==='DC'?' DC':''}`})),state.cuts.length?'Selecciona corte':'No hay cortes con piezas pendientes')}
+function loadCuts(list){state.all=list.filter(c=>c.estado==='ACTIVO');state.cuts=state.all.filter(c=>c.piezasCapturadas<c.piezasSolicitadas);fill('corte',state.cuts.map(c=>({v:c.folioCorte,t:`${c.folioCorte} · Orden ${c.orden} · ${c.estilo}${c.variante==='DC'?' DC':''}${c.colorId?' · '+c.colorId:''}`})),state.cuts.length?'Selecciona corte':'No hay cortes con piezas pendientes');renderProgress()}
+const pct=(a,b)=>b>0?Math.min(100,Math.round(a*100/b)):0;
+function renderProgress(){const cur=$('corte').value;$('progEmpty').hidden=state.all.length>0;$('progBody').innerHTML=state.all.map(c=>{const p=pct(c.piezasCapturadas,c.piezasSolicitadas),done=c.piezasSolicitadas>0&&c.piezasCapturadas>=c.piezasSolicitadas;return `<tr class="pick ${c.folioCorte===cur?'sel':''}" data-f="${esc(c.folioCorte)}"><td><b>${esc(c.folioCorte)}</b></td><td>${esc(c.orden)}</td><td>${esc(c.estilo)}${c.variante==='DC'?' DC':''}</td><td>${esc(c.colorId)}${c.color?' · '+esc(c.color):''}</td><td class="num">${nf.format(c.piezasCapturadas)} / ${nf.format(c.piezasSolicitadas)}</td><td><div class="bar"><i style="width:${p}%"></i></div><small style="color:var(--muted)">${p}%${done?' · completo':''}</small></td></tr>`}).join('');
+  document.querySelectorAll('#progBody tr').forEach(tr=>tr.addEventListener('click',()=>{const f=tr.dataset.f;if(!state.cuts.some(c=>c.folioCorte===f)){state.start='';$('corte').value='';clearGroups();get('tickets',{corte:f}).then(d=>{state.tickets=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');renderMatrix(f)}).catch(e=>show(e.message,'error'));return}$('corte').value=f;state.start='';loadTickets(f);window.scrollTo({top:0,behavior:'smooth'})}))}
+function renderMatrix(folio){const cut=state.all.find(c=>c.folioCorte===folio);const th=$('mat').tHead,tb=$('mat').tBodies[0];
+  if(!cut||!state.tickets.length||(state.tickets[0]&&state.tickets[0].folioCorte!==folio)){th.innerHTML='';tb.innerHTML='';$('matEmpty').hidden=false;$('matTitle').textContent='Avance por talla y operación';return}
+  const ops=cut.operaciones||[],sizes=(cut.corrida||[]).map(r=>r.talla);$('matEmpty').hidden=true;
+  $('matTitle').textContent='Avance · '+cut.folioCorte+' · '+cut.estilo+(cut.colorId?' · '+cut.colorId+(cut.color?' '+cut.color:''):'');
+  th.innerHTML='<tr><th>TALLA</th>'+ops.map(o=>`<th class="num">${esc(o)}</th>`).join('')+'<th class="num">TOTAL</th></tr>';
+  const sum=(z,o)=>{const g=state.tickets.filter(t=>(z===null||t.talla===z)&&(o===null||t.operacion===o));return{c:g.reduce((a,t)=>a+t.capturadas,0),p:g.reduce((a,t)=>a+t.piezas,0)}};
+  const cell=x=>{const k=x.p>0&&x.c>=x.p?'c2':(x.c>0?'c1':'c0');return `<td class="num cell ${k}">${nf.format(x.c)} / ${nf.format(x.p)}<small>${pct(x.c,x.p)}%</small></td>`};
+  tb.innerHTML=sizes.map(z=>`<tr><td><b>${esc(z)}</b></td>${ops.map(o=>cell(sum(z,o))).join('')}${cell(sum(z,null))}</tr>`).join('')+`<tr><td><b>TOTAL</b></td>${ops.map(o=>cell(sum(null,o))).join('')}${cell(sum(null,null))}</tr>`}
 const rest=t=>t.restantes;
-function clearGroups(){state.cut=null;state.tickets=[];fill('talla',[],'Selecciona primero un corte');fill('operacion',[],'Selecciona primero una talla');showGroup()}
+function clearGroups(){state.cut=null;state.tickets=[];renderMatrix('');renderProgress();fill('talla',[],'Selecciona primero un corte');fill('operacion',[],'Selecciona primero una talla');showGroup()}
 async function loadTickets(folio,after){const cut=state.cuts.find(c=>c.folioCorte===folio)||null;if(!cut){clearGroups();return}
   $('save').disabled=true;
-  try{const d=await get('tickets',{corte:folio});state.cut=cut;state.tickets=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');fillSizes();if(after)after()}catch(e){clearGroups();show(e.message,'error')}finally{$('save').disabled=!state.ready}}
+  try{const d=await get('tickets',{corte:folio});state.cut=cut;state.tickets=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');fillSizes();renderMatrix(folio);renderProgress();if(after)after()}catch(e){clearGroups();show(e.message,'error')}finally{$('save').disabled=!state.ready}}
 function sizeOrder(){return (state.cut.corrida||[]).map(r=>r.talla)}
 function fillSizes(){const items=sizeOrder().map(z=>{const g=state.tickets.filter(t=>t.talla===z);return{z,rest:g.reduce((s,t)=>s+rest(t),0)}}).filter(x=>x.rest>0);fill('talla',items.map(x=>({v:x.z,t:`${x.z} · restan ${nf.format(x.rest)}`})),items.length?'Selecciona talla':'Sin piezas pendientes');fill('operacion',[],'Selecciona primero una talla');showGroup()}
 function fillOps(){const z=$('talla').value;if(!z){fill('operacion',[],'Selecciona primero una talla');showGroup();return}
