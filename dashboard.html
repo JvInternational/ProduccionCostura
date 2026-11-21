@@ -102,6 +102,58 @@ td:nth-child(n+2),th:nth-child(n+2){text-align:right}
 /* Corrección quirúrgica del sidebar: branding y navegación únicamente */
 .side-brand{height:72px;padding:8px 10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;color:inherit}
 .side-brand img{display:block;width:100%;max-width:190px;max-height:54px;height:auto;object-fit:contain}
+
+/* ===== Acabado profesional (solo estilo; no cambia la estructura ni el orden de la página) ===== */
+body{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.45}
+.sidebar{background:linear-gradient(180deg,#0d1b22 0%,#10252b 100%);box-shadow:2px 0 14px rgba(13,27,34,.18)}
+.side-brand{border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.22)}
+.side-group{letter-spacing:.16em;font-weight:700;color:#7f9692}
+.side-nav a{position:relative;font-weight:600;letter-spacing:.01em;transition:background .15s ease,color .15s ease,padding-left .15s ease}
+.side-nav a:hover{padding-left:14px}
+.side-nav a.active{background:linear-gradient(90deg,#1c4a43,#173a35);box-shadow:inset 3px 0 0 #34d399}
+main.content{background:radial-gradient(1200px 380px at 90% -120px,#e3f0ed 0%,rgba(243,246,245,0) 70%)}
+.page-head h1{font-size:28px;font-weight:800;letter-spacing:-.025em;color:#0f2f2b}
+.page-head p{font-size:14px;color:#5f7773}
+.head-status{background:#fff;border:1px solid var(--f1-border);border-radius:999px;padding:6px 13px!important;box-shadow:0 2px 8px rgba(15,47,43,.06);align-self:flex-start}
+.filters{border:1px solid var(--f1-border)!important;border-radius:14px!important;box-shadow:var(--f1-shadow)!important;position:relative;overflow:hidden;padding:18px 20px!important}
+.filters::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#08776b,#34d399)}
+.filters-head h2{font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0f2f2b}
+.field label{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5b716d;margin-bottom:6px}
+.field input,.field select{height:42px;border:1px solid #d5e1de;border-radius:9px;background:#fbfdfc;font-size:13.5px;padding:0 12px;transition:border-color .15s,box-shadow .15s,background .15s}
+.field input:hover,.field select:hover{border-color:#a9c5bf;background:#fff}
+.field input:focus,.field select:focus{background:#fff;border-color:#08776b;box-shadow:0 0 0 4px rgba(8,119,107,.13)}
+.field input::placeholder{color:#9bb0ac}
+.actions{flex-wrap:wrap}
+.btn{height:42px;padding:0 18px;border-radius:9px;font-size:13px;font-weight:800;letter-spacing:.01em;transition:transform .12s ease,box-shadow .15s ease,background .15s ease}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(180deg,#0a8b7d,#08776b);box-shadow:0 4px 12px rgba(8,119,107,.32)}
+.btn-primary:hover:not(:disabled){box-shadow:0 7px 18px rgba(8,119,107,.4)}
+.btn-light{background:#eaf1ef;color:#294640;border:1px solid #d8e5e1}
+.btn-light:hover:not(:disabled){background:#dfeae7}
+.btn-pdf{background:#fff;color:#b85a0b;border:1.5px solid #f2b27a;box-shadow:0 2px 8px rgba(244,123,32,.12)}
+.btn-pdf:hover:not(:disabled){background:#fff7f0;box-shadow:0 6px 16px rgba(244,123,32,.22)}
+.kpis>.panel{border-radius:14px!important}
+.kpis>.panel::after{content:"";position:absolute;right:-26px;top:-26px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(8,119,107,.10),rgba(8,119,107,0) 70%);pointer-events:none}
+.kpis .label{font-size:10.5px!important;letter-spacing:.08em!important}
+.kpis .value{font-size:clamp(26px,2.4vw,36px)!important;color:#0b2926!important}
+.kpis .note{font-size:11px!important;color:#7a8f8b!important;font-weight:500}
+.chart-card{border-radius:14px!important;transition:box-shadow .2s ease,transform .2s ease}
+.chart-card:hover{box-shadow:var(--f1-shadow-hover)!important}
+.card-head{border-radius:14px 14px 0 0;align-items:baseline}
+.card-head h3{font-size:15px!important;font-weight:800!important;color:#0f2f2b!important}
+.card-head span{background:#eef6f4;border-radius:999px;padding:3px 10px;font-size:10.5px!important;font-weight:700!important;color:#4d6a65!important}
+.hrow{padding:2px 6px;border-radius:8px;transition:background .15s ease}
+.hrow:hover{background:#f1f8f6}
+.htrack{height:10px;background:#e8f0ee}
+.hfill{background:linear-gradient(90deg,#08776b,#2ed3a5)}
+.bar{background:linear-gradient(180deg,#2cc4b0,#08776b)}
+.table-wrap{border-radius:10px!important}
+tbody td:first-child{font-weight:700;color:#0f2f2b!important}
+.error{border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;font-weight:600}
+footer{color:#7a8f8b;font-size:12px;letter-spacing:.02em;border-top:1px solid #e3ece9;margin:8px 24px 0}
+@media(max-width:1050px){.grid-filters{grid-template-columns:repeat(3,1fr)!important}}
+@media(max-width:760px){.grid-filters{grid-template-columns:1fr 1fr!important}}
+@media(max-width:480px){.grid-filters{grid-template-columns:1fr!important}}
 </style>
 </head>
 <body>
@@ -115,32 +167,33 @@ td:nth-child(n+2),th:nth-child(n+2){text-align:right}
 <section class="panel filters">
 <div class="filters-head"><h2>Filtros</h2><div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Conectando…</span></div></div>
 <div class="grid-filters">
+<div class="field"><label for="folio">Folio</label><input id="folio" placeholder="Ej. PC-000001"/></div>
+<div class="field"><label for="corte">Corte</label><input id="corte" placeholder="Todos"/></div>
+<div class="field"><label for="estilo">Estilo</label><select id="estilo"><option value="">Todos</option></select></div>
+<div class="field"><label for="operacion">Operación</label><select id="operacion"><option value="">Todas</option></select></div>
+<div class="field"><label for="personal">Personal</label><select id="personal"><option value="">Todos</option></select></div>
+<div class="field"><label for="maquina">Máquina</label><select id="maquina"><option value="">Todas</option></select></div>
 <div class="field"><label for="desde">Fecha desde</label><input id="desde" type="date"/></div>
 <div class="field"><label for="hasta">Fecha hasta</label><input id="hasta" type="date"/></div>
 <div class="field"><label for="semana">Semana</label><input id="semana" max="53" min="1" placeholder="Todas" type="number"/></div>
-<div class="field"><label for="personal">Operador</label><select id="personal"><option value="">Todos</option></select></div>
-<div class="field"><label for="maquina">Máquina</label><select id="maquina"><option value="">Todas</option></select></div>
-<div class="field"><label for="estilo">Estilo</label><select id="estilo"><option value="">Todos</option></select></div>
-<div class="field"><label for="operacion">Operación</label><select id="operacion"><option value="">Todas</option></select></div>
-<div class="field"><label for="corte">Corte</label><input id="corte" placeholder="Todos"/></div>
-<div class="actions"><button class="btn btn-primary" id="applyBtn" type="button">Aplicar filtros</button><button class="btn btn-light" id="clearBtn" type="button">Limpiar</button></div>
+<div class="actions"><button class="btn btn-primary" id="applyBtn" type="button">Aplicar filtros</button><button class="btn btn-light" id="clearBtn" type="button">Limpiar</button><button class="btn btn-pdf" id="pdfBtn" type="button">Descargar PDF</button></div>
 </div>
 </section>
 <div class="error" id="errorBox" role="alert"></div>
 <section class="kpis">
 <article class="panel kpi"><div class="label">Registros</div><div class="value" id="kReg">—</div><div class="note">Operaciones registradas</div></article>
-<article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note">Producción acumulada</div></article>
+<article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note" id="kPiezasNote">Prendas del programa de corte</div></article>
 <article class="panel kpi"><div class="label">Costo total</div><div class="value" id="kCosto">—</div><div class="note">Costo de destajo</div></article>
 <article class="panel kpi"><div class="label">Operadores</div><div class="value" id="kOperadores">—</div><div class="note" id="kExtra">—</div></article>
 </section>
 <section class="charts">
-<article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Piezas</span></div><div class="chart loading" id="fechaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Top 12</span></div><div class="chart loading" id="operadorChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Top 12</span></div><div class="chart loading" id="operacionChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Piezas</span></div><div class="chart loading" id="estiloChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas</span></div><div class="chart loading" id="maquinaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Piezas</span></div><div class="chart loading" id="semanaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
+<article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Prendas equivalentes</span></div><div class="chart loading" id="fechaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Piezas capturadas · Top 12</span></div><div class="chart loading" id="operadorChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Piezas capturadas · Top 12</span></div><div class="chart loading" id="operacionChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Prendas del programa</span></div><div class="chart loading" id="estiloChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas capturadas</span></div><div class="chart loading" id="maquinaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Prendas equivalentes</span></div><div class="chart loading" id="semanaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Prendas del programa · Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
 </section>
 </main>
 <footer>JV International · Sistema de Producción Costura</footer>
@@ -155,14 +208,14 @@ let lastDashboard=null;
 
 document.addEventListener('DOMContentLoaded',()=>{
   $('applyBtn').addEventListener('click',loadDashboard);
-  $('clearBtn').addEventListener('click',()=>{['desde','hasta','semana','personal','maquina','estilo','operacion','corte'].forEach(id=>$(id).value='');loadDashboard();});
+  $('clearBtn').addEventListener('click',()=>{['folio','corte','estilo','operacion','personal','maquina','desde','hasta','semana'].forEach(id=>$(id).value='');loadDashboard();});
   $('estilo').addEventListener('change',refreshOperationOptions);
   loadDashboard();
 });
 
 function params(){
   const p=new URLSearchParams({action:'dashboard'});
-  const map={fechaDesde:'desde',fechaHasta:'hasta',semana:'semana',personal:'personal',maquina:'maquina',estilo:'estilo',operacion:'operacion',corte:'corte'};
+  const map={folio:'folio',corte:'corte',estilo:'estilo',operacion:'operacion',personal:'personal',maquina:'maquina',fechaDesde:'desde',fechaHasta:'hasta',semana:'semana'};
   Object.entries(map).forEach(([key,id])=>{const value=$(id).value.trim();if(value)p.set(key,value)});
   return p;
 }
@@ -182,6 +235,7 @@ function render(d){
   const k=d.kpis||{};
   $('kReg').textContent=nf.format(k.registros||0);$('kPiezas').textContent=nf.format(k.piezas||0);$('kCosto').textContent=money.format(k.costoTotal||0);$('kOperadores').textContent=nf.format(k.operadores||0);
   $('kExtra').textContent=`${k.estilos||0} estilos · ${k.maquinas||0} máquinas`;
+  $('kPiezasNote').textContent=k.baseCalculo==='PROGRAMA'?('Prendas del programa de corte'+(k.cortesSinPrograma?` · ${k.cortesSinPrograma} sin programa`:'')):'Piezas capturadas';
   renderLineChart('fechaChart',d.porFecha||[],'fecha',31);
   renderHbars('operadorChart',d.porOperador||[],'operador',12);
   renderHbars('operacionChart',d.porOperacion||[],'operacion',12);
@@ -254,5 +308,7 @@ function confinarTooltips(){
 }
 window.addEventListener('pointermove',e=>{const card=e.target.closest&&e.target.closest('.chart');if(!card)return;card.querySelectorAll('.chart-tooltip,.chart-local-tip,.line-tooltip,.bar-tip').forEach(t=>{if(getComputedStyle(t).display==='none')return;const b=card.getBoundingClientRect(),r=t.getBoundingClientRect();let l=r.left-b.left,top=r.top-b.top;l=Math.max(6,Math.min(l,b.width-r.width-6));top=Math.max(6,Math.min(top,b.height-r.height-6));t.style.left=l+'px';t.style.top=top+'px';t.style.transform='none'})},true);
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="dashboard_pdf.js"></script>
 </body>
 </html>
