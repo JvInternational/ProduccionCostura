@@ -161,7 +161,7 @@ footer{color:#7a8f8b;font-size:12px;letter-spacing:.02em;border-top:1px solid #e
 <aside class="sidebar">
 <div class="side-brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div>
 <div class="side-group">PRODUCCIÓN COSTURA</div>
-<nav class="side-nav"><a href="cortes.html">Programa de corte</a><a href="ticket.html">Captura por ticket</a><a href="index.html">Captura</a><a class="active" href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav></aside>
+<nav class="side-nav"><a href="cortes.html">Programa de corte</a><a href="ticket.html">Captura por ticket</a><a class="active" href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav></aside>
 <main class="content">
 <header class="page-head"><div><h1>Dashboard de Producción</h1><p>Indicadores y desempeño de costura.</p></div><div class="status head-status"><span class="dot" id="statusDotHead"></span><span id="statusTextHead">Conectando…</span></div></header>
 <section class="panel filters">
@@ -181,19 +181,19 @@ footer{color:#7a8f8b;font-size:12px;letter-spacing:.02em;border-top:1px solid #e
 </section>
 <div class="error" id="errorBox" role="alert"></div>
 <section class="kpis">
-<article class="panel kpi"><div class="label">Registros</div><div class="value" id="kReg">—</div><div class="note">Operaciones registradas</div></article>
-<article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note" id="kPiezasNote">Prendas del programa de corte</div></article>
+<article class="panel kpi"><div class="label">Operaciones</div><div class="value" id="kOps">—</div><div class="note">Operaciones realizadas</div></article>
+<article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note" id="kPiezasNote">Piezas trabajadas</div></article>
 <article class="panel kpi"><div class="label">Costo total</div><div class="value" id="kCosto">—</div><div class="note">Costo de destajo</div></article>
-<article class="panel kpi"><div class="label">Operadores</div><div class="value" id="kOperadores">—</div><div class="note" id="kExtra">—</div></article>
+<article class="panel kpi"><div class="label">Estilos</div><div class="value" id="kEstilos">—</div><div class="note" id="kExtra">—</div></article>
 </section>
 <section class="charts">
-<article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Prendas equivalentes</span></div><div class="chart loading" id="fechaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Piezas capturadas · Top 12</span></div><div class="chart loading" id="operadorChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Piezas capturadas · Top 12</span></div><div class="chart loading" id="operacionChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Prendas del programa</span></div><div class="chart loading" id="estiloChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas capturadas</span></div><div class="chart loading" id="maquinaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Prendas equivalentes</span></div><div class="chart loading" id="semanaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Prendas del programa · Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
+<article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Piezas</span></div><div class="chart loading" id="fechaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Piezas · Top 12</span></div><div class="chart loading" id="operadorChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Piezas por operación · Top 12</span></div><div class="chart loading" id="operacionChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Piezas</span></div><div class="chart loading" id="estiloChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas</span></div><div class="chart loading" id="maquinaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Piezas</span></div><div class="chart loading" id="semanaChart">Cargando…</div></article>
+<article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Piezas · Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
 </section>
 </main>
 <footer>JV International · Sistema de Producción Costura</footer>
@@ -233,9 +233,9 @@ async function loadDashboard(){
 }
 function render(d){
   const k=d.kpis||{};
-  $('kReg').textContent=nf.format(k.registros||0);$('kPiezas').textContent=nf.format(k.piezas||0);$('kCosto').textContent=money.format(k.costoTotal||0);$('kOperadores').textContent=nf.format(k.operadores||0);
-  $('kExtra').textContent=`${k.estilos||0} estilos · ${k.maquinas||0} máquinas`;
-  $('kPiezasNote').textContent=k.baseCalculo==='PROGRAMA'?('Prendas del programa de corte'+(k.cortesSinPrograma?` · ${k.cortesSinPrograma} sin programa`:'')):'Piezas capturadas';
+  $('kOps').textContent=nf.format(k.operacionesRealizadas!==undefined?k.operacionesRealizadas:(k.piezas||0));$('kPiezas').textContent=nf.format(k.piezas||0);$('kCosto').textContent=money.format(k.costoTotal||0);$('kEstilos').textContent=nf.format(k.estilos||0);
+  $('kExtra').textContent=`${k.cortes||0} cortes · ${k.operadores||0} operadores · ${k.maquinas||0} máquinas`;
+  $('kPiezasNote').textContent='Piezas trabajadas'+(k.cortesSinPrograma?` · ${k.cortesSinPrograma} corte(s) sin programa`:'');
   renderLineChart('fechaChart',d.porFecha||[],'fecha',31);
   renderHbars('operadorChart',d.porOperador||[],'operador',12);
   renderHbars('operacionChart',d.porOperacion||[],'operacion',12);
