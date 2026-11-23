@@ -1,314 +1,264 @@
-<!DOCTYPE html>
+/**
+ * dashboard_pdf.js  (archivo NUEVO en GitHub, junto a dashboard.html)
+ * Informe ejecutivo en PDF (A4 horizontal) con los filtros que estén en pantalla.
+ * Requiere jsPDF 2.5.1 (se carga desde cdnjs en dashboard.html) y usa API_URL / params() del dashboard.
+ */
+(function () {
+  'use strict';
 
-<html lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta content="Dashboard de Producción Costura - JV International" name="description"/>
-<title>Dashboard | JV International</title>
-<style>
-    :root {
-      --primary:#08776b; --primary-dark:#065b53; --secondary:#0f172a;
-      --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b;
-      --border:#dbe3ec; --success:#16a34a; --danger:#dc2626;
-      --shadow:0 10px 30px rgba(15,23,42,.08);
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-    button,input,select{font:inherit}
-    .app{min-height:100vh}
-    .topbar{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:18px 22px;box-shadow:var(--shadow)}
-    .topbar-inner{max-width:1500px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:12px;background:#fff;color:var(--primary);display:grid;place-items:center;font-weight:900}
-    .brand h1{font-size:1.1rem;margin:0}.brand p{margin:3px 0 0;opacity:.8;font-size:.85rem}
-    .nav{display:flex;gap:8px;flex-wrap:wrap}.nav a{color:#fff;text-decoration:none;padding:9px 12px;border-radius:9px;background:rgba(255,255,255,.12)}.nav a.active{background:#fff;color:var(--primary);font-weight:700}
-    main{max-width:1500px;margin:auto;padding:22px}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
-    .filters{padding:18px;margin-bottom:18px}.filters-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.filters h2{font-size:1rem;margin:0}
-    .grid-filters{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:12px}.field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:6px}.field input,.field select{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 11px;background:#fff;color:var(--text);outline:none}.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(8,119,107,.12)}
-    .actions{display:flex;align-items:end;gap:8px}.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:800;cursor:pointer}.btn-primary{background:var(--primary);color:#fff}.btn-light{background:#e2e8f0;color:var(--secondary)}.btn:disabled{opacity:.6;cursor:wait}
-    .status{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted)}.dot{width:9px;height:9px;border-radius:50%;background:#f59e0b}.dot.ok{background:var(--success)}.dot.bad{background:var(--danger)}
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.kpi{padding:18px}.kpi .label{font-size:.78rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.05em}.kpi .value{font-size:1.8rem;font-weight:900;margin-top:7px}.kpi .note{font-size:.78rem;color:var(--muted);margin-top:4px}
-    .charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.chart-card{padding:18px;min-height:390px}.chart-card.wide{grid-column:1/-1}.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.card-head h3{margin:0;font-size:1rem}.card-head span{font-size:.78rem;color:var(--muted)}
-    .line-chart{height:100%;min-height:270px;position:relative;overflow:hidden}.line-chart svg{display:block;width:100%;height:100%}.line-grid{stroke:#dfe7e4;stroke-width:1}.line-axis-label{fill:#72817e;font-size:10px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}.line-area{fill:url(#lineAreaGradient)}.line-path{fill:none;stroke:#08776b;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.line-point{fill:#08776b;stroke:#fff;stroke-width:2;cursor:pointer}.line-point:hover,.line-point:focus{r:5.5;fill:#075e55}.line-hit{fill:transparent;cursor:pointer}.line-tooltip{position:absolute;z-index:4;pointer-events:none;display:none;min-width:130px;padding:8px 10px;border-radius:7px;background:#173a35;color:#fff;font-size:11px;box-shadow:0 5px 14px #173a3540;transform:translate(-50%,-115%);white-space:nowrap}.line-tooltip strong{display:block;margin-bottom:2px}.line-tooltip.show{display:block}@media(max-width:620px){.line-axis-label{font-size:8px}.line-chart{min-height:245px}}.chart{width:100%;height:310px;overflow:hidden}.bar-chart{height:100%;display:flex;align-items:end;gap:7px;padding:12px 4px 34px;border-bottom:1px solid var(--border);position:relative}.bar-col{flex:1;min-width:0;height:100%;display:flex;align-items:end;position:relative}.bar{width:100%;background:linear-gradient(180deg,#21a99a,var(--primary));border-radius:7px 7px 2px 2px;min-height:2px;position:relative}.bar:hover{filter:brightness(.92)}.bar-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%) rotate(-28deg);transform-origin:top center;white-space:nowrap;font-size:.68rem;color:var(--muted);max-width:85px;overflow:hidden;text-overflow:ellipsis}.bar-tip{position:absolute;left:50%;bottom:calc(100% + 5px);transform:translateX(-50%);background:var(--secondary);color:#fff;border-radius:6px;padding:4px 6px;font-size:.68rem;white-space:nowrap;opacity:0;pointer-events:none;z-index:3}.bar:hover .bar-tip{opacity:1}
-    .hbars{height:100%;overflow:auto;padding-right:5px}.hrow{display:grid;grid-template-columns:minmax(95px,150px) 1fr 82px;gap:9px;align-items:center;margin:10px 0}.hlabel{font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.htrack{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}.hfill{height:100%;background:linear-gradient(90deg,var(--primary),#34d399);border-radius:999px}.hvalue{text-align:right;font-size:.74rem;font-weight:800}
-    .table-wrap{overflow:auto;max-height:400px}table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{padding:10px;border-bottom:1px solid var(--border);text-align:right}th{position:sticky;top:0;background:#f8fafc;color:var(--muted)}th:first-child,td:first-child{text-align:left}
-    .loading{min-height:180px;display:grid;place-items:center;color:var(--muted)}.error{padding:14px;border-radius:10px;background:#fee2e2;color:#991b1b;margin-bottom:16px;display:none}
-    footer{padding:25px;text-align:center;color:var(--muted);font-size:.8rem}
-    @media(max-width:1050px){.grid-filters{grid-template-columns:repeat(3,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:760px){.topbar-inner{align-items:flex-start;flex-direction:column}.nav{width:100%}.nav a{flex:1;text-align:center}.grid-filters{grid-template-columns:1fr 1fr}.charts{grid-template-columns:1fr}.chart-card.wide{grid-column:auto}.kpis{grid-template-columns:1fr 1fr}.chart-card{min-height:350px}}
-    @media(max-width:480px){main{padding:12px}.grid-filters,.kpis{grid-template-columns:1fr}.actions{grid-column:1/-1}.kpi .value{font-size:1.55rem}.bar-label{display:none}}
-  
-    /* Layout corporativo homologado JV */
-    :root{--nav:#0d1b22;--nav2:#173a35;--bg:#f3f6f5;--border:#dfe7e4;--shadow:0 5px 14px rgba(23,58,53,.06)}
-    .app{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100vh}
-    .sidebar{background:var(--nav);color:#dbe7e4;padding:10px 9px}
-    .side-brand{background:#fff;color:#18312d;border-radius:6px;padding:13px 10px;margin-bottom:18px;font-weight:900;font-style:italic;font-size:13px}
-    .side-brand small{display:block;font-size:8px;color:#77847f;margin-top:2px}
-    .side-group{font-size:8px;color:#6f8380;letter-spacing:.12em;margin:12px 6px 7px}
-    .side-nav a{display:block;color:#c9d7d4;text-decoration:none;padding:9px 10px;border-radius:6px;margin:2px 0;font-size:12px}
-    .side-nav a:hover,.side-nav a.active{background:var(--nav2);color:#fff}
-    main.content{max-width:none;margin:0;padding:20px 24px;min-width:0}
-    .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
-    .page-head h1{font-size:25px;margin:0;color:#18312d}.page-head p{color:#72817e;margin:4px 0}
-    .head-status{padding-top:7px}.panel{border-radius:10px}.filters{padding:16px;margin-bottom:14px}
-    .kpis{gap:12px;margin-bottom:14px}.kpi{padding:15px;border-top:3px solid var(--primary)}
-    .kpi .label{font-size:9px}.kpi .value{font-size:21px;margin-top:4px}.kpi .note{font-size:9px}
-    .charts{gap:14px}.chart-card{border-radius:10px;padding:16px}
-    @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:static}.side-brand{display:inline-block;margin:0 10px 8px 0}.side-group{display:none}.side-nav{display:flex;gap:4px;overflow:auto}.side-nav a{white-space:nowrap}main.content{padding:14px}}
-    @media(max-width:520px){.page-head{display:block}.head-status{margin-top:8px}}
+  var PAL = ['#2f6b8f', '#08776b', '#4f8f3a', '#4a5aa8', '#c0392b', '#d98a1f', '#7a4f9a', '#3b8f9c', '#8a6d3b', '#5b6b73'];
+  var C = { band: '#0d3b36', teal: '#08776b', text: '#18312d', muted: '#72817e', line: '#dfe7e4', card: '#f7faf9', track: '#e7eeec' };
+  var nf = new Intl.NumberFormat('es-MX');
+  var money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-/* BI executive chart system */
-.chart-card{overflow:hidden}
-#fechaChart{position:relative;height:clamp(280px,32vw,390px);min-height:280px;overflow:hidden}
-#fechaChart .bi-wrap{position:relative;width:100%;height:100%;min-width:0}
-#fechaChart canvas{display:block;width:100%;height:100%}
-.bi-tooltip{position:absolute;z-index:50;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#0f2f2b;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}
-.bi-tooltip.show{display:block}.bi-tooltip strong{display:block;font-size:12px;margin-bottom:2px}
-.chart{position:relative;overflow:hidden;contain:paint}
-.chart-tooltip,.chart-local-tip,.line-tooltip{max-width:min(180px,calc(100% - 16px))!important;box-sizing:border-box!important}
-@media(max-width:640px){#fechaChart{height:310px}.bi-tooltip{font-size:10px}.line-axis-label{font-size:9px}}
+  function $(id) { return document.getElementById(id); }
+  function num(v) { return Number(v) || 0; }
+  function dmy(v) {
+    var m = String(v == null ? '' : v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : String(v == null ? '' : v);
+  }
+  function rgb(hex) {
+    var n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
 
-/* FASE 1 — Jerarquía ejecutiva: KPIs, tarjetas y tabla */
-:root{--f1-brand:#08776b;--f1-ink:#102a2e;--f1-muted:#6b7f83;--f1-border:#dde8e6;--f1-surface:#ffffff;--f1-bg:#f3f7f6;--f1-shadow:0 8px 24px rgba(15,47,43,.07);--f1-shadow-hover:0 12px 30px rgba(15,47,43,.11)}
-body{background:var(--f1-bg)!important;color:var(--f1-ink)}
-/* KPI ejecutivos */
-.kpis{gap:14px!important;margin:14px 0!important}
-.kpis>.panel{position:relative;overflow:hidden;min-height:92px;padding:17px 18px 15px!important;border:1px solid var(--f1-border)!important;border-top:3px solid var(--f1-brand)!important;border-radius:12px!important;background:var(--f1-surface)!important;box-shadow:var(--f1-shadow)!important;transition:transform .18s ease,box-shadow .18s ease}
-.kpis>.panel:hover{transform:translateY(-2px);box-shadow:var(--f1-shadow-hover)!important}
-.kpis .label{margin-bottom:7px!important;color:var(--f1-muted)!important;font-size:10px!important;font-weight:800!important;letter-spacing:.06em!important;text-transform:uppercase}
-.kpis .value{color:var(--f1-ink)!important;font-size:clamp(22px,2.1vw,32px)!important;line-height:1!important;font-weight:800!important;letter-spacing:-.035em!important;font-variant-numeric:tabular-nums}
-.kpis .sub{margin-top:7px!important;color:#819296!important;font-size:10px!important;line-height:1.25!important}
-/* Tarjetas ejecutivas: solo marco, encabezado y jerarquía; no altera el área de las gráficas */
-.grid>.panel,.wide.panel{border:1px solid var(--f1-border)!important;border-radius:12px!important;background:var(--f1-surface)!important;box-shadow:var(--f1-shadow)!important}
-.card-head{min-height:48px;padding:15px 18px 11px!important;border-bottom:1px solid #edf3f2!important;background:linear-gradient(180deg,#fff 0%,#fcfefd 100%)}
-.card-head strong,.card-head h2,.card-head h3{color:var(--f1-ink)!important;font-size:14px!important;font-weight:800!important;letter-spacing:-.01em}
-.card-head span{color:var(--f1-muted)!important;font-size:10px!important;font-weight:600}
-/* Tabla ejecutiva */
-.table-wrap{margin:0 12px 14px!important;border:1px solid #e6eeec!important;border-radius:9px!important;background:#fff;overflow:auto!important;scrollbar-width:thin;scrollbar-color:#b8cbc7 transparent}
-table{width:100%;border-collapse:separate!important;border-spacing:0!important;font-variant-numeric:tabular-nums}
-thead th{position:sticky!important;top:0;z-index:2;padding:10px 11px!important;background:#f1f7f5!important;color:#526b70!important;border-bottom:1px solid #dce8e5!important;font-size:9px!important;font-weight:800!important;letter-spacing:.055em!important;text-transform:uppercase}
-tbody td{padding:9px 11px!important;color:#334b50!important;border-bottom:1px solid #edf2f1!important;font-size:10px!important;line-height:1.35}
-tbody tr:nth-child(even){background:#fbfdfc}
-tbody tr:hover{background:#eef7f5!important}
-tbody tr:last-child td{border-bottom:0!important}
-td:nth-child(n+2),th:nth-child(n+2){text-align:right}
-@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.kpis>.panel{min-height:86px}.grid{gap:14px!important}}
-@media(max-width:560px){.kpis{grid-template-columns:1fr!important}.kpis>.panel{min-height:80px}.kpis .value{font-size:25px!important}.card-head{padding:13px 14px 10px!important}.table-wrap{margin:0 8px 10px!important}}
+  function loadLogo() {
+    return fetch('Logo_JV%20International.png')
+      .then(function (r) { if (!r.ok) throw new Error('logo'); return r.blob(); })
+      .then(function (b) {
+        return new Promise(function (resolve, reject) {
+          var fr = new FileReader();
+          fr.onload = function () {
+            var img = new Image();
+            img.onload = function () { resolve({ data: fr.result, w: img.naturalWidth, h: img.naturalHeight }); };
+            img.onerror = reject;
+            img.src = fr.result;
+          };
+          fr.onerror = reject;
+          fr.readAsDataURL(b);
+        });
+      })
+      .catch(function () { return null; });
+  }
 
-.chart{position:relative;overflow:hidden}.secondary-tip{position:absolute;z-index:100;display:none;pointer-events:none;box-sizing:border-box;max-width:min(190px,calc(100% - 16px));padding:8px 10px;border-radius:8px;background:#123b36;color:#fff;font-size:11px;line-height:1.4;box-shadow:0 8px 22px rgba(15,47,43,.28);white-space:normal;overflow-wrap:anywhere}.secondary-tip.show{display:block}.secondary-tip strong{display:block;margin-bottom:2px;font-size:12px}.secondary-tip small{color:#bfe2dc;font-size:10px}.bar-tip{display:none!important}.bar-col,.hrow{cursor:pointer}
+  function currentFilters() {
+    var map = [['folio', 'Folio'], ['corte', 'Corte'], ['estilo', 'Estilo'], ['operacion', 'Operación'], ['personal', 'Personal'],
+      ['maquina', 'Máquina'], ['desde', 'Desde'], ['hasta', 'Hasta'], ['semana', 'Semana']];
+    var out = [];
+    map.forEach(function (m) {
+      var el = $(m[0]);
+      var v = el ? String(el.value || '').trim() : '';
+      if (v) out.push(m[1] + ': ' + (m[0] === 'desde' || m[0] === 'hasta' ? dmy(v) : v));
+    });
+    return out;
+  }
 
-/* Corrección quirúrgica del sidebar: branding y navegación únicamente */
-.side-brand{height:72px;padding:8px 10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;color:inherit}
-.side-brand img{display:block;width:100%;max-width:190px;max-height:54px;height:auto;object-fit:contain}
+  function fetchData() {
+    return fetch(API_URL + '?' + params().toString(), { redirect: 'follow' })
+      .then(function (r) { if (!r.ok) throw new Error('Error HTTP ' + r.status); return r.json(); })
+      .then(function (d) { if (!d.ok) throw new Error(d.error || 'La API devolvió un error.'); return d.dashboard || {}; });
+  }
 
-/* ===== Acabado profesional (solo estilo; no cambia la estructura ni el orden de la página) ===== */
-body{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.45}
-.sidebar{background:linear-gradient(180deg,#0d1b22 0%,#10252b 100%);box-shadow:2px 0 14px rgba(13,27,34,.18)}
-.side-brand{border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.22)}
-.side-group{letter-spacing:.16em;font-weight:700;color:#7f9692}
-.side-nav a{position:relative;font-weight:600;letter-spacing:.01em;transition:background .15s ease,color .15s ease,padding-left .15s ease}
-.side-nav a:hover{padding-left:14px}
-.side-nav a.active{background:linear-gradient(90deg,#1c4a43,#173a35);box-shadow:inset 3px 0 0 #34d399}
-main.content{background:radial-gradient(1200px 380px at 90% -120px,#e3f0ed 0%,rgba(243,246,245,0) 70%)}
-.page-head h1{font-size:28px;font-weight:800;letter-spacing:-.025em;color:#0f2f2b}
-.page-head p{font-size:14px;color:#5f7773}
-.head-status{background:#fff;border:1px solid var(--f1-border);border-radius:999px;padding:6px 13px!important;box-shadow:0 2px 8px rgba(15,47,43,.06);align-self:flex-start}
-.filters{border:1px solid var(--f1-border)!important;border-radius:14px!important;box-shadow:var(--f1-shadow)!important;position:relative;overflow:hidden;padding:18px 20px!important}
-.filters::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#08776b,#34d399)}
-.filters-head h2{font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0f2f2b}
-.field label{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5b716d;margin-bottom:6px}
-.field input,.field select{height:42px;border:1px solid #d5e1de;border-radius:9px;background:#fbfdfc;font-size:13.5px;padding:0 12px;transition:border-color .15s,box-shadow .15s,background .15s}
-.field input:hover,.field select:hover{border-color:#a9c5bf;background:#fff}
-.field input:focus,.field select:focus{background:#fff;border-color:#08776b;box-shadow:0 0 0 4px rgba(8,119,107,.13)}
-.field input::placeholder{color:#9bb0ac}
-.actions{flex-wrap:wrap}
-.btn{height:42px;padding:0 18px;border-radius:9px;font-size:13px;font-weight:800;letter-spacing:.01em;transition:transform .12s ease,box-shadow .15s ease,background .15s ease}
-.btn:hover:not(:disabled){transform:translateY(-1px)}
-.btn-primary{background:linear-gradient(180deg,#0a8b7d,#08776b);box-shadow:0 4px 12px rgba(8,119,107,.32)}
-.btn-primary:hover:not(:disabled){box-shadow:0 7px 18px rgba(8,119,107,.4)}
-.btn-light{background:#eaf1ef;color:#294640;border:1px solid #d8e5e1}
-.btn-light:hover:not(:disabled){background:#dfeae7}
-.btn-pdf{background:#fff;color:#b85a0b;border:1.5px solid #f2b27a;box-shadow:0 2px 8px rgba(244,123,32,.12)}
-.btn-pdf:hover:not(:disabled){background:#fff7f0;box-shadow:0 6px 16px rgba(244,123,32,.22)}
-.kpis>.panel{border-radius:14px!important}
-.kpis>.panel::after{content:"";position:absolute;right:-26px;top:-26px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(8,119,107,.10),rgba(8,119,107,0) 70%);pointer-events:none}
-.kpis .label{font-size:10.5px!important;letter-spacing:.08em!important}
-.kpis .value{font-size:clamp(26px,2.4vw,36px)!important;color:#0b2926!important}
-.kpis .note{font-size:11px!important;color:#7a8f8b!important;font-weight:500}
-.chart-card{border-radius:14px!important;transition:box-shadow .2s ease,transform .2s ease}
-.chart-card:hover{box-shadow:var(--f1-shadow-hover)!important}
-.card-head{border-radius:14px 14px 0 0;align-items:baseline}
-.card-head h3{font-size:15px!important;font-weight:800!important;color:#0f2f2b!important}
-.card-head span{background:#eef6f4;border-radius:999px;padding:3px 10px;font-size:10.5px!important;font-weight:700!important;color:#4d6a65!important}
-.hrow{padding:2px 6px;border-radius:8px;transition:background .15s ease}
-.hrow:hover{background:#f1f8f6}
-.htrack{height:10px;background:#e8f0ee}
-.hfill{background:linear-gradient(90deg,#08776b,#2ed3a5)}
-.bar{background:linear-gradient(180deg,#2cc4b0,#08776b)}
-.table-wrap{border-radius:10px!important}
-tbody td:first-child{font-weight:700;color:#0f2f2b!important}
-.error{border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;font-weight:600}
-footer{color:#7a8f8b;font-size:12px;letter-spacing:.02em;border-top:1px solid #e3ece9;margin:8px 24px 0}
-@media(max-width:1050px){.grid-filters{grid-template-columns:repeat(3,1fr)!important}}
-@media(max-width:760px){.grid-filters{grid-template-columns:1fr 1fr!important}}
-@media(max-width:480px){.grid-filters{grid-template-columns:1fr!important}}
-</style>
-</head>
-<body>
-<div class="app">
-<aside class="sidebar">
-<div class="side-brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div>
-<div class="side-group">PRODUCCIÓN COSTURA</div>
-<nav class="side-nav"><a href="cortes.html">Programa de corte</a><a href="ticket.html">Captura por ticket</a><a class="active" href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav></aside>
-<main class="content">
-<header class="page-head"><div><h1>Dashboard de Producción</h1><p>Indicadores y desempeño de costura.</p></div><div class="status head-status"><span class="dot" id="statusDotHead"></span><span id="statusTextHead">Conectando…</span></div></header>
-<section class="panel filters">
-<div class="filters-head"><h2>Filtros</h2><div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Conectando…</span></div></div>
-<div class="grid-filters">
-<div class="field"><label for="folio">Folio</label><input id="folio" placeholder="Ej. PC-000001"/></div>
-<div class="field"><label for="corte">Corte</label><input id="corte" placeholder="Todos"/></div>
-<div class="field"><label for="estilo">Estilo</label><select id="estilo"><option value="">Todos</option></select></div>
-<div class="field"><label for="operacion">Operación</label><select id="operacion"><option value="">Todas</option></select></div>
-<div class="field"><label for="personal">Personal</label><select id="personal"><option value="">Todos</option></select></div>
-<div class="field"><label for="maquina">Máquina</label><select id="maquina"><option value="">Todas</option></select></div>
-<div class="field"><label for="desde">Fecha desde</label><input id="desde" type="date"/></div>
-<div class="field"><label for="hasta">Fecha hasta</label><input id="hasta" type="date"/></div>
-<div class="field"><label for="semana">Semana</label><input id="semana" max="53" min="1" placeholder="Todas" type="number"/></div>
-<div class="actions"><button class="btn btn-primary" id="applyBtn" type="button">Aplicar filtros</button><button class="btn btn-light" id="clearBtn" type="button">Limpiar</button><button class="btn btn-pdf" id="pdfBtn" type="button">Descargar PDF</button></div>
-</div>
-</section>
-<div class="error" id="errorBox" role="alert"></div>
-<section class="kpis">
-<article class="panel kpi"><div class="label">Operaciones</div><div class="value" id="kOps">—</div><div class="note">Operaciones realizadas</div></article>
-<article class="panel kpi"><div class="label">Piezas</div><div class="value" id="kPiezas">—</div><div class="note" id="kPiezasNote">Piezas trabajadas</div></article>
-<article class="panel kpi"><div class="label">Costo total</div><div class="value" id="kCosto">—</div><div class="note">Costo de destajo</div></article>
-<article class="panel kpi"><div class="label">Estilos</div><div class="value" id="kEstilos">—</div><div class="note" id="kExtra">—</div></article>
-</section>
-<section class="charts">
-<article class="panel chart-card wide"><div class="card-head"><h3>Producción por fecha</h3><span>Piezas</span></div><div class="chart loading" id="fechaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por operador</h3><span>Piezas · Top 12</span></div><div class="chart loading" id="operadorChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por operación</h3><span>Piezas por operación · Top 12</span></div><div class="chart loading" id="operacionChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por estilo</h3><span>Piezas</span></div><div class="chart loading" id="estiloChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por máquina</h3><span>Piezas</span></div><div class="chart loading" id="maquinaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Producción por semana</h3><span>Piezas</span></div><div class="chart loading" id="semanaChart">Cargando…</div></article>
-<article class="panel chart-card"><div class="card-head"><h3>Principales cortes</h3><span>Piezas · Top 15</span></div><div class="table-wrap"><table><thead><tr><th>Corte</th><th>Piezas</th><th>Registros</th><th>Costo</th></tr></thead><tbody id="cortesBody"></tbody></table></div></article>
-</section>
-</main>
-<footer>JV International · Sistema de Producción Costura</footer>
-</div>
-<script src="auth.js"></script><script>
-'use strict';
-const API_URL='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9VvyisaFHc3UMPJWYFuwwp-YsZqZjEkDFURwnYVUgwdXmQY6/exec';
-const $=id=>document.getElementById(id);
-const nf=new Intl.NumberFormat('es-MX');
-const money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
-let lastDashboard=null;
+  /* ---------- Dibujo ---------- */
 
-document.addEventListener('DOMContentLoaded',()=>{
-  $('applyBtn').addEventListener('click',loadDashboard);
-  $('clearBtn').addEventListener('click',()=>{['folio','corte','estilo','operacion','personal','maquina','desde','hasta','semana'].forEach(id=>$(id).value='');loadDashboard();});
-  $('estilo').addEventListener('change',refreshOperationOptions);
-  loadDashboard();
-});
+  function Pdf(jsPDF, logo) {
+    this.doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    this.W = this.doc.internal.pageSize.getWidth();
+    this.H = this.doc.internal.pageSize.getHeight();
+    this.M = 36;
+    this.logo = logo;
+  }
 
-function params(){
-  const p=new URLSearchParams({action:'dashboard'});
-  const map={folio:'folio',corte:'corte',estilo:'estilo',operacion:'operacion',personal:'personal',maquina:'maquina',fechaDesde:'desde',fechaHasta:'hasta',semana:'semana'};
-  Object.entries(map).forEach(([key,id])=>{const value=$(id).value.trim();if(value)p.set(key,value)});
-  return p;
-}
-async function loadDashboard(){
-  setLoading(true); hideError();
-  try{
-    const response=await fetch(`${API_URL}?${params().toString()}`,{method:'GET',redirect:'follow'});
-    if(!response.ok)throw new Error(`Error HTTP ${response.status}`);
-    const data=await response.json();
-    if(!data.ok)throw new Error(data.error||'La API devolvió un error.');
-    lastDashboard=data.dashboard||{};
-    render(lastDashboard); setStatus(true,'Conectado');
-  }catch(error){showError('No fue posible cargar el dashboard: '+error.message);setStatus(false,'Sin conexión');}
-  finally{setLoading(false)}
-}
-function render(d){
-  const k=d.kpis||{};
-  $('kOps').textContent=nf.format(k.operacionesRealizadas!==undefined?k.operacionesRealizadas:(k.piezas||0));$('kPiezas').textContent=nf.format(k.piezas||0);$('kCosto').textContent=money.format(k.costoTotal||0);$('kEstilos').textContent=nf.format(k.estilos||0);
-  $('kExtra').textContent=`${k.cortes||0} cortes · ${k.operadores||0} operadores · ${k.maquinas||0} máquinas`;
-  $('kPiezasNote').textContent='Piezas trabajadas'+(k.cortesSinPrograma?` · ${k.cortesSinPrograma} corte(s) sin programa`:'');
-  renderLineChart('fechaChart',d.porFecha||[],'fecha',31);
-  renderHbars('operadorChart',d.porOperador||[],'operador',12);
-  renderHbars('operacionChart',d.porOperacion||[],'operacion',12);
-  renderBars('estiloChart',d.porEstilo||[],'estilo',12);
-  renderBars('maquinaChart',d.porMaquina||[],'maquina',8);
-  renderBars('semanaChart',(d.porSemana||[]).map(x=>({...x,semana:'S'+x.semana})),'semana',12);
-  renderCortes(d.porCorte||[]); updateFilters(d);
-}
-function formatFechaDMY(value){
-  const s=String(value??'').trim();
-  const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
-}
-function fechaDMY(v){
-  const s=String(v??'').trim(),m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}/${m[2]}/${m[1]}`:s;
-}
-function renderLineChart(id,items,labelKey,limit){
-  const host=$(id),rows=items.slice(0,limit).map(d=>({label:fechaDMY(d[labelKey]),value:Number(d.piezas)||0,costo:Number(d.costo)||0}));
-  if(!rows.length){host.innerHTML='<div class="loading">Sin datos</div>';return}
-  host.className='chart';host.innerHTML='<div class="bi-wrap"><canvas aria-label="Producción por fecha" role="img"></canvas><div class="bi-tooltip" role="status"></div></div>';
-  const wrap=host.querySelector('.bi-wrap'),canvas=wrap.querySelector('canvas'),tip=wrap.querySelector('.bi-tooltip'),ctx=canvas.getContext('2d');
-  let hit=[];
-  const draw=()=>{
-    const rect=wrap.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),W=Math.max(300,Math.round(rect.width)),H=Math.max(260,Math.round(rect.height));
-    canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-    const mobile=W<560,p={l:mobile?48:62,r:18,t:18,b:mobile?64:58},pw=W-p.l-p.r,ph=H-p.t-p.b;
-    const max=Math.max(1,...rows.map(r=>r.value)),steps=4,rough=max/steps,mag=10**Math.floor(Math.log10(rough)),nice=[1,2,2.5,5,10].find(n=>n*mag>=rough)||10,yMax=nice*mag*steps;
-    ctx.font=(mobile?'9px':'10px')+' system-ui,-apple-system,Segoe UI,sans-serif';ctx.textBaseline='middle';ctx.fillStyle='#64748b';ctx.strokeStyle='#dbe3ec';ctx.lineWidth=1;
-    for(let i=0;i<=steps;i++){const yy=p.t+ph*i/steps,v=yMax-yMax*i/steps;ctx.beginPath();ctx.moveTo(p.l,yy+.5);ctx.lineTo(W-p.r,yy+.5);ctx.stroke();ctx.textAlign='right';ctx.fillText(nf.format(v),p.l-9,yy)}
-    const x=i=>rows.length===1?p.l+pw/2:p.l+pw*i/(rows.length-1),y=v=>p.t+ph-(v/yMax)*ph;
-    const pts=rows.map((r,i)=>({x:x(i),y:y(r.value),...r}));hit=pts;
-    const path=new Path2D();path.moveTo(pts[0].x,pts[0].y);
-    for(let i=0;i<pts.length-1;i++){const a=pts[Math.max(0,i-1)],b=pts[i],c=pts[i+1],d=pts[Math.min(pts.length-1,i+2)],t=.14;path.bezierCurveTo(b.x+(c.x-a.x)*t,b.y+(c.y-a.y)*t,c.x-(d.x-b.x)*t,c.y-(d.y-b.y)*t,c.x,c.y)}
-    const area=new Path2D(path);area.lineTo(pts.at(-1).x,p.t+ph);area.lineTo(pts[0].x,p.t+ph);area.closePath();
-    const grad=ctx.createLinearGradient(0,p.t,0,p.t+ph);grad.addColorStop(0,'rgba(8,119,107,.24)');grad.addColorStop(1,'rgba(8,119,107,.03)');ctx.fillStyle=grad;ctx.fill(area);
-    ctx.strokeStyle='#08776b';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke(path);
-    pts.forEach(q=>{ctx.beginPath();ctx.arc(q.x,q.y,3.5,0,Math.PI*2);ctx.fillStyle='#08776b';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle='#fff';ctx.stroke()});
-    const minLabel=mobile?76:88,maxLabels=Math.max(2,Math.floor(pw/minLabel)),every=Math.max(1,Math.ceil(rows.length/maxLabels));ctx.fillStyle='#64748b';ctx.font=(mobile?'9px':'10px')+' system-ui,-apple-system,Segoe UI,sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
-    pts.forEach((q,i)=>{if(i%every===0||i===pts.length-1){const label=mobile?q.label.slice(0,5):q.label;ctx.fillText(label,q.x,H-p.b+14)}});
+  Pdf.prototype.fill = function (hex) { var c = rgb(hex); this.doc.setFillColor(c[0], c[1], c[2]); };
+  Pdf.prototype.stroke = function (hex) { var c = rgb(hex); this.doc.setDrawColor(c[0], c[1], c[2]); };
+  Pdf.prototype.color = function (hex) { var c = rgb(hex); this.doc.setTextColor(c[0], c[1], c[2]); };
+  Pdf.prototype.font = function (size, bold) { this.doc.setFont('helvetica', bold ? 'bold' : 'normal'); this.doc.setFontSize(size); };
+
+  Pdf.prototype.fit = function (text, maxW) {
+    var d = this.doc, t = String(text == null ? '' : text);
+    if (d.getTextWidth(t) <= maxW) return t;
+    while (t.length > 1 && d.getTextWidth(t + '…') > maxW) t = t.slice(0, -1);
+    return t + '…';
   };
-  const show=(q,clientX,clientY)=>{tip.innerHTML=`<strong>${escapeHtml(q.label)}</strong>${nf.format(q.value)} piezas<br>${money.format(q.costo)}`;tip.classList.add('show');const b=wrap.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let l=clientX-b.left+12,t=clientY-b.top-th-12;l=Math.max(8,Math.min(l,b.width-tw-8));t=Math.max(8,Math.min(t,b.height-th-8));tip.style.left=l+'px';tip.style.top=t+'px'};
-  canvas.addEventListener('pointermove',e=>{if(!hit.length)return;const b=canvas.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top;let q=hit.reduce((a,c)=>Math.hypot(c.x-mx,c.y-my)<Math.hypot(a.x-mx,a.y-my)?c:a);Math.hypot(q.x-mx,q.y-my)<24?show(q,e.clientX,e.clientY):tip.classList.remove('show')});
-  canvas.addEventListener('pointerleave',()=>tip.classList.remove('show'));
-  draw();if(window.ResizeObserver)new ResizeObserver(draw).observe(wrap);else window.addEventListener('resize',draw,{passive:true});
-}
-function activarTooltipSecundario(el,selector,rows,labelKey){
- let tip=el.querySelector('.secondary-tip');if(!tip){tip=document.createElement('div');tip.className='secondary-tip';tip.setAttribute('role','status');el.appendChild(tip)}
- const show=(node,e)=>{const d=rows[Number(node.dataset.i)];if(!d)return;tip.innerHTML=`<strong>${escapeHtml(String(d[labelKey]??''))}</strong>${nf.format(Number(d.piezas)||0)} piezas<br><small>${money.format(Number(d.costo)||0)}</small>`;tip.classList.add('show');const b=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;let left=(e?.clientX??b.left+b.width/2)-b.left+12,top=(e?.clientY??b.top+b.height/2)-b.top-th-12;left=Math.max(8,Math.min(left,b.width-tw-8));top=Math.max(8,Math.min(top,b.height-th-8));tip.style.left=left+'px';tip.style.top=top+'px'};
- const hide=()=>tip.classList.remove('show');el.querySelectorAll(selector).forEach(n=>{n.addEventListener('pointerenter',e=>show(n,e));n.addEventListener('pointermove',e=>show(n,e));n.addEventListener('pointerleave',hide);n.addEventListener('focus',e=>show(n,e));n.addEventListener('blur',hide)});
-}
-function renderBars(id,items,labelKey,limit){const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}el.className='chart';el.innerHTML='<div class="bar-chart">'+rows.map((d,i)=>{const value=Number(d.piezas)||0,h=Math.max(2,value/max*100),label=escapeHtml(String(d[labelKey]??''));return `<div class="bar-col" tabindex="0" data-i="${i}"><div class="bar" style="height:${h}%"></div><span class="bar-label">${label}</span></div>`}).join('')+'</div>';activarTooltipSecundario(el,'.bar-col',rows,labelKey)}
-function renderHbars(id,items,labelKey,limit){const el=$(id),rows=items.slice(0,limit),max=Math.max(1,...rows.map(x=>Number(x.piezas)||0));if(!rows.length){el.innerHTML='<div class="loading">Sin datos</div>';return}el.className='chart';el.innerHTML='<div class="hbars">'+rows.map((d,i)=>`<div class="hrow" tabindex="0" data-i="${i}"><div class="hlabel" title="${escapeHtml(String(d[labelKey]??''))}">${escapeHtml(String(d[labelKey]??''))}</div><div class="htrack"><div class="hfill" style="width:${((Number(d.piezas)||0)/max)*100}%"></div></div><div class="hvalue">${nf.format(Number(d.piezas)||0)}</div></div>`).join('')+'</div>';activarTooltipSecundario(el,'.hrow',rows,labelKey)}
-function renderCortes(items){$('cortesBody').innerHTML=items.slice(0,15).map(x=>`<tr><td>${escapeHtml(String(x.corte||''))}</td><td>${nf.format(x.piezas||0)}</td><td>${nf.format(x.registros||0)}</td><td>${money.format(x.costo||0)}</td></tr>`).join('')||'<tr><td colspan="4">Sin datos</td></tr>'}
-function updateFilters(d){
-  fillSelect('personal',(d.porOperador||[]).map(x=>x.operador));fillSelect('maquina',(d.porMaquina||[]).map(x=>x.maquina));fillSelect('estilo',(d.porEstilo||[]).map(x=>x.estilo));fillSelect('operacion',(d.porOperacion||[]).map(x=>x.operacion));
-}
-function fillSelect(id,values){const select=$(id),current=select.value,first=select.options[0].outerHTML;const unique=[...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es'));select.innerHTML=first+unique.map(v=>`<option value="${escapeHtml(String(v))}">${escapeHtml(String(v))}</option>`).join('');if(unique.includes(current))select.value=current}
-function refreshOperationOptions(){/* El servidor aplica el filtro; se conservan las operaciones disponibles. */}
-function setLoading(on){$('applyBtn').disabled=on;$('applyBtn').textContent=on?'Cargando…':'Aplicar filtros'}
-function setStatus(ok,text){$('statusDot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=text}
-function showError(msg){$('errorBox').textContent=msg;$('errorBox').style.display='block'}function hideError(){$('errorBox').style.display='none'}
-function escapeHtml(value){return value.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
-  const headDot=document.getElementById('statusDotHead'),headText=document.getElementById('statusTextHead');
-  const sourceDot=document.getElementById('statusDot'),sourceText=document.getElementById('statusText');
-  if(sourceText&&headText){const syncStatus=()=>{headText.textContent=sourceText.textContent;headDot.className=sourceDot.className};new MutationObserver(syncStatus).observe(sourceText,{childList:true,subtree:true,characterData:true});new MutationObserver(syncStatus).observe(sourceDot,{attributes:true,attributeFilter:['class']});syncStatus()}
+  Pdf.prototype.header = function (title, rangeText) {
+    var d = this.doc, W = this.W;
+    this.fill(C.band); d.rect(0, 0, W, 64, 'F');
+    // logotipo sobre caja blanca
+    this.fill('#ffffff'); d.roundedRect(this.M, 12, 112, 40, 5, 5, 'F');
+    if (this.logo) {
+      var maxW = 100, maxH = 30, r = Math.min(maxW / this.logo.w, maxH / this.logo.h);
+      var w = this.logo.w * r, h = this.logo.h * r;
+      d.addImage(this.logo.data, 'PNG', this.M + (112 - w) / 2, 12 + (40 - h) / 2, w, h);
+    } else {
+      this.color(C.band); this.font(9, true); d.text('JV INTERNATIONAL', this.M + 56, 36, { align: 'center' });
+    }
+    this.color('#ffffff'); this.font(17, true); d.text(title, W / 2, 38, { align: 'center' });
+    this.font(8.5, false); d.text(rangeText, W - this.M, 28, { align: 'right' });
+  };
 
-function confinarTooltips(){
- document.querySelectorAll('.chart').forEach(card=>{card.style.position='relative';card.style.overflow='hidden'});
-}
-window.addEventListener('pointermove',e=>{const card=e.target.closest&&e.target.closest('.chart');if(!card)return;card.querySelectorAll('.chart-tooltip,.chart-local-tip,.line-tooltip,.bar-tip').forEach(t=>{if(getComputedStyle(t).display==='none')return;const b=card.getBoundingClientRect(),r=t.getBoundingClientRect();let l=r.left-b.left,top=r.top-b.top;l=Math.max(6,Math.min(l,b.width-r.width-6));top=Math.max(6,Math.min(top,b.height-r.height-6));t.style.left=l+'px';t.style.top=top+'px';t.style.transform='none'})},true);
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="dashboard_pdf.js"></script>
-</body>
-</html>
+  Pdf.prototype.footers = function (generated) {
+    var d = this.doc, n = d.getNumberOfPages();
+    for (var i = 1; i <= n; i++) {
+      d.setPage(i);
+      this.stroke(C.line); d.setLineWidth(0.6); d.line(this.M, this.H - 30, this.W - this.M, this.H - 30);
+      this.color(C.muted); this.font(7.5, false);
+      d.text('JV International Solutions Inc. · Generado: ' + generated, this.M, this.H - 18);
+      d.text('Página ' + i + ' de ' + n, this.W - this.M, this.H - 18, { align: 'right' });
+      this.color('#ffffff'); this.font(8.5, false);
+      d.text('Página ' + i + ' de ' + n, this.W - this.M, 44, { align: 'right' });
+    }
+  };
+
+  Pdf.prototype.card = function (x, y, w, h, label, value, note, valueSize) {
+    var d = this.doc;
+    this.fill(C.card); this.stroke(C.line); d.setLineWidth(0.8); d.roundedRect(x, y, w, h, 5, 5, 'FD');
+    this.color(C.muted); this.font(7.5, false); d.text(String(label).toUpperCase(), x + 12, y + 16);
+    this.color(C.text); this.font(valueSize || 18, true); d.text(this.fit(value, w - 24), x + 12, y + 38);
+    if (note) { this.color(C.muted); this.font(7.5, false); d.text(this.fit(note, w - 24), x + 12, y + h - 9); }
+  };
+
+  /** Barras horizontales con valor y % del total. rows: [{label, value}] */
+  Pdf.prototype.hbars = function (x, y, w, title, rows, unit) {
+    var d = this.doc, rowH = 21, labelW = 118, valueW = 92;
+    this.color(C.text); this.font(11, true); d.text(title, x, y);
+    y += 14;
+    if (!rows.length) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x, y + 14); return y + 30; }
+    var max = Math.max.apply(null, rows.map(function (r) { return r.value; })) || 1;
+    var total = rows.reduce(function (s, r) { return s + r.value; }, 0) || 1;
+    var trackX = x + labelW, trackW = w - labelW - valueW;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i], cy = y + i * rowH + 8;
+      this.color(C.text); this.font(8, false); d.text(this.fit(r.label, labelW - 8), x, cy + 3);
+      this.fill(C.track); d.roundedRect(trackX, cy - 3, trackW, 7, 3.5, 3.5, 'F');
+      var bw = Math.max(3, trackW * r.value / max);
+      this.fill(PAL[i % PAL.length]); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
+      this.color(C.text); this.font(8, true); d.text(nf.format(r.value) + (unit || ''), x + w, cy + 3, { align: 'right' });
+      this.color(C.muted); this.font(7, false); d.text((r.value * 100 / total).toFixed(1) + '%', x + w - 52, cy + 3, { align: 'right' });
+    }
+    return y + rows.length * rowH;
+  };
+
+  /** Columnas verticales (semanas / fechas). rows: [{label, value}] */
+  Pdf.prototype.columns = function (x, y, w, h, title, rows) {
+    var d = this.doc;
+    this.color(C.text); this.font(11, true); d.text(title, x, y);
+    y += 12;
+    if (!rows.length) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x, y + 14); return y + 30; }
+    var max = Math.max.apply(null, rows.map(function (r) { return r.value; })) || 1;
+    var mag = Math.pow(10, Math.floor(Math.log10(max / 4))), rough = max / 4;
+    var niceStep = [1, 2, 2.5, 5, 10].filter(function (n) { return n * mag >= rough; })[0] || 10;
+    max = niceStep * mag * 4;
+    var ph = h - 34, base = y + ph + 6, left = x + 40, pw = w - 40;
+    // rejilla
+    for (var g = 0; g <= 4; g++) {
+      var gy = base - ph * g / 4;
+      this.stroke(C.line); d.setLineWidth(0.5); d.line(left, gy, x + w, gy);
+      this.color(C.muted); this.font(7, false); d.text(nf.format(Math.round(max * g / 4)), left - 5, gy + 2.5, { align: 'right' });
+    }
+    var slot = pw / rows.length, bw = Math.min(26, slot * 0.62);
+    var every = Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor(pw / 52))));
+    for (var i = 0; i < rows.length; i++) {
+      var bh = Math.max(1.5, ph * rows[i].value / max), bx = left + slot * i + (slot - bw) / 2;
+      this.fill(C.teal); d.rect(bx, base - bh, bw, bh, 'F');
+      if (rows.length <= 16) { this.color(C.text); this.font(6.5, true); d.text(nf.format(rows[i].value), bx + bw / 2, base - bh - 3, { align: 'center' }); }
+      if (i % every === 0 || i === rows.length - 1) {
+        this.color(C.muted); this.font(7, false); d.text(String(rows[i].label), bx + bw / 2, base + 11, { align: 'center' });
+      }
+    }
+    return base + 16;
+  };
+
+  Pdf.prototype.table = function (x, y, w, title, head, cols, rows) {
+    var d = this.doc, rowH = 17;
+    this.color(C.text); this.font(11, true); d.text(title, x, y);
+    y += 8;
+    this.fill('#eaf1ef'); d.rect(x, y, w, rowH, 'F');
+    this.color('#3f5550'); this.font(7.5, true);
+    head.forEach(function (h, i) { d.text(h.toUpperCase(), cols[i].x + (cols[i].right ? cols[i].w : 0) + 6 * (cols[i].right ? -1 : 1), y + 11.5, { align: cols[i].right ? 'right' : 'left' }); });
+    y += rowH;
+    var self = this;
+    if (!rows.length) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x + 6, y + 13); return y + rowH; }
+    rows.forEach(function (r, ri) {
+      if (ri % 2) { self.fill('#f7faf9'); d.rect(x, y, w, rowH, 'F'); }
+      self.color(C.text); self.font(8, false);
+      r.forEach(function (cell, i) {
+        var c = cols[i];
+        d.text(self.fit(cell, c.w - 12), c.x + (c.right ? c.w - 6 : 6), y + 11.5, { align: c.right ? 'right' : 'left' });
+      });
+      y += rowH;
+    });
+    self.stroke(C.line); d.setLineWidth(0.6); d.line(x, y, x + w, y);
+    return y;
+  };
+
+  /* ---------- Informe ---------- */
+
+  function top(list, labelKey, n) {
+    return (list || []).slice(0, n).map(function (r) { return { label: String(r[labelKey] == null ? '' : r[labelKey]), value: num(r.piezas) }; });
+  }
+
+  function build(jsPDF, logo, data, filters) {
+    var p = new Pdf(jsPDF, logo), d = p.doc, M = p.M, W = p.W;
+    var k = data.kpis || {};
+    var fechas = (data.porFecha || []).map(function (r) { return String(r.fecha || ''); }).filter(Boolean).sort();
+    var desde = ($('desde') && $('desde').value) || fechas[0] || '';
+    var hasta = ($('hasta') && $('hasta').value) || fechas[fechas.length - 1] || '';
+    var rango = desde || hasta ? 'Rango de fechas: ' + (dmy(desde) || '—') + ' - ' + (dmy(hasta) || '—') : 'Rango de fechas: sin registros';
+    var title = 'Informe Producción Costura';
+    var colW = (W - 2 * M - 24) / 2;
+
+    function firstOf(list, key) { var r = (list || [])[0]; return r ? { name: String(r[key] == null ? '' : r[key]), piezas: num(r.piezas) } : null; }
+    /* Página 1: encabezado, 4 indicadores y barras en dos columnas */
+    p.header(title, rango);
+    p.color(C.muted); p.font(8.5, false);
+    d.text(p.fit('Filtros aplicados: ' + (filters.length ? filters.join(' · ') : 'ninguno (todo el histórico)'), W - 2 * M), M, 82);
+    d.text(p.fit('Piezas = prendas trabajadas (operaciones capturadas ÷ operaciones del corte). Operaciones = piezas procesadas en cada operación.', W - 2 * M), M, 93);
+
+    var cw = (W - 2 * M - 3 * 12) / 4;
+    function cardX(i) { return M + i * (cw + 12); }
+    var ops = k.operacionesRealizadas !== undefined ? k.operacionesRealizadas : k.piezas;
+    var noProg = num(k.cortesSinPrograma);
+    p.card(cardX(0), 104, cw, 62, 'Operaciones', nf.format(num(ops)), 'Operaciones realizadas');
+    p.card(cardX(1), 104, cw, 62, 'Piezas', nf.format(num(k.piezas)), noProg ? 'Piezas trabajadas · ' + noProg + ' corte(s) sin programa' : 'Piezas trabajadas');
+    p.card(cardX(2), 104, cw, 62, 'Costo total', money.format(num(k.costoTotal)), 'Costo de destajo');
+    p.card(cardX(3), 104, cw, 62, 'Estilos', nf.format(num(k.estilos)), 'Estilos trabajados');
+
+    p.hbars(M, 196, colW, 'Producción por estilo (piezas)', top(data.porEstilo, 'estilo', 6));
+    p.hbars(M + colW + 24, 196, colW, 'Producción por operador (piezas)', top(data.porOperador, 'operador', 6));
+    p.hbars(M, 364, colW, 'Producción por máquina (piezas)', top(data.porMaquina, 'maquina', 6));
+    p.hbars(M + colW + 24, 364, colW, 'Producción por operación (piezas)', top(data.porOperacion, 'operacion', 6));
+
+    /* Página 2 */
+    d.addPage(); p.header(title, rango);
+    p.hbars(M, 96, colW, 'Principales cortes (piezas)', (data.porCorte || []).slice(0, 10).map(function (r) { return { label: String(r.corte == null ? '' : r.corte), value: num(r.piezas) }; }));
+    var fe = (data.porFecha || []).slice(-10).map(function (r) { return { label: dmy(r.fecha), value: num(r.piezas) }; });
+    p.hbars(M + colW + 24, 96, colW, 'Producción por fecha (piezas)', fe);
+
+    var now = new Date();
+    p.footers(now.toLocaleDateString('es-MX') + ', ' + now.toLocaleTimeString('es-MX'));
+    return p.doc;
+  }
+
+  function exportDashboardPdf() {
+    var btn = $('pdfBtn');
+    var jsPDF = window.jspdf && window.jspdf.jsPDF;
+    if (!jsPDF) { if (typeof showError === 'function') showError('No se pudo cargar la librería de PDF. Revisa tu conexión a internet e intenta de nuevo.'); return; }
+    if (typeof hideError === 'function') hideError();
+    var old = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Generando PDF…'; }
+    var filters = currentFilters();
+    Promise.all([fetchData(), loadLogo()])
+      .then(function (r) {
+        var doc = build(jsPDF, r[1], r[0], filters);
+        var t = new Date(), pad = function (n) { return String(n).padStart(2, '0'); };
+        doc.save('JV Informe Produccion Costura.pdf');
+      })
+      .catch(function (e) { if (typeof showError === 'function') showError('No fue posible generar el PDF: ' + (e && e.message ? e.message : e)); })
+      .then(function () { if (btn) { btn.disabled = false; btn.textContent = old; } });
+  }
+
+  window.exportDashboardPdf = exportDashboardPdf;
+  var b = $('pdfBtn');
+  if (b) b.addEventListener('click', exportDashboardPdf);
+})();
