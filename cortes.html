@@ -16,16 +16,27 @@ button{border:0;border-radius:6px;padding:10px 13px;font-weight:750;cursor:point
 table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;border-bottom:1px solid #edf2f0;font-size:12px;text-align:left}th{font-size:9px;background:#f5f8f7;color:#596b67}.num{text-align:right}.run input{height:34px}.wrap{overflow:auto}
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}.summary>div{background:#f7faf9;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:12px}.sl{font-size:9px;color:var(--muted);font-weight:800}.sv{font-size:19px;font-weight:850;margin-top:3px}
 .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}.row{display:flex;gap:6px;flex-wrap:wrap}.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:99px;background:#e7eeec}.tag.bad{background:#fff0ef;color:#a32b2b}
-#printArea{display:none}.lbl{width:2.5in;height:1in;padding:.05in .08in;border:1px dashed #9fb3ae;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
-.l1,.l3{display:flex;justify-content:space-between;align-items:baseline;gap:6px}.lf{font:700 7.5pt/1 "Courier New",monospace}.le{font:700 11pt/1 Arial,sans-serif;white-space:nowrap}.lo{font:700 9pt/1.05 Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lc{font:7.5pt/1 Arial,sans-serif;white-space:nowrap}.lp{display:flex;align-items:flex-end;gap:4px;font:700 8pt/1 Arial,sans-serif;flex:1;max-width:1.1in}.lp i{flex:1;border-bottom:1.2px solid #000;height:9pt}.lbc{height:.27in}.lbc svg{display:block;width:100%;height:100%}
-.sumbox{padding:16px;border-top:1px solid var(--line)}.sumbox h3{margin:0 0 10px;font-size:14px}.sumhead{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:12px}.sumhead div{font-size:10px;color:var(--muted);font-weight:800}.sumhead b{display:block;font-size:14px;color:var(--text);margin-top:2px}.sumt{border-collapse:collapse;min-width:520px}.sumt th,.sumt td{padding:7px 12px;border:1px solid var(--line);font-size:12px;text-align:right}.sumt th{background:#f5f8f7;color:#596b67}.sumt td:first-child,.sumt th:first-child{text-align:left;font-weight:800;background:#f5f8f7}.sumt .tot{font-weight:850}.sumt .nt{text-align:left;color:var(--muted);border:0;background:none;font-weight:400}tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
+#printArea{display:none}.lbl{width:2.625in;height:1in;padding:.04in .07in;border:1px dashed #9fb3ae;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.l1,.l4{display:flex;justify-content:space-between;align-items:baseline;gap:6px}.lf{font:700 7.5pt/1 "Courier New",monospace}.le{font:700 11pt/1 Arial,sans-serif;white-space:nowrap}.l2{font:700 7pt/1 Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lo{font:700 9pt/1.05 Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.l4{justify-content:flex-start;font:700 8pt/1 Arial,sans-serif;white-space:nowrap}.l4 span{font-weight:400}.lbc{height:.25in}.lbc svg{display:block;width:100%;height:100%}
+.sumbox{padding:18px 20px 20px;border-top:1px solid #dde8e6;background:linear-gradient(180deg,#fbfdfc,#fff)}.sumbox h3{margin:0 0 12px;font-size:15px;font-weight:800;color:#0f2f2b;letter-spacing:-.01em}
+.sumhead{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:14px}.sumhead div{background:#fff;border:1px solid #dde8e6;border-top:3px solid #08776b;border-radius:10px;padding:10px 12px;font-size:9.5px;color:#72817e;font-weight:800;letter-spacing:.07em;text-transform:uppercase;box-shadow:0 3px 10px rgba(15,47,43,.05)}.sumhead b{display:block;font-size:15px;color:#0b2926;margin-top:3px;letter-spacing:-.01em;text-transform:none;overflow-wrap:anywhere}
+.sumwrap{border:1px solid #dde8e6;border-radius:12px;overflow:auto;background:#fff;box-shadow:0 3px 12px rgba(15,47,43,.05)}
+.sumt{border-collapse:separate;border-spacing:0;width:100%;min-width:560px;font-variant-numeric:tabular-nums}.sumt th,.sumt td{padding:9px 14px;border:0;border-bottom:1px solid #edf2f0;font-size:12.5px;text-align:right;white-space:nowrap}
+.sumt thead th{background:#f1f7f5;color:#4d6a65;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;border-bottom:1px solid #dce8e5}
+.sumt td:first-child,.sumt th:first-child{text-align:left;position:sticky;left:0;background:#fff;font-weight:700;color:#294640}.sumt thead th:first-child{background:#f1f7f5}
+.sumt th.tc,.sumt td.tc{background:#eef7f5;font-weight:800;color:#0b5f55;border-left:1px solid #dce8e5}.sumt thead th.tc{background:#e1f1ed}
+.sumt tr.key td{font-weight:800;color:#0b2926;background:#f7fbfa}.sumt tr.key td:first-child{box-shadow:inset 3px 0 0 #08776b;background:#f7fbfa}.sumt tr.key td.tc{background:#e1f1ed}
+.sumt tr.sec td{background:#f1f7f5;color:#4d6a65;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;text-align:left;padding:7px 14px}
+.sumt tbody tr:last-child td{border-bottom:0}.sumt small{color:#8aa09b;font-weight:600;margin-left:6px;font-size:10px}
+.sumt tbody tr,.sumt tbody tr:nth-child(even),.sumt tbody tr:hover{background:#fff!important}.sumt tbody tr.key,.sumt tbody tr.key:hover{background:#f7fbfa!important}.sumt tbody tr.sec,.sumt tbody tr.sec:hover{background:#f1f7f5!important}
+tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
 .prev{margin-top:10px;overflow:auto;background:#e9eeed;padding:12px;border-radius:8px;max-height:80vh}.prev .sheetpg{margin:0 auto 14px;box-shadow:0 2px 10px #0003;border:1px solid #cfd8d5}.prev .sheetpg:last-child{margin-bottom:0}
 @media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:900px){.app{grid-template-columns:1fr}.brand{display:inline-flex;width:210px;margin:0 10px 8px 0}nav{display:flex;gap:4px;overflow:auto}.group{display:none}nav a{white-space:nowrap}main{padding:14px}}@media(max-width:520px){.top{display:block}.grid,.summary{grid-template-columns:1fr}}
-/* Hoja A4 vertical con etiquetas de 1 in x 2 5/8 in (ancho x alto). Columnas/filas: constantes LBL_COLS y LBL_ROWS en el script. */
-@page{size:A4 portrait;margin:0}
-.sheetpg{width:210mm;height:297mm;display:grid;justify-content:center;align-content:center;break-after:page;page-break-after:always;background:#fff}
+/* Hoja Carta (8.5 x 11 in) con la geometría de la plantilla SL100: margen izq. 0.1875 in, superior 0.5 in, 3 columnas de 2 5/8 in con 1/8 in entre ellas, 10 filas de 1 in = 30 etiquetas */
+@page{size:8.5in 11in;margin:0}
+.sheetpg{width:8.5in;height:11in;padding:.5in 0 0 .1875in;display:grid;grid-template-columns:repeat(3,2.625in);column-gap:.125in;grid-template-rows:repeat(10,1in);align-content:start;justify-content:start;break-after:page;page-break-after:always;background:#fff}
 .sheetpg:last-child{break-after:auto;page-break-after:auto}
-@media print{html,body{margin:0;padding:0;background:#fff}.app{display:none!important}#printArea{display:block}#printArea .lbl{border:.5pt dashed #b9c6c2}}
+@media print{html,body{margin:0;padding:0;background:#fff}.app{display:none!important}#printArea{display:block}#printArea .lbl{border:0}}
 </style><link rel="stylesheet" href="jv-pro.css"/></head><body>
 <div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div>
 <nav><a class="active" href="cortes.html">Programa de corte</a><a href="ticket.html">Captura por ticket</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav></aside>
@@ -49,7 +60,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;border-bottom:1
 
 <section class="card"><div class="head"><h2>Cortes programados</h2></div><div class="wrap"><table><thead><tr><th>FOLIO</th><th>ORDEN</th><th>LOTE</th><th>ESTILO</th><th>COLOR</th><th class="num">PIEZAS</th><th class="num">TICKETS</th><th class="num">COMPLETOS</th><th class="num">CAPTURADAS</th><th>ESTADO</th><th></th></tr></thead><tbody id="cuts"></tbody></table><div style="padding:24px;text-align:center;color:var(--muted)" id="noCuts" hidden>Aún no hay cortes.</div></div><div class="sumbox" id="cutSummary" hidden></div></section>
 
-<section class="card" id="labelPanel" hidden><div class="head"><h2 id="labelTitle">Etiquetas</h2><div class="row"><button class="primary" id="pdfLabelBtn" type="button">Descargar PDF (A4)</button><button class="light" id="printBtn" type="button">Imprimir</button></div></div><div class="body"><p style="margin:0;color:var(--muted);font-size:12px" id="labelInfo"></p><div class="prev" id="prev"></div></div></section>
+<section class="card" id="labelPanel" hidden><div class="head"><h2 id="labelTitle">Etiquetas</h2><div class="row"><button class="primary" id="pdfLabelBtn" type="button">Descargar PDF (Carta)</button><button class="light" id="printBtn" type="button">Imprimir</button></div></div><div class="body"><p style="margin:0;color:var(--muted);font-size:12px" id="labelInfo"></p><div class="prev" id="prev"></div></div></section>
 </main></div>
 <div id="printArea"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="auth.js"></script><script>
@@ -106,9 +117,10 @@ function renderCuts(){$('noCuts').hidden=state.cuts.length>0;$('cuts').innerHTML
 async function editCut(folio){const c=state.cuts.find(x=>x.folioCorte===folio);if(!c)return;hide();state.editing=folio;state.clave=newId();$('orden').value=c.orden;$('lote').value=c.lote||'';$('estilo').value=c.estilo;fillColors(c.colorId||'');$('variante').value=c.variante||'GENERAL';$('lienzosAll').value='';$('runBody').innerHTML='';(c.corrida||[]).forEach(r=>addRow(r.talla,r.proporcion,r.lienzos));await loadOps(c.operaciones||[]);$('formTitle').textContent='Reprogramar corte';$('folioShown').textContent='Folio principal: '+folio;$('save').textContent='Guardar cambios';$('cancelEdit').hidden=false;window.scrollTo({top:0,behavior:'smooth'});show('Al guardar se regeneran los tickets con los mismos folios. Vuelve a imprimir las etiquetas.','success')}
 async function cancelCut(folio){if(!confirm('¿Anular el corte '+folio+' y todos sus tickets? Esta acción no se puede deshacer.'))return;hide();try{await post('anularCorte',{folioCorte:folio});show('Corte '+folio+' anulado.','success');if(state.sel===folio)state.sel='';await loadCuts();renderSummary();$('labelPanel').hidden=true;$('printArea').innerHTML=''}catch(e){show(e.message,'error')}}
 
-/* ===== Etiquetas: hoja A4 vertical, etiqueta 1 in x 2 5/8 in ===== */
-const LBL_COLS=3,LBL_ROWS=10;            // 3 columnas x 10 filas = 30 etiquetas por hoja A4
-const LBL_W_PT=180,LBL_H_PT=72;          // 2.5 in de ancho x 1 in de alto, en puntos
+/* ===== Etiquetas: hoja Carta, plantilla SL100: etiqueta 2 5/8 in x 1 in ===== */
+const LBL_COLS=3,LBL_ROWS=10;            // 3 columnas x 10 filas = 30 etiquetas por hoja (plantilla SL100)
+const LBL_W_PT=189,LBL_H_PT=72;          // 2 5/8 in x 1 in, en puntos
+const LBL_PITCH_X=198,LBL_X0=13.5,LBL_Y0=36;   // 2.75 in entre columnas, margen izq. 0.1875 in, margen sup. 0.5 in
 /* Código de barras Code 128 (juego B) del folio de ticket, ej. CT-000001-T001 */
 const C128=['212222','222122','222221','121223','121322','131222','122213','122312','132212','221213','221312','231212','112232','122132','122231','113222','123122','123221','223211','221132','221231','213212','223112','312131','311222','321122','321221','312212','322112','322211','212123','212321','232121','111323','131123','131321','112313','132113','132311','211313','231113','231311','112133','112331','132131','113123','113321','133121','313121','211331','231131','213113','213311','213131','311123','311321','331121','312113','312311','332111','314111','221411','431111','111224','111422','121124','121421','141122','141221','112214','112412','122114','122411','142112','142211','241211','221114','413111','241112','134111','111242','121142','121241','114212','124112','124211','411212','421112','421211','212141','214121','412121','111143','111341','131141','114113','114311','411113','411311','113141','114131','311141','411131','211412','211214','211232','2331112'];
 function code128(text){const v=[104];let sum=104;String(text).split('').forEach((ch,i)=>{const c=ch.charCodeAt(0)-32;if(c<0||c>95)throw Error('Carácter no válido para código de barras');v.push(c);sum+=c*(i+1)});v.push(sum%103,106);
@@ -119,41 +131,42 @@ function renderSummary(){const box=$('cutSummary'),c=state.cuts.find(x=>x.folioC
   const run=c.corrida||[],ops=c.operaciones||[],N=x=>nf.format(x);
   const prop=run.reduce((a,r)=>a+(+r.proporcion||0),0),tot=run.map(r=>(+r.proporcion||0)*(+r.lienzos||0)),totAll=tot.reduce((a,b)=>a+b,0);
   const tk=run.map(r=>(+r.proporcion||0)*ops.length),tkAll=tk.reduce((a,b)=>a+b,0);
-  const th='<tr><th>CORRIDA</th>'+run.map(r=>`<th>${esc(r.talla)}</th>`).join('')+'<th>TOTALES</th><th></th></tr>';
-  const row=(n,vals,total,note,cls)=>`<tr class="${cls||''}"><td>${n}</td>${vals.map(v=>`<td class="${cls?'tot':''}">${N(v)}</td>`).join('')}<td class="tot">${total===null?'':N(total)}</td><td class="nt">${note||''}</td></tr>`;
-  let h=`<h3>Resumen del corte ${esc(c.folioCorte)}</h3><div class="sumhead"><div>FOLIO<b>${esc(c.folioCorte)}</b></div><div>ORDEN<b>${esc(c.orden)}</b></div><div>LOTE<b>${esc(c.lote||'—')}</b></div><div>ESTILO<b>${esc(c.estilo)}${c.variante==='DC'?' DC':''}</b></div><div>COLOR<b>${esc(c.colorId||'—')}${c.color?' · '+esc(c.color):''}</b></div></div><div class="wrap"><table class="sumt"><thead>${th}</thead><tbody>`;
-  h+=row('Piezas por lienzo',run.map(r=>+r.proporcion||0),prop,'Piezas');
-  h+=row('LIENZOS',run.map(r=>+r.lienzos||0),null,'');
-  h+=row('TOTAL ORDEN',tot,totAll,'Piezas','b');
-  h+=row('TICKETS',tk,tkAll,'Tickets con folio independiente relacionado al folio principal','b');
-  h+=`<tr class="b"><td>OPERACIONES</td>${tot.map(v=>`<td class="tot">${N(v*ops.length)}</td>`).join('')}<td class="tot">${N(totAll*ops.length)}</td><td class="nt">Piezas-operación</td></tr>`;
-  ops.forEach((o,i)=>{h+=`<tr><td>${i+1} · ${esc(o)}</td>${tot.map(v=>`<td>${N(v)}</td>`).join('')}<td></td><td class="nt"></td></tr>`});
+  const cells=(vals,total,tc)=>vals.map(v=>`<td>${N(v)}</td>`).join('')+`<td class="tc">${total===null?'':N(total)}</td>`;
+  let h=`<h3>Resumen del corte ${esc(c.folioCorte)}</h3><div class="sumhead"><div>Folio<b>${esc(c.folioCorte)}</b></div><div>Orden<b>${esc(c.orden)}</b></div><div>Lote<b>${esc(c.lote||'—')}</b></div><div>Estilo<b>${esc(c.estilo)}${c.variante==='DC'?' DC':''}</b></div><div>Color<b>${esc(c.colorId||'—')}${c.color?' · '+esc(c.color):''}</b></div></div>`;
+  h+=`<div class="sumwrap"><table class="sumt"><thead><tr><th>Corrida</th>${run.map(r=>`<th>${esc(r.talla)}</th>`).join('')}<th class="tc">Totales</th></tr></thead><tbody>`;
+  h+=`<tr><td>Piezas por lienzo</td>${cells(run.map(r=>+r.proporcion||0),prop)}</tr>`;
+  h+=`<tr><td>Lienzos</td>${cells(run.map(r=>+r.lienzos||0),null)}</tr>`;
+  h+=`<tr class="key"><td>Total orden<small>piezas</small></td>${cells(tot,totAll)}</tr>`;
+  h+=`<tr class="key"><td>Tickets<small>folios</small></td>${cells(tk,tkAll)}</tr>`;
+  h+=`<tr class="key"><td>Operaciones<small>piezas-operación</small></td>${cells(tot.map(v=>v*ops.length),totAll*ops.length)}</tr>`;
+  h+=`<tr class="sec"><td colspan="${run.length+2}">Operaciones del corte</td></tr>`;
+  ops.forEach((o,i)=>{h+=`<tr><td>${i+1} · ${esc(o)}</td>${cells(tot,null)}</tr>`});
   h+='</tbody></table></div>';box.innerHTML=h;box.hidden=false}
-function labelHtml(t){return `<div class="lbl"><div class="l1"><span class="lf">${esc(t.folio)}</span><span class="le">${esc(t.estilo)}${t.variante==='DC'?' DC':''} · ${esc(t.talla)}</span></div><div class="lo">${esc(t.operacion)}</div><div class="l3"><span class="lc">COSTO ${mxn.format(t.costoUnitario)} / pza</span><span class="lp">PIEZAS<i></i></span></div><div class="lbc">${barcodeSvg(t.folio)}</div></div>`}
-function sheetsHtml(list){const per=LBL_COLS*LBL_ROWS,out=[];for(let i=0;i<list.length;i+=per){out.push(`<div class="sheetpg" style="grid-template-columns:repeat(${LBL_COLS},2.5in);grid-template-rows:repeat(${LBL_ROWS},1in)">${list.slice(i,i+per).map(labelHtml).join('')}</div>`)}return out.join('')}
+function colorTxt(t){const c=(t.colorId||'')+(t.color?' · '+t.color:'');return c||'—'}
+function labelHtml(t){return `<div class="lbl"><div class="l1"><span class="lf">${esc(t.folio)}</span><span class="le">${esc(t.estilo)}${t.variante==='DC'?' DC':''} · ${esc(t.talla)}</span></div><div class="l2">ORDEN ${esc(t.orden)} · COLOR ${esc(colorTxt(t))}</div><div class="lo">${esc(t.operacion)}</div><div class="l4">PIEZAS ${nf.format(t.piezas)} <span>× ${mxn.format(t.costoUnitario)} = ${mxn.format(t.piezas*t.costoUnitario)}</span></div><div class="lbc">${barcodeSvg(t.folio)}</div></div>`}
+function sheetsHtml(list){const per=LBL_COLS*LBL_ROWS,out=[];for(let i=0;i<list.length;i+=per){out.push(`<div class="sheetpg">${list.slice(i,i+per).map(labelHtml).join('')}</div>`)}return out.join('')}
 async function showLabels(folio){try{const d=await get('tickets',{corte:folio});const list=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');state.labels=list;state.labelFolio=folio;$('printArea').innerHTML=sheetsHtml(list);$('prev').innerHTML=sheetsHtml(list);$('labelTitle').textContent='Etiquetas del corte '+folio;$('labelInfo').textContent='';$('printBtn').disabled=!list.length;$('pdfLabelBtn').disabled=!list.length;$('labelPanel').hidden=false;$('labelPanel').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){show(e.message,'error')}}
-/* PDF vectorial A4 con las mismas medidas (jsPDF) */
+/* PDF vectorial Carta con las mismas medidas (jsPDF) */
 function downloadLabelsPdf(){
   const list=state.labels||[];if(!list.length)return;
   const jsPDF=window.jspdf&&window.jspdf.jsPDF;
-  if(!jsPDF){show('No se pudo cargar la librería de PDF. Usa "Imprimir" y elige "Guardar como PDF", tamaño A4, escala 100%.','error');return}
-  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),per=LBL_COLS*LBL_ROWS;
-  const x0=(W-LBL_COLS*LBL_W_PT)/2,y0=(H-LBL_ROWS*LBL_H_PT)/2,padX=6,padY=4;
+  if(!jsPDF){show('No se pudo cargar la librería de PDF. Usa "Imprimir" y elige "Guardar como PDF", tamaño Carta, escala 100%.','error');return}
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'letter'}),per=LBL_COLS*LBL_ROWS,padX=5,padY=3;
   list.forEach((t,i)=>{
     if(i>0&&i%per===0)doc.addPage();
-    const k=i%per,x=x0+(k%LBL_COLS)*LBL_W_PT,y=y0+Math.floor(k/LBL_COLS)*LBL_H_PT,R=x+LBL_W_PT-padX,L=x+padX;
-    doc.setDrawColor(185,198,194);doc.setLineWidth(.5);if(doc.setLineDashPattern)doc.setLineDashPattern([2,2],0);doc.rect(x,y,LBL_W_PT,LBL_H_PT,'S');if(doc.setLineDashPattern)doc.setLineDashPattern([],0);
+    const k=i%per,x=LBL_X0+(k%LBL_COLS)*LBL_PITCH_X,y=LBL_Y0+Math.floor(k/LBL_COLS)*LBL_H_PT,R=x+LBL_W_PT-padX,L=x+padX,maxW=LBL_W_PT-2*padX;
     doc.setTextColor(0,0,0);
+    const fit=(txt,w)=>{let o=String(txt||'');while(o.length>3&&doc.getTextWidth(o)>w)o=o.slice(0,-1);return o};
     doc.setFont('courier','bold');doc.setFontSize(7.5);doc.text(t.folio,L,y+padY+8);
     doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text((t.estilo||'')+(t.variante==='DC'?' DC':'')+' · '+t.talla,R,y+padY+9,{align:'right'});
-    doc.setFontSize(9);let op=String(t.operacion||'');while(op.length>3&&doc.getTextWidth(op)>LBL_W_PT-2*padX)op=op.slice(0,-1);doc.text(op,L,y+padY+23);
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text('COSTO '+mxn.format(t.costoUnitario)+' / pza',L,y+padY+35);
-    doc.setFont('helvetica','bold');doc.setFontSize(8);const px=x+LBL_W_PT*0.52;doc.text('PIEZAS',px,y+padY+35);const lw=doc.getTextWidth('PIEZAS');doc.setDrawColor(0,0,0);doc.setLineWidth(1);doc.line(px+lw+4,y+padY+35,R-8,y+padY+35);
+    doc.setFontSize(7);doc.text(fit('ORDEN '+t.orden+' · COLOR '+colorTxt(t),maxW),L,y+padY+19);
+    doc.setFontSize(9);doc.text(fit(t.operacion,maxW),L,y+padY+30);
+    doc.setFontSize(8);const pz='PIEZAS '+nf.format(t.piezas);doc.text(pz,L,y+padY+40);const pw=doc.getTextWidth(pz);
+    doc.setFont('helvetica','normal');doc.text(' × '+mxn.format(t.costoUnitario)+' = '+mxn.format(t.piezas*t.costoUnitario),L+pw,y+padY+40);
     // código de barras Code 128 (barras negras sobre blanco, con zona de silencio)
-    const w=code128(t.folio),mod=w.reduce((a,b)=>a+b,0)+20,avail=LBL_W_PT-2*padX,mw=avail/mod,bh=19,by=y+LBL_H_PT-padY-bh;
+    const w=code128(t.folio),mod=w.reduce((a,b)=>a+b,0)+20,mw=maxW/mod,bh=18,by=y+LBL_H_PT-padY-bh;
     doc.setFillColor(0,0,0);let cx=L+10*mw;w.forEach((n,j)=>{if(j%2===0)doc.rect(cx,by,n*mw,bh,'F');cx+=n*mw});
   });
-  doc.save('Etiquetas_'+(state.labelFolio||'corte')+'_A4.pdf');
+  doc.save('Etiquetas_'+(state.labelFolio||'corte')+'_Carta.pdf');
 }
 </script></body></html>
