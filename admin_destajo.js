@@ -180,6 +180,7 @@
   }
 
   function xesc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ''); }
+  function unit(x) { return x.costoUnitario != null ? num(x.costoUnitario) : (num(x.operaciones) ? num(x.costo) / num(x.operaciones) : 0); }
   function colL(i) { return String.fromCharCode(65 + i); }
 
   /* estilos: 0 normal, 1 título, 2 subtítulo, 3 encabezado, 4 texto, 5 entero, 6 moneda, 7 %, 8 total texto, 9 total entero, 10 total moneda, 11 total %, 12 etiqueta, 13 valor KPI moneda, 14 valor KPI entero */
@@ -267,20 +268,20 @@
 
     var c2 = [], r2 = 5;
     function put2(r, c, v, s, f) { c2.push({ r: r, c: c, v: v, s: s, f: f }); }
-    for (var j = 0; j < 5; j++) put2(1, j, j ? null : 'DETALLE POR OPERADOR Y OPERACIÓN', 1);
+    for (var j = 0; j < 6; j++) put2(1, j, j ? null : 'DETALLE POR OPERADOR Y OPERACIÓN', 1);
     put2(2, 0, rango, 2); put2(3, 0, 'Generado: ' + now.toLocaleDateString('es-MX') + ' ' + now.toLocaleTimeString('es-MX'), 2);
-    ['Operador', 'Operación', 'Registros', 'Operaciones realizadas', 'Costo de destajo'].forEach(function (h, c) { put2(4, c, h, 3); });
+    ['Operador', 'Operación', 'Costo unitario', 'Registros', 'Operaciones realizadas', 'Costo de destajo'].forEach(function (h, c) { put2(4, c, h, 3); });
     ops.forEach(function (o) { o.detalle.forEach(function (x) {
-      put2(r2, 0, o.personal, 4); put2(r2, 1, x.operacion, 4); put2(r2, 2, x.registros, 5); put2(r2, 3, x.operaciones, 5); put2(r2, 4, x.costo, 6); r2++;
+      put2(r2, 0, o.personal, 4); put2(r2, 1, x.operacion, 4); put2(r2, 2, unit(x), 6); put2(r2, 3, x.registros, 5); put2(r2, 4, x.operaciones, 5); put2(r2, 5, x.costo, 6); r2++;
     }); });
     var l2 = r2 - 1, t2 = r2, sum2 = function (c) { return l2 >= 5 ? 'SUM(' + c + '5:' + c + l2 + ')' : '0'; };
-    put2(t2, 0, 'TOTAL', 8); put2(t2, 1, null, 8); put2(t2, 2, d.total.registros, 9, sum2('C')); put2(t2, 3, d.total.operaciones, 9, sum2('D')); put2(t2, 4, d.total.costo, 10, sum2('E'));
-    var s2 = sheetXml(c2, { widths: [34, 34, 12, 22, 20], merges: ['A1:E1', 'A2:E2', 'A3:E3'], freeze: 4, filter: l2 >= 5 ? 'A4:E' + l2 : null, heights: { 1: 30, 4: 32 } });
+    put2(t2, 0, 'TOTAL', 8); put2(t2, 1, null, 8); put2(t2, 2, null, 8); put2(t2, 3, d.total.registros, 9, sum2('D')); put2(t2, 4, d.total.operaciones, 9, sum2('E')); put2(t2, 5, d.total.costo, 10, sum2('F'));
+    var s2 = sheetXml(c2, { widths: [34, 34, 16, 12, 22, 20], merges: ['A1:F1', 'A2:F2', 'A3:F3'], freeze: 4, filter: l2 >= 5 ? 'A4:F' + l2 : null, heights: { 1: 30, 4: 32 } });
 
     var files = [
       { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
       { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
-      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Destajo por operador" sheetId="1" r:id="rId1"/><sheet name="Detalle por operación" sheetId="2" r:id="rId2"/></sheets><definedNames>' + '<definedName name="_xlnm._FilterDatabase" localSheetId="1" hidden="1">\'Detalle por operación\'!$A$4:$E$' + Math.max(5, l2) + '</definedName></definedNames></workbook>' },
+      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Destajo por operador" sheetId="1" r:id="rId1"/><sheet name="Detalle por operación" sheetId="2" r:id="rId2"/></sheets><definedNames>' + '<definedName name="_xlnm._FilterDatabase" localSheetId="1" hidden="1">\'Detalle por operación\'!$A$4:$F$' + Math.max(5, l2) + '</definedName></definedNames></workbook>' },
       { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
       { name: 'xl/styles.xml', data: STYLES },
       { name: 'xl/worksheets/sheet1.xml', data: s1 },
@@ -317,16 +318,13 @@
     p.card(cx(1), 96, cw, 62, 'Operaciones realizadas', nf.format(num(t.operaciones)), nf.format(num(t.registros)) + ' registros');
     p.card(cx(2), 96, cw, 62, 'Operadores', nf.format(num(t.operadores)), 'Con producción en el rango');
     p.card(cx(3), 96, cw, 62, 'Mayor destajo', lead ? fm(lead.costo) : '—', lead ? lead.personal : 'Sin datos');
-    var topO = ops.slice().sort(function (a, b) { return b.operaciones - a.operaciones; }).slice(0, 12).map(function (o) { return { label: o.personal, value: o.operaciones }; });
-    p.hbars(M, 190, W - 2 * M, 'Operaciones realizadas por operador (piezas)', topO, '', PAL[1]);
 
     /* tablas con paginación */
     var rowH = 17, bottom = H - 44;
-    function paged(titleT, head, cols, rows, totalRow) {
+    function paged(titleT, head, cols, rows, totalRow, onFirstPage) {
       var y, i = 0, started = false;
       while (i < rows.length || !started) {
-        doc.addPage(); p.header(title, rango);
-        y = 96;
+        if (onFirstPage && !started) { y = 190; } else { doc.addPage(); p.header(title, rango); y = 96; }
         p.color(C.text); p.font(11, true); doc.text(titleT + (started ? ' (continuación)' : ''), M, y);
         started = true; y += 8;
         p.fill('#eaf1ef'); doc.rect(M, y, W - 2 * M, rowH, 'F'); p.color('#3f5550'); p.font(7.5, true);
@@ -351,12 +349,12 @@
     var c1 = [{ x: M, w: 270 }, { x: M + 270, w: 100, right: 1 }, { x: M + 370, w: 130, right: 1 }, { x: M + 500, w: 150, right: 1 }, { x: M + 650, w: tw - 650, right: 1 }];
     paged('Destajo por operador', ['Operador', 'Registros', 'Operaciones', 'Costo de destajo', '% del costo'], c1,
       ops.map(function (o) { return [o.personal, nf.format(o.registros), nf.format(o.operaciones), fm(o.costo), (t.costo ? o.costo * 100 / t.costo : 0).toFixed(1) + '%']; }),
-      ['TOTAL', nf.format(num(t.registros)), nf.format(num(t.operaciones)), fm(num(t.costo)), ops.length ? '100.0%' : '0.0%']);
+      ['TOTAL', nf.format(num(t.registros)), nf.format(num(t.operaciones)), fm(num(t.costo)), ops.length ? '100.0%' : '0.0%'], true);
     var det = [];
-    ops.forEach(function (o) { o.detalle.forEach(function (x) { det.push([o.personal, x.operacion, nf.format(x.registros), nf.format(x.operaciones), fm(x.costo)]); }); });
-    var c2 = [{ x: M, w: 220 }, { x: M + 220, w: 250 }, { x: M + 470, w: 90, right: 1 }, { x: M + 560, w: 100, right: 1 }, { x: M + 660, w: tw - 660, right: 1 }];
-    paged('Detalle por operador y operación', ['Operador', 'Operación', 'Registros', 'Operaciones', 'Costo'], c2, det,
-      ['TOTAL', '', nf.format(num(t.registros)), nf.format(num(t.operaciones)), fm(num(t.costo))]);
+    ops.forEach(function (o) { o.detalle.forEach(function (x) { det.push([o.personal, x.operacion, fm(unit(x)), nf.format(x.registros), nf.format(x.operaciones), fm(x.costo)]); }); });
+    var c2 = [{ x: M, w: 190 }, { x: M + 190, w: 210 }, { x: M + 400, w: 100, right: 1 }, { x: M + 500, w: 80, right: 1 }, { x: M + 580, w: 100, right: 1 }, { x: M + 680, w: tw - 680, right: 1 }];
+    paged('Detalle por operador y operación', ['Operador', 'Operación', 'Costo unitario', 'Registros', 'Operaciones', 'Costo'], c2, det,
+      ['TOTAL', '', '', nf.format(num(t.registros)), nf.format(num(t.operaciones)), fm(num(t.costo))]);
 
     var now = new Date();
     p.footers(now.toLocaleDateString('es-MX') + ', ' + now.toLocaleTimeString('es-MX'));
@@ -383,7 +381,7 @@
     g('dz-rows').innerHTML = ops.map(function (o, i) {
       var pct = t.costo ? o.costo * 100 / t.costo : 0;
       var det = o.detalle.map(function (x) {
-        return '<tr class="dz-d" data-g="' + i + '" hidden><td>' + esc(x.operacion) + '</td><td class="num">' + nf.format(x.registros) + '</td><td class="num">' + nf.format(x.operaciones) + '</td><td class="num">' + money.format(x.costo) + '</td><td></td></tr>';
+        return '<tr class="dz-d" data-g="' + i + '" hidden><td>' + esc(x.operacion) + ' · ' + money.format(unit(x)) + ' c/u</td><td class="num">' + nf.format(x.registros) + '</td><td class="num">' + nf.format(x.operaciones) + '</td><td class="num">' + money.format(x.costo) + '</td><td></td></tr>';
       }).join('');
       return '<tr class="dz-o"><td><button type="button" class="dz-t" data-i="' + i + '" aria-expanded="false">▸</button> <b>' + esc(o.personal) + '</b></td><td class="num">' + nf.format(o.registros) + '</td><td class="num">' + nf.format(o.operaciones) + '</td><td class="num">' + money.format(o.costo) + '</td><td class="num">' + pct.toFixed(1) + '%</td></tr>' + det;
     }).join('');
