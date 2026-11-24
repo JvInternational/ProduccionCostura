@@ -1,13 +1,14 @@
 /**
  * admin_destajo.js  (archivo NUEVO en GitHub, junto a admin.html)
- * Pestaña "Destajo" de Administración: acceso con PIN de Gerencia, consulta por rango de fechas,
- * exportación a Excel (.xlsx con formato precargado) y a PDF (estructura del Informe Producción Costura).
+ * Pestañas "Destajo" e "Historial" de Administración (usan el PIN de Gerencia capturado al entrar al módulo):
+ * consulta de destajo por rango de fechas, exportación a Excel (.xlsx con formato precargado) y PDF,
+ * y consulta del historial de cambios por IP.
  * Usa req(), esc(), show() y money de admin.html; jsPDF 2.5.1 se carga en admin.html.
  */
 (function () {
   'use strict';
 
-  var PAL = ['#2f6b8f', '#08776b', '#4f8f3a', '#4a5aa8', '#c0392b', '#d98a1f', '#7a4f9a', '#3b8f9c', '#8a6d3b', '#5b6b73'];
+  var PAL = ['#1f4e79', '#08776b', '#4b5d73', '#7a6a4f', '#355c7d', '#5b6b73'];
   var C = { band: '#0d3b36', teal: '#08776b', text: '#18312d', muted: '#72817e', line: '#dfe7e4', card: '#f7faf9', track: '#e7eeec' };
   var nf = new Intl.NumberFormat('es-MX');
   var money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
@@ -101,7 +102,7 @@
   };
 
   /** Barras horizontales con valor y % del total. rows: [{label, value}] */
-  Pdf.prototype.hbars = function (x, y, w, title, rows, unit) {
+  Pdf.prototype.hbars = function (x, y, w, title, rows, unit, color) {
     var d = this.doc, rowH = 21, labelW = 118, valueW = 92;
     this.color(C.text); this.font(11, true); d.text(title, x, y);
     y += 14;
@@ -114,7 +115,7 @@
       this.color(C.text); this.font(8, false); d.text(this.fit(r.label, labelW - 8), x, cy + 3);
       this.fill(C.track); d.roundedRect(trackX, cy - 3, trackW, 7, 3.5, 3.5, 'F');
       var bw = Math.max(3, trackW * r.value / max);
-      this.fill(PAL[i % PAL.length]); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
+      this.fill(color || PAL[0]); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
       this.color(C.text); this.font(8, true); d.text(typeof unit === 'function' ? unit(r.value) : nf.format(r.value) + (unit || ''), x + w, cy + 3, { align: 'right' });
       this.color(C.muted); this.font(7, false); d.text((r.value * 100 / total).toFixed(1) + '%', x + w - 52, cy + 3, { align: 'right' });
     }
@@ -316,10 +317,8 @@
     p.card(cx(1), 96, cw, 62, 'Operaciones realizadas', nf.format(num(t.operaciones)), nf.format(num(t.registros)) + ' registros');
     p.card(cx(2), 96, cw, 62, 'Operadores', nf.format(num(t.operadores)), 'Con producción en el rango');
     p.card(cx(3), 96, cw, 62, 'Mayor destajo', lead ? fm(lead.costo) : '—', lead ? lead.personal : 'Sin datos');
-    var topC = ops.slice(0, 8).map(function (o) { return { label: o.personal, value: o.costo }; });
-    var topO = ops.slice().sort(function (a, b) { return b.operaciones - a.operaciones; }).slice(0, 8).map(function (o) { return { label: o.personal, value: o.operaciones }; });
-    p.hbars(M, 190, colW, 'Costo de destajo por operador', topC, fm);
-    p.hbars(M + colW + 24, 190, colW, 'Operaciones realizadas por operador (piezas)', topO);
+    var topO = ops.slice().sort(function (a, b) { return b.operaciones - a.operaciones; }).slice(0, 12).map(function (o) { return { label: o.personal, value: o.operaciones }; });
+    p.hbars(M, 190, W - 2 * M, 'Operaciones realizadas por operador (piezas)', topO, '', PAL[1]);
 
     /* tablas con paginación */
     var rowH = 17, bottom = H - 44;
@@ -366,17 +365,13 @@
 
   /* ---------- Interfaz ---------- */
 
-  var S = { pin: '', data: null };
+  var S = { data: null };
 
   function g(id) { return document.getElementById(id); }
   function iso(dt) { return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); }
   function msg(t, ok) { if (typeof show === 'function') show(t, ok); }
-
-  function lock(why) {
-    S.pin = ''; S.data = null;
-    g('dz-main').hidden = true; g('dz-lock').hidden = false; g('dz-pin').value = '';
-    if (why) msg(why, false);
-  }
+  function pin() { return window.JVGate ? JVGate.pin() : ''; }
+  function badPin(e) { if (/PIN de Gerencia|no está configurado/i.test(e.message) && window.JVGate) { JVGate.lock(e.message); return true; } return false; }
 
   function renderData(d) {
     S.data = d;
@@ -404,16 +399,15 @@
     });
   }
 
-  function query(pin) {
-    var m = !g('dz-main').hidden, desde = g(m ? 'dz-desde2' : 'dz-desde').value, hasta = g(m ? 'dz-hasta2' : 'dz-hasta').value;
+  function query() {
+    var desde = g('dz-desde').value, hasta = g('dz-hasta').value;
     if (!desde || !hasta) { msg('Selecciona la fecha desde y la fecha hasta.', false); return Promise.resolve(false); }
     if (desde > hasta) { msg('La fecha desde no puede ser posterior a la fecha hasta.', false); return Promise.resolve(false); }
     g('dz-go').disabled = true;
-    return req('destajo', { gpin: pin, fechaDesde: desde, fechaHasta: hasta }).then(function (r) {
-      S.pin = pin; g('dz-desde2').value = desde; g('dz-hasta2').value = hasta; g('dz-lock').hidden = true; g('dz-main').hidden = false;
+    return req('destajo', { gpin: pin(), fechaDesde: desde, fechaHasta: hasta }).then(function (r) {
       renderData(r.destajo); msg('Consulta lista.', true); return true;
     }).catch(function (e) {
-      if (/PIN de Gerencia|no está configurado/i.test(e.message)) lock(e.message); else msg(e.message, false);
+      if (!badPin(e)) msg(e.message, false);
       return false;
     }).then(function (ok) { g('dz-go').disabled = false; return ok; });
   }
@@ -434,23 +428,40 @@
       .then(function () { b.disabled = false; b.textContent = old; });
   }
 
+  /* ---------- Historial de cambios (por IP) ---------- */
+
+  function renderHist(h) {
+    g('hs-rows').innerHTML = h.registros.map(function (r) {
+      return '<tr><td>' + dmy(r.fecha) + ' ' + esc(r.hora) + '</td><td><b>' + esc(r.ip) + '</b></td><td>' + esc(r.modulo) + '</td><td>' + esc(r.accion) + '</td><td style="word-break:break-word">' + esc(r.detalle) + '</td></tr>';
+    }).join('');
+    g('hs-empty').hidden = !!h.registros.length;
+    g('hs-count').textContent = h.total > h.registros.length ? h.registros.length + ' de ' + nf.format(h.total) + ' cambios' : nf.format(h.total) + ' cambios';
+    var cur = g('hs-ip').value;
+    g('hs-ips').innerHTML = (h.ips || []).map(function (x) { return '<option value="' + esc(x) + '">'; }).join('');
+    g('hs-ip').value = cur;
+  }
+
+  function histQuery() {
+    var desde = g('hs-desde').value, hasta = g('hs-hasta').value;
+    if (desde && hasta && desde > hasta) return msg('La fecha desde no puede ser posterior a la fecha hasta.', false);
+    g('hs-go').disabled = true;
+    return req('history', { gpin: pin(), ip: g('hs-ip').value.trim(), fechaDesde: desde, fechaHasta: hasta }).then(function (r) { renderHist(r.historial); })
+      .catch(function (e) { if (!badPin(e)) msg(e.message, false); })
+      .then(function () { g('hs-go').disabled = false; });
+  }
+
   function init() {
     var now = new Date();
     g('dz-desde').value = iso(new Date(now.getFullYear(), now.getMonth(), 1));
     g('dz-hasta').value = iso(now);
-    g('dz-desde2').value = g('dz-desde').value; g('dz-hasta2').value = g('dz-hasta').value;
-    g('dz-unlock').addEventListener('click', function () {
-      var pin = g('dz-pin').value.trim();
-      if (!pin) return msg('Escribe el PIN de Gerencia.', false);
-      query(pin);
-    });
-    g('dz-pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); g('dz-unlock').click(); } });
-    g('dz-go').addEventListener('click', function () { query(S.pin); });
+    g('dz-go').addEventListener('click', query);
     g('dz-xlsx').addEventListener('click', exportXlsx);
     g('dz-pdf').addEventListener('click', exportPdf);
-    g('dz-lockbtn').addEventListener('click', function () { lock(); msg('Sección bloqueada.', true); });
+    g('hs-go').addEventListener('click', histQuery);
+    g('hs-clear').addEventListener('click', function () { g('hs-ip').value = ''; g('hs-desde').value = ''; g('hs-hasta').value = ''; histQuery(); });
   }
 
-  window.Destajo = { init: init, lock: lock, _buildXlsx: buildXlsx };
+  window.Destajo = { init: init, open: function () { if (!S.data) query(); }, reset: function () { S.data = null; }, _buildXlsx: buildXlsx };
+  window.Historial = { open: histQuery };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
