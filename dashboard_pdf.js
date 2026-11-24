@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  var PAL = ['#2f6b8f', '#08776b', '#4f8f3a', '#4a5aa8', '#c0392b', '#d98a1f', '#7a4f9a', '#3b8f9c', '#8a6d3b', '#5b6b73'];
+  var PAL = ['#1f4e79', '#08776b', '#4b5d73', '#7a6a4f', '#355c7d', '#5b6b73']; /* un tono sobrio por gráfica */
   var C = { band: '#0d3b36', teal: '#08776b', text: '#18312d', muted: '#72817e', line: '#dfe7e4', card: '#f7faf9', track: '#e7eeec' };
   var nf = new Intl.NumberFormat('es-MX');
   var money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
@@ -119,7 +119,7 @@
   };
 
   /** Barras horizontales con valor y % del total. rows: [{label, value}] */
-  Pdf.prototype.hbars = function (x, y, w, title, rows, unit) {
+  Pdf.prototype.hbars = function (x, y, w, title, rows, unit, color) {
     var d = this.doc, rowH = 21, labelW = 118, valueW = 92;
     this.color(C.text); this.font(11, true); d.text(title, x, y);
     y += 14;
@@ -132,7 +132,7 @@
       this.color(C.text); this.font(8, false); d.text(this.fit(r.label, labelW - 8), x, cy + 3);
       this.fill(C.track); d.roundedRect(trackX, cy - 3, trackW, 7, 3.5, 3.5, 'F');
       var bw = Math.max(3, trackW * r.value / max);
-      this.fill(PAL[i % PAL.length]); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
+      this.fill(color || PAL[0]); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
       this.color(C.text); this.font(8, true); d.text(nf.format(r.value) + (unit || ''), x + w, cy + 3, { align: 'right' });
       this.color(C.muted); this.font(7, false); d.text((r.value * 100 / total).toFixed(1) + '%', x + w - 52, cy + 3, { align: 'right' });
     }
@@ -211,29 +211,26 @@
     function firstOf(list, key) { var r = (list || [])[0]; return r ? { name: String(r[key] == null ? '' : r[key]), piezas: num(r.piezas) } : null; }
     /* Página 1: encabezado, 4 indicadores y barras en dos columnas */
     p.header(title, rango);
-    p.color(C.muted); p.font(8.5, false);
-    d.text(p.fit('Filtros aplicados: ' + (filters.length ? filters.join(' · ') : 'ninguno (todo el histórico)'), W - 2 * M), M, 82);
-    d.text(p.fit('Piezas = prendas trabajadas (operaciones capturadas ÷ operaciones del corte). Operaciones = piezas procesadas en cada operación.', W - 2 * M), M, 93);
 
     var cw = (W - 2 * M - 3 * 12) / 4;
     function cardX(i) { return M + i * (cw + 12); }
     var ops = k.operacionesRealizadas !== undefined ? k.operacionesRealizadas : k.piezas;
     var noProg = num(k.cortesSinPrograma);
-    p.card(cardX(0), 104, cw, 62, 'Operaciones', nf.format(num(ops)), 'Operaciones realizadas');
-    p.card(cardX(1), 104, cw, 62, 'Piezas', nf.format(num(k.piezas)), noProg ? 'Piezas trabajadas · ' + noProg + ' corte(s) sin programa' : 'Piezas trabajadas');
-    p.card(cardX(2), 104, cw, 62, 'Costo total', money.format(num(k.costoTotal)), 'Costo de destajo');
-    p.card(cardX(3), 104, cw, 62, 'Estilos', nf.format(num(k.estilos)), 'Estilos trabajados');
+    p.card(cardX(0), 84, cw, 62, 'Operaciones', nf.format(num(ops)), 'Operaciones realizadas');
+    p.card(cardX(1), 84, cw, 62, 'Piezas', nf.format(num(k.piezas)), noProg ? 'Piezas trabajadas · ' + noProg + ' corte(s) sin programa' : 'Piezas trabajadas');
+    p.card(cardX(2), 84, cw, 62, 'Costo total', money.format(num(k.costoTotal)), 'Costo de destajo');
+    p.card(cardX(3), 84, cw, 62, 'Estilos', nf.format(num(k.estilos)), 'Estilos trabajados');
 
-    p.hbars(M, 196, colW, 'Producción por estilo (piezas)', top(data.porEstilo, 'estilo', 6));
-    p.hbars(M + colW + 24, 196, colW, 'Producción por operador (piezas)', top(data.porOperador, 'operador', 6));
-    p.hbars(M, 364, colW, 'Producción por máquina (piezas)', top(data.porMaquina, 'maquina', 6));
-    p.hbars(M + colW + 24, 364, colW, 'Producción por operación (piezas)', top(data.porOperacion, 'operacion', 6));
+    p.hbars(M, 176, colW, 'Producción por estilo (piezas)', top(data.porEstilo, 'estilo', 6), '', PAL[0]);
+    p.hbars(M + colW + 24, 176, colW, 'Producción por operador (piezas)', top(data.porOperador, 'operador', 6), '', PAL[1]);
+    p.hbars(M, 344, colW, 'Producción por máquina (piezas)', top(data.porMaquina, 'maquina', 6), '', PAL[2]);
+    p.hbars(M + colW + 24, 344, colW, 'Producción por operación (piezas)', top(data.porOperacion, 'operacion', 6), '', PAL[3]);
 
     /* Página 2 */
     d.addPage(); p.header(title, rango);
-    p.hbars(M, 96, colW, 'Principales cortes (piezas)', (data.porCorte || []).slice(0, 10).map(function (r) { return { label: String(r.corte == null ? '' : r.corte), value: num(r.piezas) }; }));
+    p.hbars(M, 96, colW, 'Principales cortes (piezas)', (data.porCorte || []).slice(0, 10).map(function (r) { return { label: String(r.corte == null ? '' : r.corte), value: num(r.piezas) }; }), '', PAL[4]);
     var fe = (data.porFecha || []).slice(-10).map(function (r) { return { label: dmy(r.fecha), value: num(r.piezas) }; });
-    p.hbars(M + colW + 24, 96, colW, 'Producción por fecha (piezas)', fe);
+    p.hbars(M + colW + 24, 96, colW, 'Producción por fecha (piezas)', fe, '', PAL[5]);
 
     var now = new Date();
     p.footers(now.toLocaleDateString('es-MX') + ', ' + now.toLocaleTimeString('es-MX'));
