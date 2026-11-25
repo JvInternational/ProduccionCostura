@@ -47,7 +47,7 @@ tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
 <section class="card"><div class="head"><h2 id="formTitle">Nuevo corte</h2><span class="tag" id="folioShown">Folio principal: se asigna al guardar</span></div>
 <div class="body"><div class="grid">
 <div class="field"><label for="orden">ORDEN *</label><input id="orden" maxlength="40" placeholder="Ej. 297071"/></div>
-<div class="field"><label for="lote">LOTE</label><input id="lote" maxlength="20" placeholder="Opcional. Ej. 201200" style="text-transform:uppercase"/></div>
+<div class="field"><label for="lote">LOTE</label><input id="lote" maxlength="20" placeholder="Opcional. Ej. 201012" style="text-transform:uppercase"/></div>
 <div class="field"><label for="estilo">ESTILO *</label><select id="estilo"><option value="">Cargando…</option></select></div>
 <div class="field"><label for="variante">VARIANTE</label><select id="variante"><option>GENERAL</option><option>DC</option></select></div>
 <div class="field"><label for="color">COLOR *</label><select id="color"><option value="">Cargando…</option></select></div>
@@ -60,7 +60,7 @@ tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
 
 <section class="card"><div class="head"><h2>Cortes programados</h2></div><div class="wrap"><table><thead><tr><th>FOLIO</th><th>ORDEN</th><th>LOTE</th><th>ESTILO</th><th>COLOR</th><th class="num">PIEZAS</th><th class="num">TICKETS</th><th class="num">COMPLETOS</th><th class="num">CAPTURADAS</th><th>ESTADO</th><th></th></tr></thead><tbody id="cuts"></tbody></table><div style="padding:24px;text-align:center;color:var(--muted)" id="noCuts" hidden>Aún no hay cortes.</div></div><div class="sumbox" id="cutSummary" hidden></div></section>
 
-<section class="card" id="labelPanel" hidden><div class="head"><h2 id="labelTitle">Etiquetas</h2><div class="row"><button class="primary" id="pdfLabelBtn" type="button">Descargar PDF (Carta)</button><button class="light" id="printBtn" type="button">Imprimir</button></div></div><div class="body"><p style="margin:0;color:var(--muted);font-size:12px" id="labelInfo"></p><div class="prev" id="prev"></div></div></section>
+<section class="card" id="labelPanel" hidden><div class="head"><h2 id="labelTitle">Etiquetas</h2><div class="row"><button class="primary" id="pdfLabelBtn" type="button">Descargar PDF</button><button class="light" id="printBtn" type="button">Imprimir</button></div></div><div class="body"><p style="margin:0;color:var(--muted);font-size:12px" id="labelInfo"></p><div class="prev" id="prev"></div></div></section>
 </main></div>
 <div id="printArea"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="auth.js"></script><script>
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('addRow').addEventListener('click',()=>{if(readRun().length>=30){show('La corrida admite máximo 30 renglones.','error');return}const t=nextSize();if(!t){show('No hay tallas disponibles.','error');return}addRow(t,1,'')});
   $('lienzosAll').addEventListener('input',()=>{const v=$('lienzosAll').value;document.querySelectorAll('.rl').forEach(i=>i.value=v);recalc()});
   $('save').addEventListener('click',save);$('reset').addEventListener('click',()=>resetForm());$('cancelEdit').addEventListener('click',()=>resetForm());
-  $('printBtn').addEventListener('click',()=>window.print());
+  $('printBtn').addEventListener('click',()=>{const prev=document.title;document.title=labelFileName().replace(/\.pdf$/,'');window.print();setTimeout(()=>{document.title=prev},1500)});
   $('pdfLabelBtn').addEventListener('click',downloadLabelsPdf);
   try{const c=await get('catalogs');fillStyles(c.catalogs.estilos||[]);await loadColors();await loadCuts();defaultRows();$('status').textContent='● Conectado';$('status').className='status ok'}
   catch(e){show(e.message,'error');$('status').textContent='● Sin conexión'}
@@ -145,9 +145,22 @@ function renderSummary(){const box=$('cutSummary'),c=state.cuts.find(x=>x.folioC
 function colorTxt(t){const c=(t.colorId||'')+(t.color?' · '+t.color:'');return c||'—'}
 function labelHtml(t){return `<div class="lbl"><div class="l1"><span class="lf">${esc(t.folio)}</span><span class="le">${esc(t.estilo)}${t.variante==='DC'?' DC':''} · ${esc(t.talla)}</span></div><div class="l2">ORDEN ${esc(t.orden)} · COLOR ${esc(colorTxt(t))}</div><div class="lo">${esc(t.operacion)}</div><div class="l4">PIEZAS ${nf.format(t.piezas)} <span>× ${mxn.format(t.costoUnitario)} = ${mxn.format(t.piezas*t.costoUnitario)}</span></div><div class="lbc">${barcodeSvg(t.folio)}</div></div>`}
 function sheetsHtml(list){const per=LBL_COLS*LBL_ROWS,out=[];for(let i=0;i<list.length;i+=per){out.push(`<div class="sheetpg">${list.slice(i,i+per).map(labelHtml).join('')}</div>`)}return out.join('')}
-/* Orden de impresión: por talla (como en la corrida) y, dentro de cada talla, por la secuencia operativa del estilo; sin secuencia definida se conserva el orden del folio */
-function orderLabels(list){const ord={};list.forEach(t=>{if(!(t.talla in ord))ord[t.talla]=Object.keys(ord).length});return list.slice().sort((a,b)=>ord[a.talla]-ord[b.talla]||(a.secuencia||999)-(b.secuencia||999)||(a.folio<b.folio?-1:a.folio>b.folio?1:0))}
-async function showLabels(folio){try{const d=await get('tickets',{corte:folio});const list=orderLabels((d.tickets||[]).filter(t=>t.estado!=='ANULADO'));state.labels=list;state.labelFolio=folio;$('printArea').innerHTML=sheetsHtml(list);$('prev').innerHTML=sheetsHtml(list);$('labelTitle').textContent='Etiquetas del corte '+folio;$('labelInfo').textContent='';$('printBtn').disabled=!list.length;$('pdfLabelBtn').disabled=!list.length;$('labelPanel').hidden=false;$('labelPanel').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){show(e.message,'error')}}
+/* Orden de impresión: renglón de la corrida (talla, en el orden capturado) -> pieza 1, 2, 3... (una por cada "pieza por lienzo") -> operaciones en la secuencia operativa del estilo.
+   La pieza y el renglón se calculan con la numeración de folios del corte (por renglón de corrida: operación x proporción), por lo que no cambia ningún dato guardado.
+   Si no hay datos del corte, se agrupa por talla consecutiva; sin secuencia definida se conserva el orden del folio. */
+function folioNum(f){const m=String(f).match(/-T(\d+)$/);return m?+m[1]:0}
+function orderLabels(list,cut){const run=(cut&&cut.corrida)||[],nOps=((cut&&cut.operaciones)||[]).length,total=run.reduce((a,r)=>a+(+r.proporcion||0)*nOps,0);
+  const maxN=list.reduce((m,t)=>Math.max(m,folioNum(t.folio)),0),exact=nOps>0&&total>0&&maxN<=total&&list.every(t=>folioNum(t.folio)>0);
+  const pos=t=>{const n=folioNum(t.folio);
+    if(exact){let base=0;for(let r=0;r<run.length;r++){const p=+run[r].proporcion||0,span=p*nOps;if(n<=base+span)return{row:r,piece:p?(n-base-1)%p:0};base+=span}}
+    return null};
+  const ord={};list.forEach(t=>{if(!(t.talla in ord))ord[t.talla]=Object.keys(ord).length});
+  // respaldo (sin datos del corte): renglón = racha consecutiva de la misma talla; pieza = posición dentro de su operación
+  const asc=list.slice().sort((a,b)=>folioNum(a.folio)-folioNum(b.folio)),fb=new Map(),cnt={};let row=-1,last=null;
+  asc.forEach(t=>{if(t.talla!==last){row++;last=t.talla;Object.keys(cnt).forEach(k=>delete cnt[k])}const k=t.operacion;cnt[k]=(cnt[k]||0);fb.set(t.folio,{row,piece:cnt[k]});cnt[k]++});
+  const key=t=>pos(t)||fb.get(t.folio)||{row:ord[t.talla],piece:0};
+  return list.slice().sort((a,b)=>{const x=key(a),y=key(b);return x.row-y.row||x.piece-y.piece||(a.secuencia||999)-(b.secuencia||999)||folioNum(a.folio)-folioNum(b.folio)})}
+async function showLabels(folio){try{const d=await get('tickets',{corte:folio});const list=orderLabels((d.tickets||[]).filter(t=>t.estado!=='ANULADO'),state.cuts.find(x=>x.folioCorte===folio));state.labels=list;state.labelFolio=folio;$('printArea').innerHTML=sheetsHtml(list);$('prev').innerHTML=sheetsHtml(list);$('labelTitle').textContent='Etiquetas del corte '+folio;$('labelInfo').textContent='';$('printBtn').disabled=!list.length;$('pdfLabelBtn').disabled=!list.length;$('labelPanel').hidden=false;$('labelPanel').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){show(e.message,'error')}}
 /* PDF vectorial Carta con las mismas medidas (jsPDF) */
 function downloadLabelsPdf(){
   const list=state.labels||[];if(!list.length)return;
@@ -169,6 +182,13 @@ function downloadLabelsPdf(){
     const w=code128(t.folio),mod=w.reduce((a,b)=>a+b,0)+20,mw=maxW/mod,bh=16,by=y+LBL_H_PT-padY-bh;
     doc.setFillColor(0,0,0);let cx=L+10*mw;w.forEach((n,j)=>{if(j%2===0)doc.rect(cx,by,n*mw,bh,'F');cx+=n*mw});
   });
-  doc.save('Etiquetas_'+(state.labelFolio||'corte')+'_Carta.pdf');
+  /* Preferencias de impresión del PDF: una cara (sin doble cara), escala real 100 % y sin reducir "páginas por hoja" */
+  const fname=labelFileName();
+  try{doc.setProperties({title:fname.replace(/\.pdf$/,'')})}catch(e){}
+  try{doc.viewerPreferences({Duplex:'Simplex',PrintScaling:'None',NumCopies:1,PickTrayByPDFSize:true},true)}catch(e){}
+  doc.save(fname);
 }
+/* Nombre del archivo: Etiquetas_Orden-<orden>_<folio del corte>.pdf (sin caracteres no válidos en nombres de archivo) */
+function labelFileName(){const t=(state.labels||[])[0]||{},ok=v=>String(v||'').trim().replace(/[\\\/:*?"<>|\s]+/g,'-').replace(/^-+|-+$/g,'');
+  return 'Etiquetas_Orden-'+(ok(t.orden)||'SIN-ORDEN')+'_'+(ok(state.labelFolio)||'corte')+'.pdf'}
 </script></body></html>
