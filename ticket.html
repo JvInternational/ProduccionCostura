@@ -92,7 +92,7 @@ async function getTickets(folio){if(state.tk[folio])return state.tk[folio];const
 async function selectCut(folio){state.sel=folio;renderProgress();try{await getTickets(folio);renderMatrix(folio)}catch(e){show(e.message,'error')}}
 function renderMatrix(folio){const cut=state.all.find(c=>c.folioCorte===folio),list=state.tk[folio]||[],th=$('mat').tHead,tb=$('mat').tBodies[0];
   if(!cut||!list.length){th.innerHTML='';tb.innerHTML='';$('matEmpty').hidden=false;$('matTitle').textContent='Avance por talla y operación';return}
-  const ops=cut.operaciones||[],sizes=(cut.corrida||[]).map(r=>r.talla);$('matEmpty').hidden=true;
+  const ops=cut.operaciones||[],sizes=[...new Set((cut.corrida||[]).map(r=>r.talla))];$('matEmpty').hidden=true;
   $('matTitle').textContent='Avance · '+cut.folioCorte+' · '+cut.estilo+(cut.colorId?' · '+cut.colorId+(cut.color?' '+cut.color:''):'');
   th.innerHTML='<tr><th>TALLA</th>'+ops.map(o=>`<th class="num">${esc(o)}</th>`).join('')+'<th class="num">TOTAL</th></tr>';
   const sum=(z,o)=>{const g=list.filter(t=>(z===null||t.talla===z)&&(o===null||t.operacion===o));return{c:g.reduce((a,t)=>a+t.capturadas,0),p:g.reduce((a,t)=>a+t.piezas,0)}};
