@@ -47,7 +47,7 @@ tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
 <section class="card"><div class="head"><h2 id="formTitle">Nuevo corte</h2><span class="tag" id="folioShown">Folio principal: se asigna al guardar</span></div>
 <div class="body"><div class="grid">
 <div class="field"><label for="orden">ORDEN *</label><input id="orden" maxlength="40" placeholder="Ej. 297071"/></div>
-<div class="field"><label for="lote">LOTE</label><input id="lote" maxlength="20" placeholder="Opcional. Ej. 201012" style="text-transform:uppercase"/></div>
+<div class="field"><label for="lote">LOTE</label><input id="lote" maxlength="20" placeholder="Opcional. Ej. 201200" style="text-transform:uppercase"/></div>
 <div class="field"><label for="estilo">ESTILO *</label><select id="estilo"><option value="">Cargando…</option></select></div>
 <div class="field"><label for="variante">VARIANTE</label><select id="variante"><option>GENERAL</option><option>DC</option></select></div>
 <div class="field"><label for="color">COLOR *</label><select id="color"><option value="">Cargando…</option></select></div>
@@ -145,7 +145,9 @@ function renderSummary(){const box=$('cutSummary'),c=state.cuts.find(x=>x.folioC
 function colorTxt(t){const c=(t.colorId||'')+(t.color?' · '+t.color:'');return c||'—'}
 function labelHtml(t){return `<div class="lbl"><div class="l1"><span class="lf">${esc(t.folio)}</span><span class="le">${esc(t.estilo)}${t.variante==='DC'?' DC':''} · ${esc(t.talla)}</span></div><div class="l2">ORDEN ${esc(t.orden)} · COLOR ${esc(colorTxt(t))}</div><div class="lo">${esc(t.operacion)}</div><div class="l4">PIEZAS ${nf.format(t.piezas)} <span>× ${mxn.format(t.costoUnitario)} = ${mxn.format(t.piezas*t.costoUnitario)}</span></div><div class="lbc">${barcodeSvg(t.folio)}</div></div>`}
 function sheetsHtml(list){const per=LBL_COLS*LBL_ROWS,out=[];for(let i=0;i<list.length;i+=per){out.push(`<div class="sheetpg">${list.slice(i,i+per).map(labelHtml).join('')}</div>`)}return out.join('')}
-async function showLabels(folio){try{const d=await get('tickets',{corte:folio});const list=(d.tickets||[]).filter(t=>t.estado!=='ANULADO');state.labels=list;state.labelFolio=folio;$('printArea').innerHTML=sheetsHtml(list);$('prev').innerHTML=sheetsHtml(list);$('labelTitle').textContent='Etiquetas del corte '+folio;$('labelInfo').textContent='';$('printBtn').disabled=!list.length;$('pdfLabelBtn').disabled=!list.length;$('labelPanel').hidden=false;$('labelPanel').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){show(e.message,'error')}}
+/* Orden de impresión: por talla (como en la corrida) y, dentro de cada talla, por la secuencia operativa del estilo; sin secuencia definida se conserva el orden del folio */
+function orderLabels(list){const ord={};list.forEach(t=>{if(!(t.talla in ord))ord[t.talla]=Object.keys(ord).length});return list.slice().sort((a,b)=>ord[a.talla]-ord[b.talla]||(a.secuencia||999)-(b.secuencia||999)||(a.folio<b.folio?-1:a.folio>b.folio?1:0))}
+async function showLabels(folio){try{const d=await get('tickets',{corte:folio});const list=orderLabels((d.tickets||[]).filter(t=>t.estado!=='ANULADO'));state.labels=list;state.labelFolio=folio;$('printArea').innerHTML=sheetsHtml(list);$('prev').innerHTML=sheetsHtml(list);$('labelTitle').textContent='Etiquetas del corte '+folio;$('labelInfo').textContent='';$('printBtn').disabled=!list.length;$('pdfLabelBtn').disabled=!list.length;$('labelPanel').hidden=false;$('labelPanel').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){show(e.message,'error')}}
 /* PDF vectorial Carta con las mismas medidas (jsPDF) */
 function downloadLabelsPdf(){
   const list=state.labels||[];if(!list.length)return;
