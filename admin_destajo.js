@@ -181,12 +181,26 @@
 
   function xesc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ''); }
   function unit(x) { return x.costoUnitario != null ? num(x.costoUnitario) : (num(x.operaciones) ? num(x.costo) / num(x.operaciones) : 0); }
-  function colL(i) { return String.fromCharCode(65 + i); }
+  function colL(i) { var s = ''; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+  var DOW = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  function isoDate(y, m, d) { return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'); }
+  /** Lista de fechas ISO entre desde y hasta (incluidas). */
+  function dayList(desde, hasta) {
+    var a = desde.split('-').map(Number), b = hasta.split('-').map(Number), out = [];
+    var t = Date.UTC(a[0], a[1] - 1, a[2]), e = Date.UTC(b[0], b[1] - 1, b[2]);
+    for (; t <= e && out.length < 400; t += 86400000) { var x = new Date(t); out.push(isoDate(x.getUTCFullYear(), x.getUTCMonth() + 1, x.getUTCDate())); }
+    return out;
+  }
+  function dowOf(iso) { var a = iso.split('-').map(Number); return DOW[new Date(Date.UTC(a[0], a[1] - 1, a[2])).getUTCDay()]; }
+  function shortDate(iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7); }
+  function serial(iso) { var a = iso.split('-').map(Number); return Date.UTC(a[0], a[1] - 1, a[2]) / 86400000 + 25569; }
+  var MAXCOLS = 31;   /* días con columna propia en vista previa y Excel */
+  var MAXPDF = 14;    /* días con columna propia en el PDF */
 
   /* estilos: 0 normal, 1 título, 2 subtítulo, 3 encabezado, 4 texto, 5 entero, 6 moneda, 7 %, 8 total texto, 9 total entero, 10 total moneda, 11 total %, 12 etiqueta, 13 valor KPI moneda, 14 valor KPI entero */
   var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-    '<numFmts count="2"><numFmt numFmtId="164" formatCode="&quot;$&quot;#,##0.00"/><numFmt numFmtId="165" formatCode="0.0%"/></numFmts>' +
+    '<numFmts count="3"><numFmt numFmtId="164" formatCode="&quot;$&quot;#,##0.00"/><numFmt numFmtId="165" formatCode="0.0%"/><numFmt numFmtId="166" formatCode="dd/mm/yyyy"/></numFmts>' +
     '<fonts count="7">' +
     '<font><sz val="10"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="16"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
@@ -203,7 +217,7 @@
     '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
     '<border><left style="thin"><color rgb="FFDFE7E4"/></left><right style="thin"><color rgb="FFDFE7E4"/></right><top style="thin"><color rgb="FFDFE7E4"/></top><bottom style="thin"><color rgb="FFDFE7E4"/></bottom><diagonal/></border></borders>' +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="15">' +
+    '<cellXfs count="16">' +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
     '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment vertical="center"/></xf>' +
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
@@ -219,6 +233,7 @@
     '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
     '<xf numFmtId="164" fontId="6" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +
     '<xf numFmtId="3" fontId="6" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +
+    '<xf numFmtId="166" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>' +
     '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
   /** Hoja: cells = [{r, c, v, s, f}] ; opts {widths, merges, freeze, filter, heights} */
@@ -234,7 +249,8 @@
         return '<c r="' + ref + '"' + s + ' t="inlineStr"><is><t xml:space="preserve">' + xesc(c.v) + '</t></is></c>';
       }).join('') + '</row>';
     }).join('');
-    var pane = o.freeze ? '<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="' + o.freeze + '" topLeftCell="A' + (o.freeze + 1) + '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' : '<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews>';
+    var xs = o.freezeCols || 0;
+    var pane = o.freeze ? '<sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ' + (xs ? 'xSplit="' + xs + '" ' : '') + 'ySplit="' + o.freeze + '" topLeftCell="' + colL(xs) + (o.freeze + 1) + '" activePane="' + (xs ? 'bottomRight' : 'bottomLeft') + '" state="frozen"/></sheetView></sheetViews>' : '<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews>';
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
       '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>' + pane + '<sheetFormatPr defaultRowHeight="15"/>' +
       '<cols>' + o.widths.map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join('') + '</cols>' +
@@ -245,49 +261,60 @@
   }
 
   function buildXlsx(d) {
-    var ops = d.operadores || [], n = ops.length;
+    var ops = d.operadores || [], n = ops.length, det = d.detalleDia || [], now = new Date();
+    var days = dayList(d.desde, d.hasta), withDays = days.length <= MAXCOLS, nd = withDays ? days.length : 0;
     var rango = 'Rango de fechas: ' + dmy(d.desde) + ' - ' + dmy(d.hasta);
-    var now = new Date();
-    var cells = [], H = 7, first = H + 1, last = H + n, tot = last + 1;
+    var gen = 'Generado: ' + now.toLocaleDateString('es-MX') + ' ' + now.toLocaleTimeString('es-MX') + ' · Solo Gerencia General';
+
+    /* ---- Hoja 1: Destajo por operador (misma información que la vista previa) ---- */
+    var cells = [], H = 5, first = H + 1, last = H + n, tot = last + 1;
+    var cOps = 1, cD0 = 2, cTot = 2 + nd, cPct = 3 + nd, nCols = 4 + nd;
     function put(r, c, v, s, f) { cells.push({ r: r, c: c, v: v, s: s, f: f }); }
-    for (var i = 0; i < 6; i++) put(1, i, i ? null : 'JV INTERNATIONAL SOLUTIONS INC. · INFORME DE DESTAJO', 1);
-    put(2, 0, rango, 2); put(3, 0, 'Generado: ' + now.toLocaleDateString('es-MX') + ' ' + now.toLocaleTimeString('es-MX') + ' · Solo Gerencia General', 2);
-    put(4, 0, 'COSTO DE DESTAJO', 12); put(4, 2, 'OPERACIONES REALIZADAS', 12); put(4, 4, 'OPERADORES', 12);
-    put(5, 0, d.total.costo, 13, 'D' + tot); put(5, 2, d.total.operaciones, 14, 'C' + tot); put(5, 4, d.total.operadores, 14, 'COUNTA(A' + first + ':A' + Math.max(first, last) + ')');
-    ['Operador', 'Registros', 'Operaciones realizadas', 'Costo de destajo', '% del costo', 'Costo promedio por operación'].forEach(function (h, c) { put(H, c, h, 3); });
+    for (var i = 0; i < nCols; i++) put(1, i, i ? null : 'JV INTERNATIONAL SOLUTIONS INC. · INFORME DE DESTAJO', 1);
+    put(2, 0, rango, 2); put(3, 0, gen, 2);
+    put(H, 0, 'Operador', 3); put(H, cOps, 'Operaciones', 3);
+    days.slice(0, nd).forEach(function (x, k) { put(H, cD0 + k, dowOf(x) + '\n' + shortDate(x), 3); });
+    put(H, cTot, 'Total', 3); put(H, cPct, '% del costo', 3);
+    var grand = d.total.costo || 0;
     ops.forEach(function (o, k) {
       var r = first + k;
-      put(r, 0, o.personal, 4); put(r, 1, o.registros, 5); put(r, 2, o.operaciones, 5); put(r, 3, o.costo, 6);
-      put(r, 4, d.total.costo ? o.costo / d.total.costo : 0, 7, 'IF($D$' + tot + '=0,0,D' + r + '/$D$' + tot + ')');
-      put(r, 5, o.operaciones ? o.costo / o.operaciones : 0, 6, 'IF(C' + r + '=0,0,D' + r + '/C' + r + ')');
+      put(r, 0, o.personal, 4); put(r, cOps, o.operaciones, 5);
+      days.slice(0, nd).forEach(function (x, j) { var v = (o.fechas || {})[x]; put(r, cD0 + j, v == null ? null : v, 6); });
+      if (nd) put(r, cTot, o.costo, 6, 'SUM(' + colL(cD0) + r + ':' + colL(cD0 + nd - 1) + r + ')'); else put(r, cTot, o.costo, 6);
+      put(r, cPct, grand ? o.costo / grand : 0, 7, 'IF($' + colL(cTot) + '$' + tot + '=0,0,' + colL(cTot) + r + '/$' + colL(cTot) + '$' + tot + ')');
     });
-    var rng = function (c) { return n ? 'SUM(' + c + first + ':' + c + last + ')' : '0'; };
-    put(tot, 0, 'TOTAL', 8); put(tot, 1, d.total.registros, 9, rng('B')); put(tot, 2, d.total.operaciones, 9, rng('C')); put(tot, 3, d.total.costo, 10, rng('D'));
-    put(tot, 4, n ? 1 : 0, 11, n ? rng('E') : '0'); put(tot, 5, d.total.operaciones ? d.total.costo / d.total.operaciones : 0, 10, 'IF(C' + tot + '=0,0,D' + tot + '/C' + tot + ')');
-    var s1 = sheetXml(cells, { widths: [34, 12, 22, 20, 14, 26], merges: ['A1:F1', 'A2:F2', 'A3:F3'], freeze: H, heights: { 1: 30, 7: 32 } });
+    function colSum(c) { return n ? 'SUM(' + colL(c) + first + ':' + colL(c) + last + ')' : '0'; }
+    put(tot, 0, 'TOTAL', 8); put(tot, cOps, d.total.operaciones, 9, colSum(cOps));
+    days.slice(0, nd).forEach(function (x, j) { put(tot, cD0 + j, (d.total.fechas || {})[x] || 0, 10, colSum(cD0 + j)); });
+    put(tot, cTot, d.total.costo, 10, colSum(cTot)); put(tot, cPct, n ? 1 : 0, 11, n ? colSum(cPct) : '0');
+    var w1 = [34, 14].concat(days.slice(0, nd).map(function () { return 12.5; }), [15, 12]);
+    var m1 = [1, 2, 3].map(function (r) { return 'A' + r + ':' + colL(nCols - 1) + r; });
+    var s1 = sheetXml(cells, { widths: w1, merges: m1, freeze: H, freezeCols: 1, heights: { 1: 30, 5: 34 } });
 
+    /* ---- Hoja 2: Detalle por operación (fecha, operador, estilo, operación...) ---- */
     var c2 = [], r2 = 5;
     function put2(r, c, v, s, f) { c2.push({ r: r, c: c, v: v, s: s, f: f }); }
-    for (var j = 0; j < 6; j++) put2(1, j, j ? null : 'DETALLE POR OPERADOR Y OPERACIÓN', 1);
+    for (var j = 0; j < 8; j++) put2(1, j, j ? null : 'DETALLE POR OPERACIÓN', 1);
     put2(2, 0, rango, 2); put2(3, 0, 'Generado: ' + now.toLocaleDateString('es-MX') + ' ' + now.toLocaleTimeString('es-MX'), 2);
-    ['Operador', 'Operación', 'Costo unitario', 'Registros', 'Operaciones realizadas', 'Costo de destajo'].forEach(function (h, c) { put2(4, c, h, 3); });
-    ops.forEach(function (o) { o.detalle.forEach(function (x) {
-      put2(r2, 0, o.personal, 4); put2(r2, 1, x.operacion, 4); put2(r2, 2, unit(x), 6); put2(r2, 3, x.registros, 5); put2(r2, 4, x.operaciones, 5); put2(r2, 5, x.costo, 6); r2++;
-    }); });
+    ['Fecha', 'Operador', 'Estilo', 'Operación', 'Costo unitario', 'Registros', 'Operaciones realizadas', 'Costo de destajo'].forEach(function (h, c) { put2(4, c, h, 3); });
+    det.forEach(function (x) {
+      put2(r2, 0, serial(x.fecha), 15); put2(r2, 1, x.personal, 4); put2(r2, 2, x.estilo, 4); put2(r2, 3, x.operacion, 4);
+      put2(r2, 4, x.costoUnitario, 6); put2(r2, 5, x.registros, 5); put2(r2, 6, x.operaciones, 5); put2(r2, 7, x.costo, 6); r2++;
+    });
     var l2 = r2 - 1, t2 = r2, sum2 = function (c) { return l2 >= 5 ? 'SUM(' + c + '5:' + c + l2 + ')' : '0'; };
-    put2(t2, 0, 'TOTAL', 8); put2(t2, 1, null, 8); put2(t2, 2, null, 8); put2(t2, 3, d.total.registros, 9, sum2('D')); put2(t2, 4, d.total.operaciones, 9, sum2('E')); put2(t2, 5, d.total.costo, 10, sum2('F'));
-    var s2 = sheetXml(c2, { widths: [34, 34, 16, 12, 22, 20], merges: ['A1:F1', 'A2:F2', 'A3:F3'], freeze: 4, filter: l2 >= 5 ? 'A4:F' + l2 : null, heights: { 1: 30, 4: 32 } });
+    for (var q = 0; q < 5; q++) put2(t2, q, q ? null : 'TOTAL', 8);
+    put2(t2, 5, d.total.registros, 9, sum2('F')); put2(t2, 6, d.total.operaciones, 9, sum2('G')); put2(t2, 7, d.total.costo, 10, sum2('H'));
+    var s2 = sheetXml(c2, { widths: [13, 30, 12, 32, 15, 11, 22, 18], merges: ['A1:H1', 'A2:H2', 'A3:H3'], freeze: 4, filter: l2 >= 5 ? 'A4:H' + l2 : null, heights: { 1: 30, 4: 32 } });
 
     var files = [
       { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
       { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
-      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Destajo por operador" sheetId="1" r:id="rId1"/><sheet name="Detalle por operación" sheetId="2" r:id="rId2"/></sheets><definedNames>' + '<definedName name="_xlnm._FilterDatabase" localSheetId="1" hidden="1">\'Detalle por operación\'!$A$4:$F$' + Math.max(5, l2) + '</definedName></definedNames></workbook>' },
+      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Destajo por operador" sheetId="1" r:id="rId1"/><sheet name="Detalle por operación" sheetId="2" r:id="rId2"/></sheets>' + (l2 >= 5 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="1" hidden="1">\'Detalle por operación\'!$A$4:$H$' + l2 + '</definedName></definedNames>' : '') + '</workbook>' },
       { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
       { name: 'xl/styles.xml', data: STYLES },
       { name: 'xl/worksheets/sheet1.xml', data: s1 },
       { name: 'xl/worksheets/sheet2.xml', data: s2 }
     ];
-    if (l2 < 5) files[2].data = files[2].data.replace(/<definedNames>.*<\/definedNames>/, '');
     return zip(files);
   }
 
@@ -306,55 +333,44 @@
     var ops = d.operadores || [], t = d.total || {};
     var title = 'Informe de Destajo';
     var rango = 'Rango de fechas: ' + dmy(d.desde) + ' - ' + dmy(d.hasta);
-    var colW = (W - 2 * M - 24) / 2, cw = (W - 2 * M - 3 * 12) / 4;
-    function cx(i) { return M + i * (cw + 12); }
-    var fm = function (v) { return money.format(v); };
+    var days = dayList(d.desde, d.hasta), nd = days.length <= MAXPDF ? days.length : 0;
+    var cents = nd <= 9, fm = function (v) { return v == null || v === '' ? '' : (cents ? money.format(v) : '$' + nf.format(Math.round(v))); };
+    var tw = W - 2 * M, nameW = 150, opsW = 66, totW = 78, pctW = 46;
+    var dateW = nd ? (tw - nameW - opsW - totW - pctW) / nd : 0;
+    if (!nd) { nameW = tw - opsW - totW - pctW; }
+    var cols = [{ x: M, w: nameW }, { x: M + nameW, w: opsW, right: 1 }], x = M + nameW + opsW;
+    for (var k = 0; k < nd; k++) { cols.push({ x: x, w: dateW, right: 1 }); x += dateW; }
+    cols.push({ x: x, w: totW, right: 1 }); cols.push({ x: x + totW, w: pctW, right: 1 });
+    var head = ['Operador', 'Operaciones'].concat(days.slice(0, nd).map(function (z) { return dowOf(z).toUpperCase() + ' ' + shortDate(z); }), ['Total', '% costo']);
+    var rows = ops.map(function (o) {
+      return [o.personal, nf.format(o.operaciones)].concat(days.slice(0, nd).map(function (z) { return fm((o.fechas || {})[z]); }), [fm(o.costo), (t.costo ? o.costo * 100 / t.costo : 0).toFixed(1) + '%']);
+    });
+    var totalRow = ['TOTAL GENERAL', nf.format(num(t.operaciones))].concat(days.slice(0, nd).map(function (z) { return fm((t.fechas || {})[z] || 0); }), [fm(num(t.costo)), ops.length ? '100.0%' : '0.0%']);
 
-    p.header(title, rango);
-    p.color(C.muted); p.font(8.5, false);
-    doc.text(p.fit('Sección de uso exclusivo de Gerencia General. Las operaciones realizadas son las piezas capturadas por operación; el costo es el costo de destajo.', W - 2 * M), M, 82);
-    var lead = ops[0];
-    p.card(cx(0), 96, cw, 62, 'Costo de destajo', fm(num(t.costo)), 'Total del rango');
-    p.card(cx(1), 96, cw, 62, 'Operaciones realizadas', nf.format(num(t.operaciones)), nf.format(num(t.registros)) + ' registros');
-    p.card(cx(2), 96, cw, 62, 'Operadores', nf.format(num(t.operadores)), 'Con producción en el rango');
-    p.card(cx(3), 96, cw, 62, 'Mayor destajo', lead ? fm(lead.costo) : '—', lead ? lead.personal : 'Sin datos');
-
-    /* tablas con paginación */
-    var rowH = 17, bottom = H - 44;
-    function paged(titleT, head, cols, rows, totalRow, onFirstPage) {
-      var y, i = 0, started = false;
-      while (i < rows.length || !started) {
-        if (onFirstPage && !started) { y = 190; } else { doc.addPage(); p.header(title, rango); y = 96; }
-        p.color(C.text); p.font(11, true); doc.text(titleT + (started ? ' (continuación)' : ''), M, y);
-        started = true; y += 8;
-        p.fill('#eaf1ef'); doc.rect(M, y, W - 2 * M, rowH, 'F'); p.color('#3f5550'); p.font(7.5, true);
-        head.forEach(function (h, k) { var c = cols[k]; doc.text(h.toUpperCase(), c.right ? c.x + c.w - 6 : c.x + 6, y + 11.5, { align: c.right ? 'right' : 'left' }); });
-        y += rowH;
-        var n = 0;
-        while (i < rows.length && y + rowH <= bottom - (i === rows.length - 1 ? rowH : 0)) {
-          if (n % 2) { p.fill('#f7faf9'); doc.rect(M, y, W - 2 * M, rowH, 'F'); }
-          p.color(C.text); p.font(8, false);
-          rows[i].forEach(function (cell, k) { var c = cols[k]; doc.text(p.fit(cell, c.w - 12), c.right ? c.x + c.w - 6 : c.x + 6, y + 11.5, { align: c.right ? 'right' : 'left' }); });
-          y += rowH; i++; n++;
-        }
-        if (i >= rows.length) {
-          p.fill('#eaf1ef'); doc.rect(M, y, W - 2 * M, rowH, 'F'); p.color(C.text); p.font(8, true);
-          totalRow.forEach(function (cell, k) { var c = cols[k]; doc.text(p.fit(cell, c.w - 12), c.right ? c.x + c.w - 6 : c.x + 6, y + 11.5, { align: c.right ? 'right' : 'left' }); });
-          y += rowH; p.stroke(C.line); doc.setLineWidth(0.6); doc.line(M, y, W - M, y);
-          break;
-        }
+    var rowH = 17, bottom = H - 44, i = 0, page = 0, y;
+    var fs = nd > 9 ? 6.5 : 8;
+    function cell(txt, c, yy) { doc.text(p.fit(txt, c.w - 8), c.right ? c.x + c.w - 4 : c.x + 4, yy + 11.5, { align: c.right ? 'right' : 'left' }); }
+    do {
+      if (page) doc.addPage();
+      p.header(title, rango);
+      y = 96;
+      p.color(C.text); p.font(11, true); doc.text('Destajo por operador' + (page ? ' (continuación)' : ''), M, y); y += 8;
+      p.fill('#0d3b36'); doc.rect(M, y, tw, rowH + 5, 'F'); p.color('#ffffff'); p.font(nd > 9 ? 6 : 7.2, true);
+      head.forEach(function (h, k) { var c = cols[k]; doc.text(p.fit(h.toUpperCase(), c.w - 6), c.right ? c.x + c.w - 4 : c.x + 4, y + 14, { align: c.right ? 'right' : 'left' }); });
+      y += rowH + 5; var n = 0;
+      while (i < rows.length && y + rowH <= bottom - (i === rows.length - 1 ? rowH : 0)) {
+        if (n % 2) { p.fill('#f3f7f6'); doc.rect(M, y, tw, rowH, 'F'); }
+        p.color(C.text); p.font(fs, false);
+        rows[i].forEach(function (v, k) { cell(v, cols[k], y); });
+        y += rowH; i++; n++;
       }
-    }
-    var tw = W - 2 * M;
-    var c1 = [{ x: M, w: 270 }, { x: M + 270, w: 100, right: 1 }, { x: M + 370, w: 130, right: 1 }, { x: M + 500, w: 150, right: 1 }, { x: M + 650, w: tw - 650, right: 1 }];
-    paged('Destajo por operador', ['Operador', 'Registros', 'Operaciones', 'Costo de destajo', '% del costo'], c1,
-      ops.map(function (o) { return [o.personal, nf.format(o.registros), nf.format(o.operaciones), fm(o.costo), (t.costo ? o.costo * 100 / t.costo : 0).toFixed(1) + '%']; }),
-      ['TOTAL', nf.format(num(t.registros)), nf.format(num(t.operaciones)), fm(num(t.costo)), ops.length ? '100.0%' : '0.0%'], true);
-    var det = [];
-    ops.forEach(function (o) { o.detalle.forEach(function (x) { det.push([o.personal, x.operacion, fm(unit(x)), nf.format(x.registros), nf.format(x.operaciones), fm(x.costo)]); }); });
-    var c2 = [{ x: M, w: 190 }, { x: M + 190, w: 210 }, { x: M + 400, w: 100, right: 1 }, { x: M + 500, w: 80, right: 1 }, { x: M + 580, w: 100, right: 1 }, { x: M + 680, w: tw - 680, right: 1 }];
-    paged('Detalle por operador y operación', ['Operador', 'Operación', 'Costo unitario', 'Registros', 'Operaciones', 'Costo'], c2, det,
-      ['TOTAL', '', '', nf.format(num(t.registros)), nf.format(num(t.operaciones)), fm(num(t.costo))]);
+      if (i >= rows.length) {
+        p.fill('#eaf1ef'); doc.rect(M, y, tw, rowH, 'F'); p.color(C.text); p.font(fs, true);
+        totalRow.forEach(function (v, k) { cell(v, cols[k], y); });
+        y += rowH; p.stroke(C.line); doc.setLineWidth(0.6); doc.line(M, y, W - M, y);
+      }
+      page++;
+    } while (i < rows.length);
 
     var now = new Date();
     p.footers(now.toLocaleDateString('es-MX') + ', ' + now.toLocaleTimeString('es-MX'));
@@ -373,28 +389,27 @@
 
   function renderData(d) {
     S.data = d;
-    var t = d.total, ops = d.operadores;
+    var t = d.total, ops = d.operadores, days = dayList(d.desde, d.hasta), nd = days.length <= MAXCOLS ? days.length : 0;
     g('dz-k-costo').textContent = money.format(t.costo);
     g('dz-k-ops').textContent = nf.format(t.operaciones);
     g('dz-k-reg').textContent = nf.format(t.registros);
     g('dz-k-opr').textContent = nf.format(t.operadores);
-    g('dz-rows').innerHTML = ops.map(function (o, i) {
+    var mon = function (v) { return v == null ? '' : money.format(v); };
+    g('dz-head').innerHTML = '<th>OPERADOR</th><th class="num">OPERACIONES</th>' + days.slice(0, nd).map(function (z) {
+      return '<th class="num dz-dh">' + dowOf(z).toUpperCase() + '<br>' + shortDate(z) + '</th>';
+    }).join('') + '<th class="num">TOTAL</th><th class="num">% DEL COSTO</th>';
+    g('dz-rows').innerHTML = ops.map(function (o) {
       var pct = t.costo ? o.costo * 100 / t.costo : 0;
-      var det = o.detalle.map(function (x) {
-        return '<tr class="dz-d" data-g="' + i + '" hidden><td>' + esc(x.operacion) + ' · ' + money.format(unit(x)) + ' c/u</td><td class="num">' + nf.format(x.registros) + '</td><td class="num">' + nf.format(x.operaciones) + '</td><td class="num">' + money.format(x.costo) + '</td><td></td></tr>';
-      }).join('');
-      return '<tr class="dz-o"><td><button type="button" class="dz-t" data-i="' + i + '" aria-expanded="false">▸</button> <b>' + esc(o.personal) + '</b></td><td class="num">' + nf.format(o.registros) + '</td><td class="num">' + nf.format(o.operaciones) + '</td><td class="num">' + money.format(o.costo) + '</td><td class="num">' + pct.toFixed(1) + '%</td></tr>' + det;
+      return '<tr><td><b>' + esc(o.personal) + '</b></td><td class="num">' + nf.format(o.operaciones) + '</td>' +
+        days.slice(0, nd).map(function (z) { return '<td class="num">' + mon((o.fechas || {})[z]) + '</td>'; }).join('') +
+        '<td class="num"><b>' + money.format(o.costo) + '</b></td><td class="num">' + pct.toFixed(1) + '%</td></tr>';
     }).join('');
-    g('dz-foot').innerHTML = '<td><b>TOTAL</b></td><td class="num"><b>' + nf.format(t.registros) + '</b></td><td class="num"><b>' + nf.format(t.operaciones) + '</b></td><td class="num"><b>' + money.format(t.costo) + '</b></td><td class="num"><b>' + (ops.length ? '100.0%' : '0.0%') + '</b></td>';
+    g('dz-foot').innerHTML = '<td><b>TOTAL GENERAL</b></td><td class="num"><b>' + nf.format(t.operaciones) + '</b></td>' +
+      days.slice(0, nd).map(function (z) { return '<td class="num"><b>' + money.format((t.fechas || {})[z] || 0) + '</b></td>'; }).join('') +
+      '<td class="num"><b>' + money.format(t.costo) + '</b></td><td class="num"><b>' + (ops.length ? '100.0%' : '0.0%') + '</b></td>';
     g('dz-empty').hidden = !!ops.length;
     g('dz-range').textContent = dmy(d.desde) + ' - ' + dmy(d.hasta);
-    document.querySelectorAll('#dz-rows .dz-t').forEach(function (b) {
-      b.onclick = function () {
-        var open = b.getAttribute('aria-expanded') !== 'true';
-        document.querySelectorAll('#dz-rows tr[data-g="' + b.dataset.i + '"]').forEach(function (r) { r.hidden = !open; });
-        b.textContent = open ? '▾' : '▸'; b.setAttribute('aria-expanded', open);
-      };
-    });
+    g('dz-note').hidden = !!nd;
   }
 
   function query() {
@@ -403,6 +418,7 @@
     if (desde > hasta) { msg('La fecha desde no puede ser posterior a la fecha hasta.', false); return Promise.resolve(false); }
     g('dz-go').disabled = true;
     return req('destajo', { gpin: pin(), fechaDesde: desde, fechaHasta: hasta }).then(function (r) {
+      if (!r.destajo.detalleDia || !r.destajo.total.fechas) { msg('Falta actualizar Destajo.gs en Apps Script (Nueva versión): la respuesta no trae el detalle por fecha.', false); return false; }
       renderData(r.destajo); msg('Consulta lista.', true); return true;
     }).catch(function (e) {
       if (!badPin(e)) msg(e.message, false);
@@ -450,8 +466,19 @@
 
   function init() {
     var now = new Date();
-    g('dz-desde').value = iso(new Date(now.getFullYear(), now.getMonth(), 1));
-    g('dz-hasta').value = iso(now);
+    /* Semana ISO (lunes a domingo): lista de las últimas 26 semanas; por defecto, la semana anterior a hoy */
+    var dow = (now.getDay() + 6) % 7, mon0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+    function isoWeek(dt) { var x = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate())); x.setUTCDate(x.getUTCDate() + 4 - (x.getUTCDay() || 7)); var y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return Math.ceil(((x - y0) / 86400000 + 1) / 7); }
+    var opts = ['<option value="">Rango personalizado</option>'];
+    for (var w = 0; w < 26; w++) {
+      var m = new Date(mon0.getFullYear(), mon0.getMonth(), mon0.getDate() - 7 * w), s = new Date(m.getFullYear(), m.getMonth(), m.getDate() + 6);
+      opts.push('<option value="' + iso(m) + '|' + iso(s) + '">Semana ' + isoWeek(m) + ' · ' + dmy(iso(m)) + ' - ' + dmy(iso(s)) + (w === 0 ? ' (actual)' : '') + '</option>');
+    }
+    g('dz-sem').innerHTML = opts.join('');
+    g('dz-sem').selectedIndex = 2;   /* semana anterior */
+    var sel = g('dz-sem').value.split('|'); g('dz-desde').value = sel[0]; g('dz-hasta').value = sel[1];
+    g('dz-sem').addEventListener('change', function () { var v = g('dz-sem').value; if (!v) return; var q = v.split('|'); g('dz-desde').value = q[0]; g('dz-hasta').value = q[1]; if (pin()) query(); });
+    ['dz-desde', 'dz-hasta'].forEach(function (id) { g(id).addEventListener('change', function () { g('dz-sem').value = ''; }); });
     g('dz-go').addEventListener('click', query);
     g('dz-xlsx').addEventListener('click', exportXlsx);
     g('dz-pdf').addEventListener('click', exportPdf);
