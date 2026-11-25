@@ -37,7 +37,7 @@ tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
 .sheetpg{width:8.5in;height:10.98in;overflow:hidden;padding:.5in 0 0 .1875in;display:grid;grid-template-columns:repeat(3,2.625in);column-gap:.125in;grid-template-rows:repeat(10,1in);align-content:start;justify-content:start;break-after:page;page-break-after:always;background:#fff}
 .sheetpg:last-child{break-after:auto;page-break-after:auto}
 @media print{html,body{margin:0;padding:0;background:#fff}.app{display:none!important}#printArea{display:block}#printArea .lbl{border:0}}
-</style><link rel="stylesheet" href="jv-pro.css"/></head><body>
+</style><link rel="stylesheet" href="jv-pro.css"/><script src="jv-fast.js"></script></head><body>
 <div class="app"><aside><div class="brand"><img alt="JV International Solutions Inc." src="Logo_JV%20International.png"/></div><div class="group">PRODUCCIÓN COSTURA</div>
 <nav><a class="active" href="cortes.html">Programa de corte</a><a href="ticket.html">Captura por ticket</a><a href="dashboard.html">Dashboard</a><a href="database.html">Base de datos</a><a href="admin.html">Administración</a></nav></aside>
 <main>
@@ -47,7 +47,7 @@ tr.sel{background:#e9f5f2}tr.pickc{cursor:pointer}
 <section class="card"><div class="head"><h2 id="formTitle">Nuevo corte</h2><span class="tag" id="folioShown">Folio principal: se asigna al guardar</span></div>
 <div class="body"><div class="grid">
 <div class="field"><label for="orden">ORDEN *</label><input id="orden" maxlength="40" placeholder="Ej. 297071"/></div>
-<div class="field"><label for="lote">LOTE</label><input id="lote" maxlength="20" placeholder="Opcional. Ej. 201012" style="text-transform:uppercase"/></div>
+<div class="field"><label for="lote">LOTE</label><input id="lote" maxlength="20" placeholder="Opcional. Ej. 201210" style="text-transform:uppercase"/></div>
 <div class="field"><label for="estilo">ESTILO *</label><select id="estilo"><option value="">Cargando…</option></select></div>
 <div class="field"><label for="variante">VARIANTE</label><select id="variante"><option>GENERAL</option><option>DC</option></select></div>
 <div class="field"><label for="color">COLOR *</label><select id="color"><option value="">Cargando…</option></select></div>
@@ -83,7 +83,10 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('save').addEventListener('click',save);$('reset').addEventListener('click',()=>resetForm());$('cancelEdit').addEventListener('click',()=>resetForm());
   $('printBtn').addEventListener('click',()=>{const prev=document.title;document.title=labelFileName().replace(/\.pdf$/,'');window.print();setTimeout(()=>{document.title=prev},1500)});
   $('pdfLabelBtn').addEventListener('click',downloadLabelsPdf);
-  try{const c=await get('catalogs');fillStyles(c.catalogs.estilos||[]);await loadColors();await loadCuts();defaultRows();$('status').textContent='● Conectado';$('status').className='status ok'}
+  try{/* Arranque rápido: catálogos y colores salen del caché y las tallas de la última visita; la lista de cortes se carga en paralelo sin bloquear el formulario */
+    try{const tl=JSON.parse(localStorage.getItem('jv_tallas')||'[]');if(Array.isArray(tl)&&tl.length)state.tallas=tl}catch(_){}
+    const cutsP=loadCuts();cutsP.catch(()=>{});
+    const[c]=await Promise.all([get('catalogs'),loadColors(),state.tallas.length?null:cutsP]);fillStyles(c.catalogs.estilos||[]);defaultRows();$('status').textContent='● Conectado';$('status').className='status ok';await cutsP}
   catch(e){show(e.message,'error');$('status').textContent='● Sin conexión'}
 });
 async function loadColors(sel){const d=await get('colors');state.colors=d.colores||[];fillColors(sel||'')}
@@ -110,7 +113,7 @@ async function save(){hide();if(state.busy)return;const payload={folioCorte:stat
   catch(e){show(e.message,'error')}finally{state.busy=false;$('save').disabled=false;$('save').textContent=state.editing?'Guardar cambios':'Guardar corte'}}
 function resetForm(keepMsg){state.editing='';state.clave=newId();$('orden').value='';$('lote').value='';$('estilo').value='';fillColors('');$('variante').value='GENERAL';$('lienzosAll').value='';$('ops').innerHTML='<span style="color:var(--muted);font-size:12px">Selecciona un estilo.</span>';defaultRows();$('formTitle').textContent='Nuevo corte';$('folioShown').textContent='Folio principal: se asigna al guardar';$('save').textContent='Guardar corte';$('cancelEdit').hidden=true;if(!keepMsg)hide()}
 
-async function loadCuts(){const d=await get('cortes');state.cuts=d.cortes||[];if(Array.isArray(d.tallas)&&d.tallas.length)state.tallas=d.tallas;renderCuts();renderSummary()}
+async function loadCuts(){const d=await get('cortes');state.cuts=d.cortes||[];if(Array.isArray(d.tallas)&&d.tallas.length){state.tallas=d.tallas;try{localStorage.setItem('jv_tallas',JSON.stringify(d.tallas))}catch(_){}}renderCuts();renderSummary()}
 function renderCuts(){$('noCuts').hidden=state.cuts.length>0;$('cuts').innerHTML=state.cuts.map(c=>{const open=c.estado==='ACTIVO',free=open&&!(c.piezasCapturadas>0);return `<tr class="pickc ${c.folioCorte===state.sel?'sel':''}" data-f="${esc(c.folioCorte)}"><td><b>${esc(c.folioCorte)}</b></td><td>${esc(c.orden)}</td><td>${esc(c.lote||'—')}</td><td>${esc(c.estilo)}${c.variante==='DC'?' DC':''}</td><td>${esc(c.colorId)}${c.color?' · '+esc(c.color):''}</td><td class="num">${nf.format(c.piezasOrden)}</td><td class="num">${nf.format(c.tickets)}</td><td class="num">${nf.format(c.ticketsCompletos)}</td><td class="num">${nf.format(c.piezasCapturadas)} / ${nf.format(c.piezasSolicitadas)}</td><td><span class="tag ${open?'':'bad'}">${esc(c.estado)}</span></td><td><div class="row"><button class="light small" data-a="lab" data-f="${esc(c.folioCorte)}" ${open?'':'disabled'}>Etiquetas</button><button class="light small" data-a="edit" data-f="${esc(c.folioCorte)}" ${free?'':'disabled'}>Editar</button><button class="danger" data-a="del" data-f="${esc(c.folioCorte)}" ${free?'':'disabled'}>Anular</button></div></td></tr>`}).join('');
   document.querySelectorAll('#cuts tr').forEach(tr=>tr.addEventListener('click',e=>{if(e.target.closest('button'))return;selectCut(tr.dataset.f)}));
   document.querySelectorAll('#cuts button').forEach(b=>b.addEventListener('click',()=>{const f=b.dataset.f;if(b.dataset.a==='lab'){selectCut(f);showLabels(f)}else if(b.dataset.a==='edit')editCut(f);else cancelCut(f)}))}
