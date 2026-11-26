@@ -49,7 +49,7 @@
 
   function currentFilters() {
     var map = [['folio', 'Folio'], ['corte', 'Corte'], ['estilo', 'Estilo'], ['operacion', 'Operación'], ['personal', 'Personal'],
-      ['maquina', 'Máquina'], ['desde', 'Desde'], ['hasta', 'Hasta'], ['semana', 'Semana']];
+      ['maquina', 'Máquina'], ['desde', 'Desde'], ['hasta', 'Hasta']];
     var out = [];
     map.forEach(function (m) {
       var el = $(m[0]);
@@ -224,6 +224,11 @@
     (data.feriados || []).forEach(function (h) { H[String(h.fecha || '').slice(0, 10)] = h.descripcion || 'Feriado'; });
     var days = [], s = parseIso(desde), e = parseIso(hasta);
     if (!s || !e || e < s) return days;
+    /* No se reportan como "sin producción" los días que aún no ocurren (semana o mes en curso). */
+    var now0 = new Date(), cap = new Date(now0.getFullYear(), now0.getMonth(), now0.getDate());
+    Object.keys(P).concat(Object.keys(O)).forEach(function (k) { var dd = parseIso(k); if (dd && dd > cap && dd <= e) cap = dd; });
+    if (e > cap) e = cap;
+    if (e < s) return days;
     for (var i = 0; i < 800; i++) {
       var d = addDays(s, i);
       if (d > e) break;
@@ -302,6 +307,8 @@
     else if (s.getDate() === 1 && e.getMonth() === s.getMonth() && e.getFullYear() === s.getFullYear() && e.getDate() === new Date(e.getFullYear(), e.getMonth() + 1, 0).getDate())
       rango = 'Mes: ' + MES_L[s.getMonth()] + ' ' + s.getFullYear() + ' (' + dmy(desde) + ' - ' + dmy(hasta) + ')';
     else rango = 'Rango de fechas: ' + dmy(desde) + ' - ' + dmy(hasta);
+    var selW = $('semana'), optW = selW && selW.value && selW.selectedOptions && selW.selectedOptions[0];
+    if (optW && optW.dataset && optW.dataset.n && s && e && optW.dataset.desde === desde && optW.dataset.hasta === hasta) rango = 'Semana ' + optW.dataset.n + ': ' + dmy(desde) + ' - ' + dmy(hasta);
     var title = 'Informe Producción Costura';
     p.header(title, rango);
 
@@ -361,8 +368,8 @@
     var jsPDF = window.jspdf && window.jspdf.jsPDF;
     if (!jsPDF) { if (typeof showError === 'function') showError('No se pudo cargar la librería de PDF. Revisa tu conexión a internet e intenta de nuevo.'); return; }
     if (typeof hideError === 'function') hideError();
-    var old = btn ? btn.textContent : '';
-    if (btn) { btn.disabled = true; btn.textContent = 'Generando PDF…'; }
+    var lab = btn ? (btn.querySelector('.btn-label') || btn) : null, old = lab ? lab.textContent : '';
+    if (btn) { btn.disabled = true; btn.classList.add('is-loading'); lab.textContent = 'Generando PDF…'; }
     var filters = currentFilters();
     Promise.all([fetchData(), loadLogo()])
       .then(function (r) {
@@ -371,7 +378,7 @@
         doc.save('JV Informe Produccion Costura.pdf');
       })
       .catch(function (e) { if (typeof showError === 'function') showError('No fue posible generar el PDF: ' + (e && e.message ? e.message : e)); })
-      .then(function () { if (btn) { btn.disabled = false; btn.textContent = old; } });
+      .then(function () { if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); lab.textContent = old; } });
   }
 
   window.exportDashboardPdf = exportDashboardPdf;
