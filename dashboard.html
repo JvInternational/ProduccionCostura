@@ -151,6 +151,27 @@ main.content{background:radial-gradient(1200px 380px at 90% -120px,#e3f0ed 0%,rg
 tbody td:first-child{font-weight:700;color:#0f2f2b!important}
 .error{border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;font-weight:600}
 footer{color:#7a8f8b;font-size:12px;letter-spacing:.02em;border-top:1px solid #e3ece9;margin:8px 24px 0}
+/* ===== Barra de acciones y botones (vista profesional) ===== */
+.actions-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:6px;padding-top:16px;border-top:1px solid #e3ece9}
+.filters-hint{display:flex;align-items:center;gap:8px;margin:0;font-size:12px;line-height:1.4;color:#6a807c;max-width:560px}
+.filters-hint strong{color:#294640;font-weight:700}
+.filters-hint .ico{flex:none;width:16px;height:16px;color:#08776b}
+.actions-bar .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto}
+.ico{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:128px;height:42px;padding:0 20px;position:relative;white-space:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
+.btn:active:not(:disabled){transform:translateY(0);box-shadow:none}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(8,119,107,.25)}
+.btn-pdf:focus-visible{box-shadow:0 0 0 4px rgba(244,123,32,.25)}
+.btn:disabled{cursor:wait;opacity:.75}
+.btn-primary{min-width:156px;border:1px solid #076a5f}
+.btn-light{background:#fff;color:#3b5651;border:1px solid #d5e1de;box-shadow:0 1px 2px rgba(15,47,43,.05)}
+.btn-light:hover:not(:disabled){background:#f3f8f7;border-color:#b9cfca}
+.btn-pdf{min-width:156px;background:#fffaf5}
+.btn.is-loading .ico{display:none}
+.btn.is-loading::before{content:"";width:15px;height:15px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:btnspin .7s linear infinite}
+@keyframes btnspin{to{transform:rotate(360deg)}}
+.field select:disabled{opacity:.6;cursor:not-allowed}
+@media(max-width:760px){.actions-bar{flex-direction:column;align-items:stretch}.actions-bar .actions{margin-left:0}.actions-bar .btn{flex:1 1 140px}}
 @media(max-width:1050px){.grid-filters{grid-template-columns:repeat(3,1fr)!important}}
 @media(max-width:760px){.grid-filters{grid-template-columns:1fr 1fr!important}}
 @media(max-width:480px){.grid-filters{grid-template-columns:1fr!important}}
@@ -175,8 +196,9 @@ footer{color:#7a8f8b;font-size:12px;letter-spacing:.02em;border-top:1px solid #e
 <div class="field"><label for="maquina">Máquina</label><select id="maquina"><option value="">Todas</option></select></div>
 <div class="field"><label for="desde">Fecha desde</label><input id="desde" type="date"/></div>
 <div class="field"><label for="hasta">Fecha hasta</label><input id="hasta" type="date"/></div>
-<div class="field"><label for="semana">Semana</label><input id="semana" max="53" min="1" placeholder="Todas" type="number"/></div>
-<div class="actions"><button class="btn btn-primary" id="applyBtn" type="button">Aplicar filtros</button><button class="btn btn-light" id="clearBtn" type="button">Limpiar</button><button class="btn btn-pdf" id="pdfBtn" type="button">Descargar PDF</button></div>
+<div class="field"><label for="semana">Semana</label><select id="semana" aria-label="Semana"><option value="">Todas</option></select></div>
+<div class="field"><label for="mes">Mes</label><select id="mes" aria-label="Mes"><option value="">Todos</option></select></div>
+<div class="actions-bar"><p class="filters-hint"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span><strong>Semana</strong> y <strong>Mes</strong> completan el rango de fechas. El PDF de una semana sale por día; el de un mes, por semana.</span></p><div class="actions"><button class="btn btn-light" id="clearBtn" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg><span class="btn-label">Limpiar</span></button><button class="btn btn-pdf" id="pdfBtn" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg><span class="btn-label">Descargar PDF</span></button><button class="btn btn-primary" id="applyBtn" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg><span class="btn-label">Aplicar filtros</span></button></div></div>
 </div>
 </section>
 <div class="error" id="errorBox" role="alert"></div>
@@ -204,18 +226,21 @@ const API_URL='https://script.google.com/macros/s/AKfycbxCCt3bQaTcA8x58rn_9Vvyis
 const $=id=>document.getElementById(id);
 const nf=new Intl.NumberFormat('es-MX');
 const money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'});
-let lastDashboard=null;
+let lastDashboard=null,periodsBuilt=false;
 
 document.addEventListener('DOMContentLoaded',()=>{
   $('applyBtn').addEventListener('click',loadDashboard);
-  $('clearBtn').addEventListener('click',()=>{['folio','corte','estilo','operacion','personal','maquina','desde','hasta','semana'].forEach(id=>$(id).value='');loadDashboard();});
+  $('clearBtn').addEventListener('click',()=>{['folio','corte','estilo','operacion','personal','maquina','desde','hasta','semana','mes'].forEach(id=>$(id).value='');loadDashboard();});
+  $('semana').addEventListener('change',()=>pickPeriod('semana'));
+  $('mes').addEventListener('change',()=>pickPeriod('mes'));
+  ['desde','hasta'].forEach(id=>$(id).addEventListener('change',()=>{$('semana').value='';$('mes').value='';}));
   $('estilo').addEventListener('change',refreshOperationOptions);
   loadDashboard();
 });
 
 function params(){
   const p=new URLSearchParams({action:'dashboard'});
-  const map={folio:'folio',corte:'corte',estilo:'estilo',operacion:'operacion',personal:'personal',maquina:'maquina',fechaDesde:'desde',fechaHasta:'hasta',semana:'semana'};
+  const map={folio:'folio',corte:'corte',estilo:'estilo',operacion:'operacion',personal:'personal',maquina:'maquina',fechaDesde:'desde',fechaHasta:'hasta'};
   Object.entries(map).forEach(([key,id])=>{const value=$(id).value.trim();if(value)p.set(key,value)});
   return p;
 }
@@ -227,6 +252,7 @@ async function loadDashboard(){
     const data=await response.json();
     if(!data.ok)throw new Error(data.error||'La API devolvió un error.');
     lastDashboard=data.dashboard||{};
+    if(!periodsBuilt)buildPeriods(lastDashboard);
     render(lastDashboard); setStatus(true,'Conectado');
   }catch(error){showError('No fue posible cargar el dashboard: '+error.message);setStatus(false,'Sin conexión');}
   finally{setLoading(false)}
@@ -294,7 +320,41 @@ function updateFilters(d){
 }
 function fillSelect(id,values){const select=$(id),current=select.value,first=select.options[0].outerHTML;const unique=[...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es'));select.innerHTML=first+unique.map(v=>`<option value="${escapeHtml(String(v))}">${escapeHtml(String(v))}</option>`).join('');if(unique.includes(current))select.value=current}
 function refreshOperationOptions(){/* El servidor aplica el filtro; se conservan las operaciones disponibles. */}
-function setLoading(on){$('applyBtn').disabled=on;$('applyBtn').textContent=on?'Cargando…':'Aplicar filtros'}
+/* ===== Semana / Mes: listas desplegables que completan Fecha desde / hasta ===== */
+const MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],MESES_C=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const p2=n=>String(n).padStart(2,'0');
+const isoOf=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const mondayOf=d=>addD(d,-((d.getDay()+6)%7));
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/86400000+1)/7)}
+function isoWeekYear(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);return t.getUTCFullYear()}
+function parseIsoLocal(v){const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+function buildPeriods(d){
+  const today=new Date(),t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const fechas=(d.porFecha||[]).map(r=>parseIsoLocal(r.fecha)).filter(Boolean).sort((a,b)=>a-b);
+  if(!fechas.length&&!(d.kpis&&d.kpis.piezas===0))return;           /* sin datos aún: se reintenta en la siguiente carga */
+  const first=fechas.length?fechas[0]:new Date(t0.getFullYear(),0,1),last=fechas.length&&fechas[fechas.length-1]>t0?fechas[fechas.length-1]:t0;
+  /* Semanas (lunes a domingo), de la más reciente a la más antigua, agrupadas por año */
+  const wk=[];for(let m=mondayOf(last);m>=mondayOf(first);m=addD(m,-7)){const e=addD(m,6);wk.push({m,e,n:isoWeek(m),y:isoWeekYear(m)})}
+  const selW=$('semana'),byY={};wk.forEach(w=>{(byY[w.y]=byY[w.y]||[]).push(w)});
+  selW.innerHTML='<option value="">Todas</option>'+Object.keys(byY).sort((a,b)=>b-a).map(y=>`<optgroup label="${y}">`+byY[y].map(w=>{
+    const cur=t0>=w.m&&t0<=w.e,lab=`Sem ${w.n} · ${w.m.getDate()} ${MESES_C[w.m.getMonth()]} – ${w.e.getDate()} ${MESES_C[w.e.getMonth()]}${cur?' (actual)':''}`;
+    return `<option value="${isoOf(w.m)}" data-desde="${isoOf(w.m)}" data-hasta="${isoOf(w.e)}" data-n="${w.n}">${lab}</option>`}).join('')+'</optgroup>').join('');
+  /* Meses, del más reciente al más antiguo */
+  const mo=[];for(let c=new Date(last.getFullYear(),last.getMonth(),1);c>=new Date(first.getFullYear(),first.getMonth(),1);c=new Date(c.getFullYear(),c.getMonth()-1,1)){mo.push(c)}
+  const byM={};mo.forEach(c=>{(byM[c.getFullYear()]=byM[c.getFullYear()]||[]).push(c)});
+  $('mes').innerHTML='<option value="">Todos</option>'+Object.keys(byM).sort((a,b)=>b-a).map(y=>`<optgroup label="${y}">`+byM[y].map(c=>{
+    const e=new Date(c.getFullYear(),c.getMonth()+1,0),cur=c.getFullYear()===t0.getFullYear()&&c.getMonth()===t0.getMonth(),lab=MESES_L[c.getMonth()].charAt(0).toUpperCase()+MESES_L[c.getMonth()].slice(1)+' '+c.getFullYear()+(cur?' (actual)':'');
+    return `<option value="${isoOf(c)}" data-desde="${isoOf(c)}" data-hasta="${isoOf(e)}">${lab}</option>`}).join('')+'</optgroup>').join('');
+  periodsBuilt=true;
+}
+function pickPeriod(which){
+  const sel=$(which),opt=sel.selectedOptions&&sel.selectedOptions[0],other=$(which==='semana'?'mes':'semana');
+  other.value='';
+  if(!sel.value||!opt){$('desde').value='';$('hasta').value='';return}
+  $('desde').value=opt.dataset.desde;$('hasta').value=opt.dataset.hasta;
+}
+function setLoading(on){const b=$('applyBtn');b.disabled=on;b.classList.toggle('is-loading',on);b.querySelector('.btn-label').textContent=on?'Cargando…':'Aplicar filtros'}
 function setStatus(ok,text){$('statusDot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=text}
 function showError(msg){$('errorBox').textContent=msg;$('errorBox').style.display='block'}function hideError(){$('errorBox').style.display='none'}
 function escapeHtml(value){return value.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
