@@ -1,12 +1,18 @@
 /**
  * dashboard_pdf.js  (archivo NUEVO en GitHub, junto a dashboard.html)
- * Informe ejecutivo en PDF (A4 horizontal) con los filtros que estén en pantalla.
+ * Informe ejecutivo en PDF (A4 horizontal, una página) con los filtros que estén en pantalla.
+ * Un día: desglose por operador / operación / estilo. Varios días: detalle por fecha. Un mes o más: detalle por semana
+ * (por mes si el rango pasa de ~3 meses). Marca días sin producción (rojo cenizo) y feriados (gris azulado, se administran en Administración > Feriados).
  * Requiere jsPDF 2.5.1 (se carga desde cdnjs en dashboard.html) y usa API_URL / params() del dashboard.
  */
 (function () {
   'use strict';
 
-  var PAL = ['#1f4e79', '#08776b', '#4b5d73', '#7a6a4f', '#355c7d', '#5b6b73']; /* un tono sobrio por gráfica */
+  var PAL = { piezas: '#1f5f8b', costo: '#7a6a4f', ops: '#08776b', estilos: '#44546a' }; /* un tono sobrio por gráfica */
+  var ASH = '#a8625c', ASH_T = '#f6e9e7', HOL = '#5d7391', HOL_T = '#e8edf4'; /* días sin producción (rojo cenizo) y feriados (gris azulado) */
+  var MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  var MES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var DOW3 = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'], DOW1 = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
   var C = { band: '#0d3b36', teal: '#08776b', text: '#18312d', muted: '#72817e', line: '#dfe7e4', card: '#f7faf9', track: '#e7eeec' };
   var nf = new Intl.NumberFormat('es-MX');
   var money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
@@ -118,9 +124,10 @@
     if (note) { this.color(C.muted); this.font(7.5, false); d.text(this.fit(note, w - 24), x + 12, y + h - 9); }
   };
 
-  /** Barras horizontales con valor y % del total. rows: [{label, value}] */
-  Pdf.prototype.hbars = function (x, y, w, title, rows, unit, color) {
+  /** Barras horizontales con valor y % del total. rows: [{label, value}]; fmtFn opcional para el valor. */
+  Pdf.prototype.hbars = function (x, y, w, title, rows, unit, color, fmtFn) {
     var d = this.doc, rowH = 21, labelW = 118, valueW = 92;
+    var fmt = fmtFn || function (v) { return nf.format(v) + (unit || ''); };
     this.color(C.text); this.font(11, true); d.text(title, x, y);
     y += 14;
     if (!rows.length) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x, y + 14); return y + 30; }
@@ -132,105 +139,217 @@
       this.color(C.text); this.font(8, false); d.text(this.fit(r.label, labelW - 8), x, cy + 3);
       this.fill(C.track); d.roundedRect(trackX, cy - 3, trackW, 7, 3.5, 3.5, 'F');
       var bw = Math.max(3, trackW * r.value / max);
-      this.fill(color || PAL[0]); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
-      this.color(C.text); this.font(8, true); d.text(nf.format(r.value) + (unit || ''), x + w, cy + 3, { align: 'right' });
-      this.color(C.muted); this.font(7, false); d.text((r.value * 100 / total).toFixed(1) + '%', x + w - 52, cy + 3, { align: 'right' });
+      this.fill(color); d.roundedRect(trackX, cy - 3, bw, 7, 3.5, 3.5, 'F');
+      this.color(C.text); this.font(8, true); d.text(fmt(r.value), x + w, cy + 3, { align: 'right' });
+      this.color(C.muted); this.font(7, false); d.text((r.value * 100 / total).toFixed(1) + '%', x + w - 62, cy + 3, { align: 'right' });
     }
     return y + rows.length * rowH;
   };
 
-  /** Columnas verticales (semanas / fechas). rows: [{label, value}] */
-  Pdf.prototype.columns = function (x, y, w, h, title, rows) {
-    var d = this.doc;
+  /**
+   * Columnas verticales por fecha / semana / mes.
+   * items: [{ l1, l2, v, kind: 'ok'|'zero'|'hol', holWithData, notes: [[texto, color]] }]
+   */
+  Pdf.prototype.cols = function (x, y, w, h, title, items, color, fmtV) {
+    var d = this.doc, n = items.length;
     this.color(C.text); this.font(11, true); d.text(title, x, y);
-    y += 12;
-    if (!rows.length) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x, y + 14); return y + 30; }
-    var max = Math.max.apply(null, rows.map(function (r) { return r.value; })) || 1;
-    var mag = Math.pow(10, Math.floor(Math.log10(max / 4))), rough = max / 4;
-    var niceStep = [1, 2, 2.5, 5, 10].filter(function (n) { return n * mag >= rough; })[0] || 10;
-    max = niceStep * mag * 4;
-    var ph = h - 34, base = y + ph + 6, left = x + 40, pw = w - 40;
-    // rejilla
-    for (var g = 0; g <= 4; g++) {
-      var gy = base - ph * g / 4;
-      this.stroke(C.line); d.setLineWidth(0.5); d.line(left, gy, x + w, gy);
-      this.color(C.muted); this.font(7, false); d.text(nf.format(Math.round(max * g / 4)), left - 5, gy + 2.5, { align: 'right' });
-    }
-    var slot = pw / rows.length, bw = Math.min(26, slot * 0.62);
-    var every = Math.max(1, Math.ceil(rows.length / Math.max(2, Math.floor(pw / 52))));
-    for (var i = 0; i < rows.length; i++) {
-      var bh = Math.max(1.5, ph * rows[i].value / max), bx = left + slot * i + (slot - bw) / 2;
-      this.fill(C.teal); d.rect(bx, base - bh, bw, bh, 'F');
-      if (rows.length <= 16) { this.color(C.text); this.font(6.5, true); d.text(nf.format(rows[i].value), bx + bw / 2, base - bh - 3, { align: 'center' }); }
-      if (i % every === 0 || i === rows.length - 1) {
-        this.color(C.muted); this.font(7, false); d.text(String(rows[i].label), bx + bw / 2, base + 11, { align: 'center' });
+    if (!n) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x, y + 28); return; }
+    var noteRows = 0;
+    items.forEach(function (it) { noteRows = Math.max(noteRows, (it.notes || []).length); });
+    var slot = w / n, bw = Math.min(slot * 0.62, 38), narrow = slot < 24;
+    var top = y + 16, base = y + h - 24 - noteRows * 8.5 - 4;
+    var max = Math.max.apply(null, items.map(function (i) { return i.v; })) || 1;
+    var ph = base - top - 8;
+    for (var i = 0; i < n; i++) {
+      var it = items[i], cx = x + slot * i + slot / 2, bx = cx - bw / 2;
+      if (it.kind === 'zero' || it.kind === 'hol') {
+        var zc = it.kind === 'zero' ? ASH : HOL;
+        this.fill(it.kind === 'zero' ? ASH_T : HOL_T); d.roundedRect(x + slot * i + 1, top - 6, slot - 2, base - top + 8, 2.5, 2.5, 'F');
+        this.fill(zc); d.rect(bx, base - 2, bw, 2, 'F');
+        this.color(zc); this.font(narrow || it.kind === 'zero' ? 7.5 : 6.5, true);
+        d.text(it.kind === 'zero' ? fmtV(0, narrow) : (slot >= 30 ? 'Feriado' : 'F'), cx, base - 7, { align: 'center' });
+      } else {
+        var bh = Math.max(1.5, ph * it.v / max);
+        this.fill(color); d.rect(bx, base - bh, bw, bh, 'F');
+        this.color(C.text); this.font(narrow ? 6 : 7, false);
+        d.text(fmtV(it.v, narrow), cx, base - bh - 2.5, { align: 'center' });
       }
+      var lc = it.kind === 'zero' ? ASH : (it.kind === 'hol' || it.holWithData ? HOL : C.muted), bold = it.kind !== 'ok' || it.holWithData;
+      this.color(lc); this.font(narrow ? 6.5 : 7.5, bold); d.text(it.l1, cx, base + 10, { align: 'center' });
+      if (it.l2) { this.color(C.muted); this.font(narrow ? 5.5 : 6.5, false); d.text(it.l2, cx, base + 19, { align: 'center' }); }
+      (it.notes || []).forEach(function (nt, j) { this.color(nt[1]); this.font(6.5, true); d.text(nt[0], cx, base + 29 + j * 8.5, { align: 'center' }); }, this);
     }
-    return base + 16;
+    this.stroke(C.line); d.setLineWidth(0.5); d.line(x, base, x + w, base);
   };
 
-  Pdf.prototype.table = function (x, y, w, title, head, cols, rows) {
-    var d = this.doc, rowH = 17;
-    this.color(C.text); this.font(11, true); d.text(title, x, y);
-    y += 8;
-    this.fill('#eaf1ef'); d.rect(x, y, w, rowH, 'F');
-    this.color('#3f5550'); this.font(7.5, true);
-    head.forEach(function (h, i) { d.text(h.toUpperCase(), cols[i].x + (cols[i].right ? cols[i].w : 0) + 6 * (cols[i].right ? -1 : 1), y + 11.5, { align: cols[i].right ? 'right' : 'left' }); });
-    y += rowH;
-    var self = this;
-    if (!rows.length) { this.color(C.muted); this.font(9, false); d.text('Sin datos', x + 6, y + 13); return y + rowH; }
-    rows.forEach(function (r, ri) {
-      if (ri % 2) { self.fill('#f7faf9'); d.rect(x, y, w, rowH, 'F'); }
-      self.color(C.text); self.font(8, false);
-      r.forEach(function (cell, i) {
-        var c = cols[i];
-        d.text(self.fit(cell, c.w - 12), c.x + (c.right ? c.w - 6 : 6), y + 11.5, { align: c.right ? 'right' : 'left' });
-      });
-      y += rowH;
-    });
-    self.stroke(C.line); d.setLineWidth(0.6); d.line(x, y, x + w, y);
-    return y;
+  /** Texto con tramos de distinto estilo en una línea. runs: [{t, bold, color}] */
+  Pdf.prototype.runs = function (x, y, runs) {
+    var d = this.doc;
+    runs.forEach(function (r) {
+      this.color(r.color || C.muted); this.font(8, !!r.bold); d.text(r.t, x, y);
+      x += d.getTextWidth(r.t);
+    }, this);
+  };
+
+  Pdf.prototype.legend = function (xRight, y) {
+    var d = this.doc, items = [['Feriado', HOL, HOL_T], ['Día sin producción (0)', ASH, ASH_T]], x = xRight;
+    this.font(8, false);
+    items.forEach(function (it) {
+      var tw = d.getTextWidth(it[0]);
+      x -= tw; this.color(C.muted); d.text(it[0], x, y);
+      x -= 14; this.fill(it[2]); this.stroke(it[1]); d.setLineWidth(0.7); d.roundedRect(x, y - 7, 9, 9, 1.5, 1.5, 'FD');
+      x -= 14;
+    }, this);
   };
 
   /* ---------- Informe ---------- */
 
-  function top(list, labelKey, n) {
-    return (list || []).slice(0, n).map(function (r) { return { label: String(r[labelKey] == null ? '' : r[labelKey]), value: num(r.piezas) }; });
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function isoOf(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function parseIso(s) { var m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function isoWeek(d) {
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  }
+  function mondayOf(d) { return addDays(d, -((d.getDay() + 6) % 7)); }
+
+  /** Un renglón por día natural del rango, con producción, feriado y si es lunes-viernes. */
+  function buildDays(data, desde, hasta) {
+    var P = {}, O = {}, Cst = {}, H = {};
+    (data.porFecha || []).forEach(function (r) { var k = String(r.fecha || '').slice(0, 10); P[k] = (P[k] || 0) + num(r.piezas); Cst[k] = (Cst[k] || 0) + num(r.costo); });
+    (data.porFechaOps || []).forEach(function (r) { var k = String(r.fecha || '').slice(0, 10); O[k] = (O[k] || 0) + num(r.operaciones); });
+    (data.feriados || []).forEach(function (h) { H[String(h.fecha || '').slice(0, 10)] = h.descripcion || 'Feriado'; });
+    var days = [], s = parseIso(desde), e = parseIso(hasta);
+    if (!s || !e || e < s) return days;
+    for (var i = 0; i < 800; i++) {
+      var d = addDays(s, i);
+      if (d > e) break;
+      var k = isoOf(d), wd = d.getDay();
+      days.push({ iso: k, date: d, weekday: wd >= 1 && wd <= 5, hol: H.hasOwnProperty(k), p: P[k] || 0, o: O[k] || 0, c: Cst[k] || 0, has: (P[k] || 0) > 0 || (O[k] || 0) > 0 || (Cst[k] || 0) > 0 });
+    }
+    return days;
+  }
+
+  function dayKind(d) { return d.has ? 'ok' : (d.hol ? 'hol' : 'zero'); }
+
+  /** Lunes a viernes que se muestran; sábado y domingo solo si tuvieron producción (para que las barras sumen el total). */
+  function shown(days) { return days.filter(function (d) { return d.weekday || d.has; }); }
+
+  function dayCounts(days) {
+    var lab = days.filter(function (d) { return d.weekday && !d.hol; });
+    var con = lab.filter(function (d) { return d.has; }).length;
+    return { lab: lab.length, con: con, sin: lab.length - con, hol: days.filter(function (d) { return d.weekday && d.hol; }).length };
+  }
+
+  function rangeLabel(a, b) {
+    return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
+      ? (a.getDate() === b.getDate() ? a.getDate() + ' ' + MES[a.getMonth()] : a.getDate() + '–' + b.getDate() + ' ' + MES[a.getMonth()])
+      : a.getDate() + ' ' + MES[a.getMonth()] + '–' + b.getDate() + ' ' + MES[b.getMonth()];
+  }
+
+  function groupNotes(group) {
+    var c = dayCounts(group), notes = [];
+    if (c.sin) notes.push([c.sin + (c.sin === 1 ? ' día sin prod.' : ' días sin prod.'), ASH]);
+    if (c.hol) notes.push([c.hol + (c.hol === 1 ? ' feriado' : ' feriados'), HOL]);
+    return notes;
+  }
+
+  /** Series [{l1, l2, v, kind, notes}] por fecha, semana o mes. field: p | o | c */
+  function series(days, mode, field, wide) {
+    if (mode === 'fecha') {
+      return shown(days).map(function (d) {
+        return { l1: wide ? pad2(d.date.getDate()) + '/' + pad2(d.date.getMonth() + 1) : String(d.date.getDate()), l2: wide ? DOW3[d.date.getDay()] : DOW1[d.date.getDay()], v: d[field], kind: dayKind(d), holWithData: d.hol && d.has };
+      });
+    }
+    var groups = [], idx = {};
+    days.forEach(function (d) {
+      var key = mode === 'semana' ? isoOf(mondayOf(d.date)) : d.date.getFullYear() + '-' + pad2(d.date.getMonth() + 1);
+      if (!idx.hasOwnProperty(key)) { idx[key] = groups.length; groups.push({ key: key, days: [] }); }
+      groups[idx[key]].days.push(d);
+    });
+    return groups.filter(function (g) { return shown(g.days).length; }).map(function (g) {
+      var sh = shown(g.days), ref = sh.length ? sh : g.days, first = ref[0].date, last = ref[ref.length - 1].date;
+      var v = g.days.reduce(function (s, d) { return s + d[field]; }, 0);
+      var it = mode === 'semana'
+        ? { l1: 'Sem ' + isoWeek(first), l2: rangeLabel(first, last) }
+        : { l1: MES[first.getMonth()].charAt(0).toUpperCase() + MES[first.getMonth()].slice(1) + ' ' + first.getFullYear(), l2: '' };
+      it.v = v; it.kind = v > 0 ? 'ok' : 'zero'; it.notes = groupNotes(g.days);
+      return it;
+    });
+  }
+
+  function top(list, labelKey, field, n) {
+    return (list || []).slice().sort(function (a, b) { return num(b[field]) - num(a[field]); }).slice(0, n).map(function (r) { return { label: String(r[labelKey] == null ? '' : r[labelKey]), value: num(r[field]) }; });
   }
 
   function build(jsPDF, logo, data, filters) {
-    var p = new Pdf(jsPDF, logo), d = p.doc, M = p.M, W = p.W;
+    var p = new Pdf(jsPDF, logo), d = p.doc, M = p.M, W = p.W, H = p.H;
     var k = data.kpis || {};
-    var fechas = (data.porFecha || []).map(function (r) { return String(r.fecha || ''); }).filter(Boolean).sort();
+    var fechas = (data.porFecha || []).map(function (r) { return String(r.fecha || '').slice(0, 10); }).filter(Boolean).sort();
     var desde = ($('desde') && $('desde').value) || fechas[0] || '';
     var hasta = ($('hasta') && $('hasta').value) || fechas[fechas.length - 1] || '';
-    var rango = desde || hasta ? 'Rango de fechas: ' + (dmy(desde) || '—') + ' - ' + (dmy(hasta) || '—') : 'Rango de fechas: sin registros';
+    if (desde && !hasta) hasta = fechas[fechas.length - 1] || desde;
+    if (hasta && !desde) desde = fechas[0] || hasta;
+    var s = parseIso(desde), e = parseIso(hasta);
+    var nDays = s && e && e >= s ? Math.round((new Date(e.getFullYear(), e.getMonth(), e.getDate()) - new Date(s.getFullYear(), s.getMonth(), s.getDate())) / 86400000) + 1 : 0;
+    var mode = nDays <= 1 ? 'dia' : (nDays < 28 ? 'fecha' : (nDays <= 92 ? 'semana' : 'mes'));
+    var rango;
+    if (!s || !e) rango = 'Rango de fechas: sin registros';
+    else if (mode === 'dia') rango = 'Fecha: ' + dmy(desde);
+    else if (s.getDate() === 1 && e.getMonth() === s.getMonth() && e.getFullYear() === s.getFullYear() && e.getDate() === new Date(e.getFullYear(), e.getMonth() + 1, 0).getDate())
+      rango = 'Mes: ' + MES_L[s.getMonth()] + ' ' + s.getFullYear() + ' (' + dmy(desde) + ' - ' + dmy(hasta) + ')';
+    else rango = 'Rango de fechas: ' + dmy(desde) + ' - ' + dmy(hasta);
     var title = 'Informe Producción Costura';
-    var colW = (W - 2 * M - 24) / 2;
-
-    function firstOf(list, key) { var r = (list || [])[0]; return r ? { name: String(r[key] == null ? '' : r[key]), piezas: num(r.piezas) } : null; }
-    /* Página 1: encabezado, 4 indicadores y barras en dos columnas */
     p.header(title, rango);
 
-    var cw = (W - 2 * M - 3 * 12) / 4;
-    function cardX(i) { return M + i * (cw + 12); }
+    var days = mode === 'dia' ? [] : buildDays(data, desde, hasta);
     var ops = k.operacionesRealizadas !== undefined ? k.operacionesRealizadas : k.piezas;
     var noProg = num(k.cortesSinPrograma);
-    p.card(cardX(0), 84, cw, 62, 'Operaciones', nf.format(num(ops)), 'Operaciones realizadas');
-    p.card(cardX(1), 84, cw, 62, 'Piezas', nf.format(num(k.piezas)), noProg ? 'Piezas trabajadas · ' + noProg + ' corte(s) sin programa' : 'Piezas trabajadas');
-    p.card(cardX(2), 84, cw, 62, 'Costo total', money.format(num(k.costoTotal)), 'Costo de destajo');
-    p.card(cardX(3), 84, cw, 62, 'Estilos', nf.format(num(k.estilos)), 'Estilos trabajados');
 
-    p.hbars(M, 176, colW, 'Producción por estilo (piezas)', top(data.porEstilo, 'estilo', 6), '', PAL[0]);
-    p.hbars(M + colW + 24, 176, colW, 'Producción por operador (piezas)', top(data.porOperador, 'operador', 6), '', PAL[1]);
-    p.hbars(M, 344, colW, 'Producción por máquina (piezas)', top(data.porMaquina, 'maquina', 6), '', PAL[2]);
-    p.hbars(M + colW + 24, 344, colW, 'Producción por operación (piezas)', top(data.porOperacion, 'operacion', 6), '', PAL[3]);
+    /* Línea de resumen / leyenda */
+    var ly = 83;
+    if (mode === 'semana' || mode === 'mes') {
+      var c = dayCounts(days);
+      p.runs(M, ly, [{ t: 'Días laborables: ' }, { t: String(c.lab), bold: true, color: C.text }, { t: '   ·   Con producción: ' }, { t: String(c.con), bold: true, color: C.text },
+        { t: '   ·   Sin producción: ', color: ASH, bold: true }, { t: String(c.sin), bold: true, color: ASH }, { t: '   ·   Feriados: ', color: HOL, bold: true }, { t: String(c.hol), bold: true, color: HOL }]);
+    }
+    if (mode !== 'dia') p.legend(W - M, ly);
 
-    /* Página 2 */
-    d.addPage(); p.header(title, rango);
-    p.hbars(M, 96, colW, 'Principales cortes (piezas)', (data.porCorte || []).slice(0, 10).map(function (r) { return { label: String(r.corte == null ? '' : r.corte), value: num(r.piezas) }; }), '', PAL[4]);
-    var fe = (data.porFecha || []).slice(-10).map(function (r) { return { label: dmy(r.fecha), value: num(r.piezas) }; });
-    p.hbars(M + colW + 24, 96, colW, 'Producción por fecha (piezas)', fe, '', PAL[5]);
+    var top0 = mode === 'dia' ? 82 : 94, gap = 12, pw = (W - 2 * M - 18) / 2, ph = (H - 40 - top0 - gap) / 2;
+    function px(i) { return M + (i % 2) * (pw + 18); }
+    function py(i) { return top0 + Math.floor(i / 2) * (ph + gap); }
+    function panel(i, label, value, note) {
+      var x = px(i), y = py(i);
+      p.fill('#ffffff'); p.stroke(C.line); d.setLineWidth(0.8); d.roundedRect(x, y, pw, ph, 5, 5, 'FD');
+      p.color(C.muted); p.font(7.5, false); d.text(String(label).toUpperCase(), x + 14, y + 17);
+      p.color(C.text); p.font(21, true); d.text(p.fit(value, pw - 28), x + 14, y + 41);
+      p.color(C.muted); p.font(7.5, false); d.text(p.fit(note, pw - 28), x + 14, y + 53);
+      p.stroke(C.line); d.setLineWidth(0.6); d.line(x + 14, y + 60, x + pw - 14, y + 60);
+      return { x: x + 14, y: y + 76, w: pw - 28, h: ph - 76 - 6 };
+    }
+    var moneyRound = function (v, narrow) { return '$' + nf.format(Math.round(v)).replace(narrow ? /,/g : /^$/, ''); };
+    var intV = function (v, narrow) { var r = Math.round(v); return narrow ? String(r) : nf.format(r); };
+    var costV = function (v, narrow) { return moneyRound(v, narrow); };
+
+    var a = panel(0, 'Piezas', nf.format(num(k.piezas)), noProg ? 'Piezas trabajadas · ' + noProg + ' corte(s) sin programa' : 'Piezas trabajadas');
+    var b = panel(1, 'Costo total', money.format(num(k.costoTotal)), 'Costo de destajo');
+    var o = panel(2, 'Operaciones', nf.format(num(ops)), 'Operaciones realizadas');
+    var st = panel(3, 'Estilos', nf.format(num(k.estilos)), 'Estilos trabajados');
+
+    if (mode === 'dia') {
+      p.hbars(a.x, a.y, a.w, 'Piezas por operador', top(data.porOperador, 'operador', 'piezas', 6), '', PAL.piezas);
+      p.hbars(b.x, b.y, b.w, 'Costo de destajo por operador', top(data.porOperador, 'operador', 'costo', 6), '', PAL.costo, function (v) { return money.format(v); });
+      p.hbars(o.x, o.y, o.w, 'Operaciones por tipo de operación', top(data.porOperacion, 'operacion', 'piezas', 6), '', PAL.ops);
+    } else {
+      var by = mode === 'fecha' ? 'fecha' : (mode === 'semana' ? 'semana' : 'mes'), wide = mode === 'fecha' && (a.w / Math.max(1, shown(days).length)) >= 30;
+      p.cols(a.x, a.y, a.w, a.h, 'Piezas por ' + by, series(days, mode, 'p', wide), PAL.piezas, intV);
+      p.cols(b.x, b.y, b.w, b.h, 'Costo de destajo por ' + by, series(days, mode, 'c', wide), PAL.costo, costV);
+      p.cols(o.x, o.y, o.w, o.h, 'Operaciones por ' + by, series(days, mode, 'o', wide), PAL.ops, intV);
+    }
+    p.hbars(st.x, st.y, st.w, 'Piezas por estilo', top(data.porEstilo, 'estilo', 'piezas', 6), '', PAL.estilos);
 
     var now = new Date();
     p.footers(now.toLocaleDateString('es-MX') + ', ' + now.toLocaleTimeString('es-MX'));
