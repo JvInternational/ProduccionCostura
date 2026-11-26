@@ -516,35 +516,82 @@
     return list.filter(function (x) { return x.estado === 'PEND' && (!who || x.personal === who); });
   }
 
+  /* ---------- Ventana central: pide el supervisor que autoriza ---------- */
+
+  var MODAL = { done: null };
+
+  function closeModal(val) {
+    g('dz-modal').hidden = true;
+    var d = MODAL.done; MODAL.done = null;
+    if (d) d(val);
+  }
+
+  /** Muestra la ventana al centro. o: { title, html, okText, motivo (true = pide motivo), motivos[], motivoSel }. Resuelve { sup, motivo } o null. */
+  function askSup(o) {
+    return new Promise(function (resolve) {
+      if (MODAL.done) closeModal(null);
+      g('dz-m-title').textContent = o.title;
+      g('dz-m-sum').innerHTML = o.html;
+      g('dz-m-ok').textContent = o.okText || 'Confirmar';
+      g('dz-m-err').textContent = '';
+      var mb = g('dz-m-mot-box');
+      mb.hidden = !o.motivo;
+      if (o.motivo) {
+        g('dz-m-mot').innerHTML = '<option value="">Selecciona el motivo…</option>' + (o.motivos || []).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('');
+        g('dz-m-mot').value = o.motivoSel || '';
+      }
+      var saved = ''; try { saved = sessionStorage.getItem('jv_sup') || ''; } catch (e) {}
+      g('dz-m-sup').value = saved;
+      MODAL.done = resolve;
+      g('dz-modal').hidden = false;
+      setTimeout(function () { var f = (o.motivo && !g('dz-m-mot').value) ? g('dz-m-mot') : g('dz-m-sup'); f.focus(); if (f === g('dz-m-sup')) f.select(); }, 30);
+    });
+  }
+
+  function modalOk() {
+    var sup = g('dz-m-sup').value.trim(), withMot = !g('dz-m-mot-box').hidden, mot = withMot ? g('dz-m-mot').value : '';
+    if (withMot && !mot) { g('dz-m-err').textContent = 'Selecciona el motivo de la ausencia.'; g('dz-m-mot').focus(); return; }
+    if (sup.length < 2) { g('dz-m-err').textContent = 'Escribe el nombre del supervisor que autoriza.'; g('dz-m-sup').focus(); return; }
+    try { sessionStorage.setItem('jv_sup', sup); } catch (e) {}
+    closeModal({ sup: sup, motivo: mot });
+  }
+
   function bulkAuthorize() {
-    var sup = g('dz-sup').value.trim(), items = pendientes(), who = g('dz-bulk-p').value;
-    if (sup.length < 2) { msg('Escribe el nombre del supervisor que autoriza.', false); g('dz-sup').focus(); return; }
+    var items = pendientes(), who = g('dz-bulk-p').value;
     if (!items.length) { msg('No hay días pendientes para autorizar.', false); return; }
     if (items.length > 500) { msg('Máximo 500 días por autorización. Autoriza por persona o reduce el rango.', false); return; }
-    var total = items.reduce(function (s, x) { return s + num(x.pagoDia) - num(x.prod); }, 0);
-    if (!window.confirm('¿Autorizar ' + items.length + (items.length === 1 ? ' día pendiente' : ' días pendientes') + (who ? ' de ' + who : ' de todas las personas') + '?\n\nSe pagará el pago por día completo en cada uno (pago adicional al destajo: ' + money.format(total) + ').\nAutoriza: ' + sup)) return;
-    try { sessionStorage.setItem('jv_sup', sup); } catch (e) {}
-    var btn = g('dz-bulk-go'); btn.disabled = true;
-    req0('saveIncidenciasLote', { gpin: pin(), autoriza: sup, items: items.map(function (x) { return { fecha: x.fecha, personal: x.personal }; }) }, true).then(function (r) {
-      if (typeof logChange === 'function') logChange('saveIncidenciasLote', { autoriza: sup, personal: who || 'TODAS', dias: r.autorizados, desde: S.data.desde, hasta: S.data.hasta });
-      return query().then(function (ok) { if (ok) msg('Pago del día autorizado en ' + r.autorizados + (r.autorizados === 1 ? ' día' : ' días') + (r.omitidos ? ' (' + r.omitidos + ' omitidos)' : '') + '.', true); });
-    }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
+    var extra = items.reduce(function (s, x) { return s + num(x.pagoDia) - num(x.prod); }, 0);
+    askSup({
+      title: 'Autorizar ' + items.length + (items.length === 1 ? ' día pendiente' : ' días pendientes'),
+      html: '<b>' + esc(who || 'Todas las personas') + '</b> · ' + dmy(S.data.desde) + ' - ' + dmy(S.data.hasta) + '<br>Se pagará el pago por día completo en cada uno.<br>Pago adicional al destajo: <b>' + money.format(extra) + '</b>',
+      okText: 'Autorizar ' + items.length
+    }).then(function (r) {
+      if (!r) return;
+      var btn = g('dz-bulk-go'); btn.disabled = true;
+      req0('saveIncidenciasLote', { gpin: pin(), autoriza: r.sup, items: items.map(function (x) { return { fecha: x.fecha, personal: x.personal }; }) }, true).then(function (res) {
+        if (typeof logChange === 'function') logChange('saveIncidenciasLote', { autoriza: r.sup, personal: who || 'TODAS', dias: res.autorizados, desde: S.data.desde, hasta: S.data.hasta });
+        return query().then(function (ok) { if (ok) msg('Pago del día autorizado en ' + res.autorizados + (res.autorizados === 1 ? ' día' : ' días') + (res.omitidos ? ' (' + res.omitidos + ' omitidos)' : '') + '.', true); });
+      }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
+    });
   }
 
   function incAction(btn) {
-    var a = btn.dataset.a, fecha = btn.dataset.f, personal = btn.dataset.p, sup = g('dz-sup').value.trim();
-    if (sup.length < 2) { msg('Escribe el nombre del supervisor que autoriza.', false); g('dz-sup').focus(); return; }
-    var tipo = a === 'aus' ? 'AUSENCIA' : (a === 'comp' ? 'COMPLEMENTO' : ''), motivo = '';
-    if (a === 'aus') {
-      var sel = btn.parentNode.querySelector('.inc-mot'); motivo = sel ? sel.value : '';
-      if (!motivo) { msg('Selecciona el motivo de la ausencia.', false); if (sel) sel.focus(); return; }
-    }
-    try { sessionStorage.setItem('jv_sup', sup); } catch (e) {}
-    btn.disabled = true;
-    req0('saveIncidencia', { gpin: pin(), fecha: fecha, personal: personal, tipo: tipo, motivo: motivo, autoriza: sup }, true).then(function () {
-      if (typeof logChange === 'function') logChange('saveIncidencia', { fecha: fecha, personal: personal, tipo: tipo || 'QUITAR', motivo: motivo, autoriza: sup });
-      return query().then(function (ok) { if (ok) msg(tipo === 'AUSENCIA' ? 'Ausencia registrada: no se paga el día.' : (tipo === 'COMPLEMENTO' ? 'Pago del día autorizado.' : 'Incidencia quitada.'), true); });
-    }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
+    var a = btn.dataset.a, fecha = btn.dataset.f, personal = btn.dataset.p;
+    var it = ((S.data && S.data.pago && S.data.pago.incidencias) || []).filter(function (x) { return x.fecha === fecha && x.personal === personal; })[0] || { prod: 0, pagoDia: 0 };
+    var tipo = a === 'aus' ? 'AUSENCIA' : (a === 'comp' ? 'COMPLEMENTO' : '');
+    var who = '<b>' + esc(personal) + '</b> · ' + dmy(fecha) + ' ' + dowOf(fecha) + '<br>';
+    var o;
+    if (a === 'comp') o = { title: 'Autorizar pago del día', okText: 'Autorizar', html: who + (num(it.prod) ? 'Producido ' + money.format(num(it.prod)) + ' + complemento ' + money.format(num(it.pagoDia) - num(it.prod)) + ' = <b>' + money.format(num(it.pagoDia)) + '</b>' : 'Día sin producción: se pagará el pago por día de <b>' + money.format(num(it.pagoDia)) + '</b>') };
+    else if (a === 'aus') { var sel = btn.parentNode.querySelector('.inc-mot'); o = { title: 'Registrar ausencia', okText: 'Registrar ausencia', html: who + 'No se pagará el día.', motivo: true, motivos: (S.data.pago && S.data.pago.motivos) || [], motivoSel: sel ? sel.value : '' }; }
+    else o = { title: it.estado === 'AUS' ? 'Quitar ausencia' : 'Quitar autorización', okText: 'Quitar', html: who + 'El día volverá a <b>pendiente de autorización</b> y no se pagará hasta que se autorice de nuevo.' };
+    askSup(o).then(function (r) {
+      if (!r) return;
+      btn.disabled = true;
+      req0('saveIncidencia', { gpin: pin(), fecha: fecha, personal: personal, tipo: tipo, motivo: r.motivo, autoriza: r.sup }, true).then(function () {
+        if (typeof logChange === 'function') logChange('saveIncidencia', { fecha: fecha, personal: personal, tipo: tipo || 'QUITAR', motivo: r.motivo, autoriza: r.sup });
+        return query().then(function (ok) { if (ok) msg(tipo === 'AUSENCIA' ? 'Ausencia registrada: no se paga el día.' : (tipo === 'COMPLEMENTO' ? 'Pago del día autorizado.' : 'Incidencia quitada: el día quedó pendiente.'), true); });
+      }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
+    });
   }
 
   function query() {
@@ -615,7 +662,10 @@
     g('dz-sem').addEventListener('change', function () { var v = g('dz-sem').value; if (!v) return; var q = v.split('|'); g('dz-desde').value = q[0]; g('dz-hasta').value = q[1]; if (pin()) query(); });
     ['dz-desde', 'dz-hasta'].forEach(function (id) { g(id).addEventListener('change', function () { g('dz-sem').value = ''; }); });
     g('dz-go').addEventListener('click', query);
-    try { g('dz-sup').value = sessionStorage.getItem('jv_sup') || ''; } catch (e) {}
+    g('dz-m-ok').addEventListener('click', modalOk);
+    g('dz-m-cancel').addEventListener('click', function () { closeModal(null); });
+    g('dz-modal').addEventListener('mousedown', function (ev) { if (ev.target === g('dz-modal')) closeModal(null); });
+    g('dz-modal').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeModal(null); } else if (ev.key === 'Enter' && ev.target.tagName !== 'BUTTON') { ev.preventDefault(); modalOk(); } });
     g('dz-bulk-p').addEventListener('change', function () { renderBulk((S.data && S.data.pago && S.data.pago.incidencias) || []); });
     g('dz-bulk-go').addEventListener('click', bulkAuthorize);
     g('dz-inc-rows').addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('button[data-a]'); if (b && !b.disabled) incAction(b); });
