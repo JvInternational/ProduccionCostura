@@ -458,7 +458,18 @@
     g('dz-empty').hidden = !!ops.length;
     g('dz-range').textContent = dmy(d.desde) + ' - ' + dmy(d.hasta);
     g('dz-note').hidden = !!nd;
+    payNote(d, on);
     renderInc(d, on);
+  }
+
+  /** Aviso sobre el estado del pago por día (para saber por qué no aparece, o si falta actualizar Apps Script). */
+  function payNote(d, on) {
+    var n = g('dz-pay-note'), txt = '', err = false, p = d.pago;
+    if (!p) { txt = 'Pago por día no disponible: falta actualizar Destajo.gs y PagoDia.gs en Apps Script y publicar una Nueva versión. Mientras tanto se muestra solo el destajo producido.'; err = true; }
+    else if (p.error) { txt = 'No se pudo calcular el pago por día: ' + p.error; err = true; }
+    else if (p.omitido) { txt = 'El rango supera 400 días: el pago por día no se calcula. Elige un rango menor.'; }
+    else if (!p.configurado) { txt = 'Pago por día sin configurar: captura el monto en Administración › Personal.'; }
+    n.hidden = !txt || on; n.textContent = txt; n.classList.toggle('err', err);
   }
 
   /* ---------- Pago por día: incidencias (ausencias y autorizaciones del supervisor) ---------- */
@@ -480,6 +491,44 @@
       return '<tr><td>' + dmy(x.fecha) + ' <span class="inc-note">' + dowOf(x.fecha) + '</span></td><td><b>' + esc(x.personal) + '</b></td><td class="num">' + money.format(num(x.prod)) + '</td><td class="num">' + money.format(num(x.pagoDia)) + '</td><td><span class="st ' + cls + '">' + esc(ESTADO[x.estado] || x.estado) + '</span></td><td>' + act + '</td></tr>';
     }).join('');
     g('dz-inc-empty').hidden = !!list.length;
+    renderBulk(list);
+  }
+
+  /** Selector de persona + botón para autorizar de una vez todos los días pendientes. */
+  function renderBulk(list) {
+    var sel = g('dz-bulk-p'), keep = sel.value, by = {}, total = 0;
+    list.forEach(function (x) { if (x.estado === 'PEND') { by[x.personal] = (by[x.personal] || 0) + 1; total++; } });
+    var names = Object.keys(by).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+    sel.innerHTML = '<option value="">Todas las personas · todo el rango (' + total + ')</option>' + names.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + ' (' + by[n] + ')</option>'; }).join('');
+    if (keep && by[keep]) sel.value = keep;
+    updateBulk(by, total);
+  }
+
+  function updateBulk(by, total) {
+    var sel = g('dz-bulk-p'), n = sel.value ? (by[sel.value] || 0) : total;
+    g('dz-bulk-go').disabled = !n;
+    g('dz-bulk-go').textContent = n ? 'Autorizar ' + n + (n === 1 ? ' pendiente' : ' pendientes') : 'Autorizar pendientes';
+    g('dz-bulk-n').textContent = total ? 'Se paga el pago por día completo en cada día autorizado.' : 'No hay días pendientes de autorización.';
+  }
+
+  function pendientes() {
+    var who = g('dz-bulk-p').value, list = (S.data && S.data.pago && S.data.pago.incidencias) || [];
+    return list.filter(function (x) { return x.estado === 'PEND' && (!who || x.personal === who); });
+  }
+
+  function bulkAuthorize() {
+    var sup = g('dz-sup').value.trim(), items = pendientes(), who = g('dz-bulk-p').value;
+    if (sup.length < 2) { msg('Escribe el nombre del supervisor que autoriza.', false); g('dz-sup').focus(); return; }
+    if (!items.length) { msg('No hay días pendientes para autorizar.', false); return; }
+    if (items.length > 500) { msg('Máximo 500 días por autorización. Autoriza por persona o reduce el rango.', false); return; }
+    var total = items.reduce(function (s, x) { return s + num(x.pagoDia) - num(x.prod); }, 0);
+    if (!window.confirm('¿Autorizar ' + items.length + (items.length === 1 ? ' día pendiente' : ' días pendientes') + (who ? ' de ' + who : ' de todas las personas') + '?\n\nSe pagará el pago por día completo en cada uno (pago adicional al destajo: ' + money.format(total) + ').\nAutoriza: ' + sup)) return;
+    try { sessionStorage.setItem('jv_sup', sup); } catch (e) {}
+    var btn = g('dz-bulk-go'); btn.disabled = true;
+    req0('saveIncidenciasLote', { gpin: pin(), autoriza: sup, items: items.map(function (x) { return { fecha: x.fecha, personal: x.personal }; }) }, true).then(function (r) {
+      if (typeof logChange === 'function') logChange('saveIncidenciasLote', { autoriza: sup, personal: who || 'TODAS', dias: r.autorizados, desde: S.data.desde, hasta: S.data.hasta });
+      return query().then(function (ok) { if (ok) msg('Pago del día autorizado en ' + r.autorizados + (r.autorizados === 1 ? ' día' : ' días') + (r.omitidos ? ' (' + r.omitidos + ' omitidos)' : '') + '.', true); });
+    }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
   }
 
   function incAction(btn) {
@@ -567,6 +616,8 @@
     ['dz-desde', 'dz-hasta'].forEach(function (id) { g(id).addEventListener('change', function () { g('dz-sem').value = ''; }); });
     g('dz-go').addEventListener('click', query);
     try { g('dz-sup').value = sessionStorage.getItem('jv_sup') || ''; } catch (e) {}
+    g('dz-bulk-p').addEventListener('change', function () { renderBulk((S.data && S.data.pago && S.data.pago.incidencias) || []); });
+    g('dz-bulk-go').addEventListener('click', bulkAuthorize);
     g('dz-inc-rows').addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('button[data-a]'); if (b && !b.disabled) incAction(b); });
     g('dz-xlsx').addEventListener('click', exportXlsx);
     g('dz-pdf').addEventListener('click', exportPdf);
