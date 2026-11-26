@@ -194,6 +194,10 @@
   function dowOf(iso) { var a = iso.split('-').map(Number); return DOW[new Date(Date.UTC(a[0], a[1] - 1, a[2])).getUTCDay()]; }
   function shortDate(iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7); }
   function serial(iso) { var a = iso.split('-').map(Number); return Date.UTC(a[0], a[1] - 1, a[2]) / 86400000 + 25569; }
+  /** ¿Hay pago por día configurado (algún monto > 0) y calculado para este rango? */
+  function payOn(d) { return !!(d && d.pago && d.pago.habilitado && d.pago.configurado && d.total && d.total.pagar !== undefined); }
+  var ESTADO = { DIA: 'Día sin producción · pago autorizado', PEND: 'Pendiente de autorización', AUS: 'Ausencia · no se paga', COMP: 'Complemento autorizado' };
+  function adicional(x) { return x.estado === 'DIA' ? num(x.pagoDia) : (x.estado === 'COMP' ? Math.round((num(x.pagoDia) - num(x.prod)) * 100) / 100 : 0); }
   var MAXCOLS = 31;   /* días con columna propia en vista previa y Excel */
   var MAXPDF = 14;    /* días con columna propia en el PDF */
 
@@ -268,13 +272,14 @@
 
     /* ---- Hoja 1: Destajo por operador (misma información que la vista previa) ---- */
     var cells = [], H = 5, first = H + 1, last = H + n, tot = last + 1;
-    var cOps = 1, cD0 = 2, cTot = 2 + nd, cPct = 3 + nd, nCols = 4 + nd;
+    var pay = payOn(d), cOps = 1, cD0 = 2, cTot = 2 + nd, cPct = 3 + nd, cP1 = 4 + nd, cP2 = 5 + nd, cP3 = 6 + nd, nCols = (pay ? 7 : 4) + nd;
     function put(r, c, v, s, f) { cells.push({ r: r, c: c, v: v, s: s, f: f }); }
     for (var i = 0; i < nCols; i++) put(1, i, i ? null : 'JV INTERNATIONAL SOLUTIONS INC. · INFORME DE DESTAJO', 1);
     put(2, 0, rango, 2); put(3, 0, gen, 2);
     put(H, 0, 'Operador', 3); put(H, cOps, 'Operaciones', 3);
     days.slice(0, nd).forEach(function (x, k) { put(H, cD0 + k, dowOf(x) + '\n' + shortDate(x), 3); });
     put(H, cTot, 'Total', 3); put(H, cPct, '% del costo', 3);
+    if (pay) { put(H, cP1, 'Pago por días sin producción (autorizados)', 3); put(H, cP2, 'Complemento autorizado', 3); put(H, cP3, 'Total a pagar', 3); }
     var grand = d.total.costo || 0;
     ops.forEach(function (o, k) {
       var r = first + k;
@@ -282,12 +287,14 @@
       days.slice(0, nd).forEach(function (x, j) { var v = (o.fechas || {})[x]; put(r, cD0 + j, v == null ? null : v, 6); });
       if (nd) put(r, cTot, o.costo, 6, 'SUM(' + colL(cD0) + r + ':' + colL(cD0 + nd - 1) + r + ')'); else put(r, cTot, o.costo, 6);
       put(r, cPct, grand ? o.costo / grand : 0, 7, 'IF($' + colL(cTot) + '$' + tot + '=0,0,' + colL(cTot) + r + '/$' + colL(cTot) + '$' + tot + ')');
+      if (pay) { put(r, cP1, num(o.pagoDiasSinProd), 6); put(r, cP2, num(o.complemento), 6); put(r, cP3, num(o.pagar), 6, colL(cTot) + r + '+' + colL(cP1) + r + '+' + colL(cP2) + r); }
     });
     function colSum(c) { return n ? 'SUM(' + colL(c) + first + ':' + colL(c) + last + ')' : '0'; }
     put(tot, 0, 'TOTAL', 8); put(tot, cOps, d.total.operaciones, 9, colSum(cOps));
     days.slice(0, nd).forEach(function (x, j) { put(tot, cD0 + j, (d.total.fechas || {})[x] || 0, 10, colSum(cD0 + j)); });
     put(tot, cTot, d.total.costo, 10, colSum(cTot)); put(tot, cPct, n ? 1 : 0, 11, n ? colSum(cPct) : '0');
-    var w1 = [34, 14].concat(days.slice(0, nd).map(function () { return 12.5; }), [15, 12]);
+    if (pay) { put(tot, cP1, num(d.total.pagoDiasSinProd), 10, colSum(cP1)); put(tot, cP2, num(d.total.complemento), 10, colSum(cP2)); put(tot, cP3, num(d.total.pagar), 10, colSum(cP3)); }
+    var w1 = [34, 14].concat(days.slice(0, nd).map(function () { return 12.5; }), [15, 12], pay ? [17, 17, 16] : []);
     var m1 = [1, 2, 3].map(function (r) { return 'A' + r + ':' + colL(nCols - 1) + r; });
     var s1 = sheetXml(cells, { widths: w1, merges: m1, freeze: H, freezeCols: 1, heights: { 1: 30, 5: 34 } });
 
@@ -306,15 +313,34 @@
     put2(t2, 5, d.total.registros, 9, sum2('F')); put2(t2, 6, d.total.operaciones, 9, sum2('G')); put2(t2, 7, d.total.costo, 10, sum2('H'));
     var s2 = sheetXml(c2, { widths: [13, 30, 12, 32, 15, 11, 22, 18], merges: ['A1:H1', 'A2:H2', 'A3:H3'], freeze: 4, filter: l2 >= 5 ? 'A4:H' + l2 : null, heights: { 1: 30, 4: 32 } });
 
+    /* ---- Hoja 3 (solo con pago por día): incidencias del rango ---- */
+    var s3 = '', inc = pay ? (d.pago.incidencias || []) : [];
+    if (pay) {
+      var c3 = [], r3 = 5;
+      var put3 = function (r, c, v, s, f) { c3.push({ r: r, c: c, v: v, s: s, f: f }); };
+      for (var j3 = 0; j3 < 8; j3++) put3(1, j3, j3 ? null : 'PAGO POR DÍA · INCIDENCIAS', 1);
+      put3(2, 0, rango, 2); put3(3, 0, 'Generado: ' + now.toLocaleDateString('es-MX') + ' ' + now.toLocaleTimeString('es-MX'), 2);
+      ['Fecha', 'Operador', 'Producido', 'Pago por día', 'Estado', 'Motivo de ausencia', 'Autorizó (supervisor)', 'Pago adicional al destajo'].forEach(function (h, c) { put3(4, c, h, 3); });
+      inc.forEach(function (x) {
+        put3(r3, 0, serial(x.fecha), 15); put3(r3, 1, x.personal, 4); put3(r3, 2, num(x.prod), 6); put3(r3, 3, num(x.pagoDia), 6);
+        put3(r3, 4, ESTADO[x.estado] || x.estado, 4); put3(r3, 5, x.motivo || '', 4); put3(r3, 6, x.autoriza || '', 4); put3(r3, 7, adicional(x), 6); r3++;
+      });
+      var l3 = r3 - 1, t3 = r3;
+      for (var q3 = 0; q3 < 7; q3++) put3(t3, q3, q3 ? null : 'TOTAL', 8);
+      put3(t3, 7, num(d.total.pagoDiasSinProd) + num(d.total.complemento), 10, l3 >= 5 ? 'SUM(H5:H' + l3 + ')' : '0');
+      s3 = sheetXml(c3, { widths: [13, 30, 14, 15, 30, 20, 24, 24], merges: ['A1:H1', 'A2:H2', 'A3:H3'], freeze: 4, filter: l3 >= 5 ? 'A4:H' + l3 : null, heights: { 1: 30, 4: 34 } });
+    }
+
     var files = [
-      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
+      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' + (pay ? '<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' : '') + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
       { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
-      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Destajo por operador" sheetId="1" r:id="rId1"/><sheet name="Detalle por operación" sheetId="2" r:id="rId2"/></sheets>' + (l2 >= 5 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="1" hidden="1">\'Detalle por operación\'!$A$4:$H$' + l2 + '</definedName></definedNames>' : '') + '</workbook>' },
-      { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Destajo por operador" sheetId="1" r:id="rId1"/><sheet name="Detalle por operación" sheetId="2" r:id="rId2"/>' + (pay ? '<sheet name="Pago por día" sheetId="3" r:id="rId4"/>' : '') + '</sheets>' + (l2 >= 5 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="1" hidden="1">\'Detalle por operación\'!$A$4:$H$' + l2 + '</definedName></definedNames>' : '') + '</workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' + (pay ? '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>' : '') + '</Relationships>' },
       { name: 'xl/styles.xml', data: STYLES },
       { name: 'xl/worksheets/sheet1.xml', data: s1 },
       { name: 'xl/worksheets/sheet2.xml', data: s2 }
     ];
+    if (pay) files.push({ name: 'xl/worksheets/sheet3.xml', data: s3 });
     return zip(files);
   }
 
@@ -331,21 +357,31 @@
   function buildPdf(jsPDF, logo, d) {
     var p = new Pdf(jsPDF, logo), doc = p.doc, M = p.M, W = p.W, H = p.H;
     var ops = d.operadores || [], t = d.total || {};
-    var title = 'Informe de Destajo';
+    var title = 'Informe de Destajo', pay = payOn(d);
     var rango = 'Rango de fechas: ' + dmy(d.desde) + ' - ' + dmy(d.hasta);
     var days = dayList(d.desde, d.hasta), nd = days.length <= MAXPDF ? days.length : 0;
     var cents = nd <= 9, fm = function (v) { return v == null || v === '' ? '' : (cents ? money.format(v) : '$' + nf.format(Math.round(v))); };
-    var tw = W - 2 * M, nameW = 150, opsW = 66, totW = 78, pctW = 46;
-    var dateW = nd ? (tw - nameW - opsW - totW - pctW) / nd : 0;
-    if (!nd) { nameW = tw - opsW - totW - pctW; }
+    var tw = W - 2 * M, nameW = 150, opsW = 66, totW = 78, pctW = 46, payW = pay ? 78 : 0;
+    var dateW = nd ? (tw - nameW - opsW - totW - pctW - payW) / nd : 0;
+    if (!nd) { nameW = tw - opsW - totW - pctW - payW; }
     var cols = [{ x: M, w: nameW }, { x: M + nameW, w: opsW, right: 1 }], x = M + nameW + opsW;
     for (var k = 0; k < nd; k++) { cols.push({ x: x, w: dateW, right: 1 }); x += dateW; }
     cols.push({ x: x, w: totW, right: 1 }); cols.push({ x: x + totW, w: pctW, right: 1 });
-    var head = ['Operador', 'Operaciones'].concat(days.slice(0, nd).map(function (z) { return dowOf(z).toUpperCase() + ' ' + shortDate(z); }), ['Total', '% costo']);
+    if (pay) cols.push({ x: x + totW + pctW, w: payW, right: 1 });
+    var head = ['Operador', 'Operaciones'].concat(days.slice(0, nd).map(function (z) { return dowOf(z).toUpperCase() + ' ' + shortDate(z); }), ['Total', '% costo'].concat(pay ? ['A pagar'] : []));
+    /* Marcas del pago por día: * día sin producción pagado · + pago del día autorizado · ! pendiente de autorización · Aus ausencia */
+    function dayTxt(o, z) {
+      var base = fm((o.fechas || {})[z]), e = pay && o.dias ? o.dias[z] : null;
+      if (!e) return base;
+      if (e.estado === 'DIA') return fm(e.pago) + '*';
+      if (e.estado === 'COMP') return fm(e.pago) + '+';
+      if (e.estado === 'PEND') return fm(e.prod) + '!';
+      return (base ? base + ' ' : '') + 'Aus';
+    }
     var rows = ops.map(function (o) {
-      return [o.personal, nf.format(o.operaciones)].concat(days.slice(0, nd).map(function (z) { return fm((o.fechas || {})[z]); }), [fm(o.costo), (t.costo ? o.costo * 100 / t.costo : 0).toFixed(1) + '%']);
+      return [o.personal, nf.format(o.operaciones)].concat(days.slice(0, nd).map(function (z) { return dayTxt(o, z); }), [fm(o.costo), (t.costo ? o.costo * 100 / t.costo : 0).toFixed(1) + '%'], pay ? [fm(num(o.pagar))] : []);
     });
-    var totalRow = ['TOTAL GENERAL', nf.format(num(t.operaciones))].concat(days.slice(0, nd).map(function (z) { return fm((t.fechas || {})[z] || 0); }), [fm(num(t.costo)), ops.length ? '100.0%' : '0.0%']);
+    var totalRow = ['TOTAL GENERAL', nf.format(num(t.operaciones))].concat(days.slice(0, nd).map(function (z) { return fm((t.fechas || {})[z] || 0); }), [fm(num(t.costo)), ops.length ? '100.0%' : '0.0%'], pay ? [fm(num(t.pagar))] : []);
 
     var rowH = 17, bottom = H - 44, i = 0, page = 0, y;
     var fs = nd > 9 ? 6.5 : 8;
@@ -358,7 +394,7 @@
       p.fill('#0d3b36'); doc.rect(M, y, tw, rowH + 5, 'F'); p.color('#ffffff'); p.font(nd > 9 ? 6 : 7.2, true);
       head.forEach(function (h, k) { var c = cols[k]; doc.text(p.fit(h.toUpperCase(), c.w - 6), c.right ? c.x + c.w - 4 : c.x + 4, y + 14, { align: c.right ? 'right' : 'left' }); });
       y += rowH + 5; var n = 0;
-      while (i < rows.length && y + rowH <= bottom - (i === rows.length - 1 ? rowH : 0)) {
+      while (i < rows.length && y + rowH <= bottom - (i === rows.length - 1 ? rowH + (pay ? 16 : 0) : 0)) {
         if (n % 2) { p.fill('#f3f7f6'); doc.rect(M, y, tw, rowH, 'F'); }
         p.color(C.text); p.font(fs, false);
         rows[i].forEach(function (v, k) { cell(v, cols[k], y); });
@@ -368,6 +404,7 @@
         p.fill('#eaf1ef'); doc.rect(M, y, tw, rowH, 'F'); p.color(C.text); p.font(fs, true);
         totalRow.forEach(function (v, k) { cell(v, cols[k], y); });
         y += rowH; p.stroke(C.line); doc.setLineWidth(0.6); doc.line(M, y, W - M, y);
+        if (pay) { p.color(C.muted); p.font(6.8, false); doc.text(nd ? '* Día sin producción con pago autorizado   + Pago por día autorizado (producción menor)   ! Pendiente de autorización (no se paga)   Aus = Ausencia (no se paga)   Feriados validados: no se pagan' : 'A pagar = destajo + días sin producción autorizados + complementos autorizados. Las ausencias y los feriados validados no se pagan.', M, y + 12); }
       }
       page++;
     } while (i < rows.length);
@@ -387,29 +424,78 @@
   function pin() { return window.JVGate ? JVGate.pin() : ''; }
   function badPin(e) { if (/PIN de Gerencia|no está configurado/i.test(e.message) && window.JVGate) { JVGate.lock(e.message); return true; } return false; }
 
+  function dayCell(o, z, on) {
+    var v = (o.fechas || {})[z], e = on && o.dias ? o.dias[z] : null, mon = function (x) { return x == null ? '' : money.format(x); };
+    if (!e) return '<td class="num">' + mon(v) + '</td>';
+    if (e.estado === 'DIA') return '<td class="num" title="Día sin producción: pago autorizado por ' + esc(e.autoriza || '') + '"><span class="mk-dia">' + money.format(e.pago) + ' <small>día</small></span></td>';
+    if (e.estado === 'COMP') return '<td class="num" title="Producido ' + money.format(e.prod) + ' + complemento ' + money.format(e.complemento) + ' (autorizó ' + esc(e.autoriza || '') + ')"><span class="mk-comp">' + money.format(e.pago) + ' <small>compl.</small></span></td>';
+    if (e.estado === 'PEND') return '<td class="num" title="' + (e.prod ? 'Producción menor al pago por día' : 'Día sin producción') + ': pendiente de autorización del supervisor"><span class="mk-pend">' + money.format(e.prod) + ' <small>pend.</small></span></td>';
+    return '<td class="num" title="Ausencia: ' + esc(e.motivo || '') + (e.autoriza ? ' (registró ' + esc(e.autoriza) + ')' : '') + '. No se paga el día"><span class="mk-aus">' + (e.prod ? mon(e.prod) + ' ' : '') + '<small>aus.</small></span></td>';
+  }
+
   function renderData(d) {
     S.data = d;
-    var t = d.total, ops = d.operadores, days = dayList(d.desde, d.hasta), nd = days.length <= MAXCOLS ? days.length : 0;
+    var t = d.total, ops = d.operadores, days = dayList(d.desde, d.hasta), nd = days.length <= MAXCOLS ? days.length : 0, on = payOn(d), hol = on ? (d.pago.feriados || {}) : {};
     g('dz-k-costo').textContent = money.format(t.costo);
     g('dz-k-ops').textContent = nf.format(t.operaciones);
     g('dz-k-reg').textContent = nf.format(t.registros);
     g('dz-k-opr').textContent = nf.format(t.operadores);
+    g('dz-k-pagar-box').hidden = !on; g('dz-k-pagar').textContent = money.format(num(t.pagar));
+    g('dz-k-costo').closest('.dz-kpis').classList.toggle('five', on);
     var mon = function (v) { return v == null ? '' : money.format(v); };
     g('dz-head').innerHTML = '<th>OPERADOR</th><th class="num">OPERACIONES</th>' + days.slice(0, nd).map(function (z) {
-      return '<th class="num dz-dh">' + dowOf(z).toUpperCase() + '<br>' + shortDate(z) + '</th>';
-    }).join('') + '<th class="num">TOTAL</th><th class="num">% DEL COSTO</th>';
+      return '<th class="num dz-dh' + (hol[z] ? ' dz-hol' : '') + '"' + (hol[z] ? ' title="Feriado validado: ' + esc(hol[z]) + '"' : '') + '>' + dowOf(z).toUpperCase() + '<br>' + shortDate(z) + '</th>';
+    }).join('') + '<th class="num">TOTAL</th><th class="num">% DEL COSTO</th>' + (on ? '<th class="num">A PAGAR</th>' : '');
     g('dz-rows').innerHTML = ops.map(function (o) {
       var pct = t.costo ? o.costo * 100 / t.costo : 0;
       return '<tr><td><b>' + esc(o.personal) + '</b></td><td class="num">' + nf.format(o.operaciones) + '</td>' +
-        days.slice(0, nd).map(function (z) { return '<td class="num">' + mon((o.fechas || {})[z]) + '</td>'; }).join('') +
-        '<td class="num"><b>' + money.format(o.costo) + '</b></td><td class="num">' + pct.toFixed(1) + '%</td></tr>';
+        days.slice(0, nd).map(function (z) { return dayCell(o, z, on); }).join('') +
+        '<td class="num"><b>' + money.format(o.costo) + '</b></td><td class="num">' + pct.toFixed(1) + '%</td>' + (on ? '<td class="num dz-pay"><b>' + money.format(num(o.pagar)) + '</b></td>' : '') + '</tr>';
     }).join('');
     g('dz-foot').innerHTML = '<td><b>TOTAL GENERAL</b></td><td class="num"><b>' + nf.format(t.operaciones) + '</b></td>' +
       days.slice(0, nd).map(function (z) { return '<td class="num"><b>' + money.format((t.fechas || {})[z] || 0) + '</b></td>'; }).join('') +
-      '<td class="num"><b>' + money.format(t.costo) + '</b></td><td class="num"><b>' + (ops.length ? '100.0%' : '0.0%') + '</b></td>';
+      '<td class="num"><b>' + money.format(t.costo) + '</b></td><td class="num"><b>' + (ops.length ? '100.0%' : '0.0%') + '</b></td>' + (on ? '<td class="num"><b>' + money.format(num(t.pagar)) + '</b></td>' : '');
     g('dz-empty').hidden = !!ops.length;
     g('dz-range').textContent = dmy(d.desde) + ' - ' + dmy(d.hasta);
     g('dz-note').hidden = !!nd;
+    renderInc(d, on);
+  }
+
+  /* ---------- Pago por día: incidencias (ausencias y autorizaciones del supervisor) ---------- */
+
+  function renderInc(d, on) {
+    var box = g('dz-inc');
+    box.hidden = !on;
+    if (!on) return;
+    var list = d.pago.incidencias || [], motivos = d.pago.motivos || [];
+    var opts = '<option value="">Motivo…</option>' + motivos.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('');
+    g('dz-inc-rows').innerHTML = list.map(function (x) {
+      var cls = x.estado.toLowerCase(), act;
+      var key = 'data-f="' + esc(x.fecha) + '" data-p="' + esc(x.personal) + '"';
+      if (x.estado === 'DIA') act = '<div class="inc-act"><span class="inc-note">Autorizó ' + esc(x.autoriza) + '</span><button class="secondary small" data-a="quitar" ' + key + ' type="button">Quitar autorización</button></div>';
+      else if (x.estado === 'PEND' && !num(x.prod)) act = '<div class="inc-act"><button class="primary small" data-a="comp" ' + key + ' type="button">Autorizar pago del día</button><select class="inc-mot" aria-label="Motivo de ausencia">' + opts + '</select><button class="secondary small" data-a="aus" ' + key + ' type="button">Registrar ausencia</button></div>';
+      else if (x.estado === 'PEND') act = '<div class="inc-act"><button class="primary small" data-a="comp" ' + key + ' type="button">Autorizar pago del día</button><span class="inc-note">Se paga solo lo producido</span></div>';
+      else if (x.estado === 'AUS') act = '<div class="inc-act"><span class="inc-note"><b>' + esc(x.motivo) + '</b> · registró ' + esc(x.autoriza) + '</span><button class="secondary small" data-a="quitar" ' + key + ' type="button">Quitar ausencia</button></div>';
+      else act = '<div class="inc-act"><span class="inc-note">Autorizó ' + esc(x.autoriza) + '</span><button class="secondary small" data-a="quitar" ' + key + ' type="button">Quitar autorización</button></div>';
+      return '<tr><td>' + dmy(x.fecha) + ' <span class="inc-note">' + dowOf(x.fecha) + '</span></td><td><b>' + esc(x.personal) + '</b></td><td class="num">' + money.format(num(x.prod)) + '</td><td class="num">' + money.format(num(x.pagoDia)) + '</td><td><span class="st ' + cls + '">' + esc(ESTADO[x.estado] || x.estado) + '</span></td><td>' + act + '</td></tr>';
+    }).join('');
+    g('dz-inc-empty').hidden = !!list.length;
+  }
+
+  function incAction(btn) {
+    var a = btn.dataset.a, fecha = btn.dataset.f, personal = btn.dataset.p, sup = g('dz-sup').value.trim();
+    if (sup.length < 2) { msg('Escribe el nombre del supervisor que autoriza.', false); g('dz-sup').focus(); return; }
+    var tipo = a === 'aus' ? 'AUSENCIA' : (a === 'comp' ? 'COMPLEMENTO' : ''), motivo = '';
+    if (a === 'aus') {
+      var sel = btn.parentNode.querySelector('.inc-mot'); motivo = sel ? sel.value : '';
+      if (!motivo) { msg('Selecciona el motivo de la ausencia.', false); if (sel) sel.focus(); return; }
+    }
+    try { sessionStorage.setItem('jv_sup', sup); } catch (e) {}
+    btn.disabled = true;
+    req0('saveIncidencia', { gpin: pin(), fecha: fecha, personal: personal, tipo: tipo, motivo: motivo, autoriza: sup }, true).then(function () {
+      if (typeof logChange === 'function') logChange('saveIncidencia', { fecha: fecha, personal: personal, tipo: tipo || 'QUITAR', motivo: motivo, autoriza: sup });
+      return query().then(function (ok) { if (ok) msg(tipo === 'AUSENCIA' ? 'Ausencia registrada: no se paga el día.' : (tipo === 'COMPLEMENTO' ? 'Pago del día autorizado.' : 'Incidencia quitada.'), true); });
+    }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
   }
 
   function query() {
@@ -480,6 +566,8 @@
     g('dz-sem').addEventListener('change', function () { var v = g('dz-sem').value; if (!v) return; var q = v.split('|'); g('dz-desde').value = q[0]; g('dz-hasta').value = q[1]; if (pin()) query(); });
     ['dz-desde', 'dz-hasta'].forEach(function (id) { g(id).addEventListener('change', function () { g('dz-sem').value = ''; }); });
     g('dz-go').addEventListener('click', query);
+    try { g('dz-sup').value = sessionStorage.getItem('jv_sup') || ''; } catch (e) {}
+    g('dz-inc-rows').addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('button[data-a]'); if (b && !b.disabled) incAction(b); });
     g('dz-xlsx').addEventListener('click', exportXlsx);
     g('dz-pdf').addEventListener('click', exportPdf);
     g('hs-go').addEventListener('click', histQuery);
