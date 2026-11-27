@@ -198,14 +198,36 @@
   function payOn(d) { return !!(d && d.pago && d.pago.habilitado && d.pago.configurado && d.total && d.total.pagar !== undefined); }
   var ESTADO = { DIA: 'Día sin producción · pago autorizado', PEND: 'Pendiente de autorización', AUS: 'Ausencia · no se paga', COMP: 'Complemento autorizado' };
   function adicional(x) { return x.estado === 'DIA' ? num(x.pagoDia) : (x.estado === 'COMP' ? Math.round((num(x.pagoDia) - num(x.prod)) * 100) / 100 : 0); }
+  /** Semana ISO de una fecha yyyy-mm-dd. */
+  function isoWeek(iso) {
+    var a = iso.split('-').map(Number), dt = new Date(Date.UTC(a[0], a[1] - 1, a[2])), dn = dt.getUTCDay() || 7;
+    dt.setUTCDate(dt.getUTCDate() + 4 - dn);
+    return Math.ceil(((dt - Date.UTC(dt.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
+  }
+  function weekLabel(d) { var a = isoWeek(d.desde), b = isoWeek(d.hasta); return a === b ? 'Semana ' + a : 'Semanas ' + a + ' - ' + b; }
+  var MOT_ABR = { 'Vacaciones': 'Vac.', 'Incapacidad': 'Inc.', 'Suspensión': 'Sus.', 'Permiso': 'Perm.', 'Falta': 'Falta', 'Otro': 'Otro' };
+  /** Qué se muestra en la celda de un operador en un día (Excel y PDF): v texto/número, n monto que se paga, k tipo (dest, dia, pend, aus, fest, vac). */
+  function dayInfo(o, z, pay, hol) {
+    var base = (o.fechas || {})[z], e = pay && o.dias ? o.dias[z] : null;
+    if (!pay) return { v: base == null ? null : base, n: num(base), k: 'plain' };
+    if (e) {
+      if (e.estado === 'DIA' || e.estado === 'COMP') return { v: num(e.pago), n: num(e.pago), k: 'dia' };
+      if (e.estado === 'PEND') return { v: num(e.prod), n: num(e.prod), k: 'pend' };
+      var m = e.motivo || 'Ausencia';
+      return { v: m, n: num(e.prod), k: 'aus', prod: num(e.prod), txt: true };
+    }
+    if (hol && hol[z]) return num(base) ? { v: num(base), n: num(base), k: 'festp' } : { v: 'Festivo', n: 0, k: 'fest', txt: true };
+    if (base == null) return { v: null, n: 0, k: 'vacio' };
+    return { v: num(base), n: num(base), k: 'dest' };
+  }
   var MAXCOLS = 31;   /* días con columna propia en vista previa y Excel */
   var MAXPDF = 14;    /* días con columna propia en el PDF */
 
-  /* estilos: 0 normal, 1 título, 2 subtítulo, 3 encabezado, 4 texto, 5 entero, 6 moneda, 7 %, 8 total texto, 9 total entero, 10 total moneda, 11 total %, 12 etiqueta, 13 valor KPI moneda, 14 valor KPI entero */
+  /* estilos: 0 normal, 1 título, 2 subtítulo, 3 encabezado, 4 texto, 5 entero, 6 moneda, 7 %, 8 total texto, 9 total entero, 10 total moneda, 11 total %, 12 etiqueta, 13 valor KPI moneda, 14 valor KPI entero, 15 fecha, 16 $ destajo (verde), 17 $ pago por día (azul), 18 $ pendiente (ámbar), 19 $ festivo con producción, 20 texto ausencia (rojo), 21 texto Festivo (morado), 22 encabezado Total destajo, 23 $ total destajo (dorado), 24-28 leyenda verde/azul/ámbar/rojo/morado, 29 etiqueta Semana, 30 $ total destajo en negrita */
   var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
     '<numFmts count="3"><numFmt numFmtId="164" formatCode="&quot;$&quot;#,##0.00"/><numFmt numFmtId="165" formatCode="0.0%"/><numFmt numFmtId="166" formatCode="dd/mm/yyyy"/></numFmts>' +
-    '<fonts count="7">' +
+    '<fonts count="9">' +
     '<font><sz val="10"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="16"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
     '<font><i/><sz val="9"/><color rgb="FF72817E"/><name val="Calibri"/></font>' +
@@ -213,15 +235,24 @@
     '<font><b/><sz val="10"/><color rgb="FF18312D"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="8"/><color rgb="FF72817E"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="14"/><color rgb="FF0B2926"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="10"/><color rgb="FF9B2C20"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="10"/><color rgb="FF5B3A8C"/><name val="Calibri"/></font>' +
     '</fonts>' +
-    '<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+    '<fills count="12"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
     '<fill><patternFill patternType="solid"><fgColor rgb="FF0D3B36"/></patternFill></fill>' +
     '<fill><patternFill patternType="solid"><fgColor rgb="FF08776B"/></patternFill></fill>' +
-    '<fill><patternFill patternType="solid"><fgColor rgb="FFEAF1EF"/></patternFill></fill></fills>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFEAF1EF"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFE3F4E8"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFDCEBFA"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF1CC"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFF9D9D5"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFE8DDF5"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFB26A00"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF4DC"/></patternFill></fill></fills>' +
     '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
     '<border><left style="thin"><color rgb="FFDFE7E4"/></left><right style="thin"><color rgb="FFDFE7E4"/></right><top style="thin"><color rgb="FFDFE7E4"/></top><bottom style="thin"><color rgb="FFDFE7E4"/></bottom><diagonal/></border></borders>' +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="16">' +
+    '<cellXfs count="31">' +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
     '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment vertical="center"/></xf>' +
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
@@ -238,6 +269,21 @@
     '<xf numFmtId="164" fontId="6" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +
     '<xf numFmtId="3" fontId="6" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +
     '<xf numFmtId="166" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf>' +
+    '<xf numFmtId="164" fontId="0" fillId="5" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="164" fontId="0" fillId="6" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="164" fontId="0" fillId="7" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="164" fontId="0" fillId="9" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="0" fontId="7" fillId="8" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="8" fillId="9" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="3" fillId="10" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="164" fontId="0" fillId="11" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="0" fontId="4" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="4" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="4" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="7" fillId="8" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="8" fillId="9" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="6" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +
+    '<xf numFmtId="164" fontId="4" fillId="11" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
     '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
   /** Hoja: cells = [{r, c, v, s, f}] ; opts {widths, merges, freeze, filter, heights} */
@@ -275,27 +321,41 @@
     var pay = payOn(d), cOps = 1, cD0 = 2, cTot = 2 + nd, cPct = 3 + nd, cP1 = 4 + nd, cP2 = 5 + nd, cP3 = 6 + nd, nCols = (pay ? 7 : 4) + nd;
     function put(r, c, v, s, f) { cells.push({ r: r, c: c, v: v, s: s, f: f }); }
     for (var i = 0; i < nCols; i++) put(1, i, i ? null : 'JV INTERNATIONAL SOLUTIONS INC. · INFORME DE DESTAJO', 1);
-    put(2, 0, rango, 2); put(3, 0, gen, 2);
+    put(2, 0, rango, 2); put(3, 0, gen, 2); put(4, 0, weekLabel(d), 29);
+    var hol = pay ? (d.pago.feriados || {}) : {};
     put(H, 0, 'Operador', 3); put(H, cOps, 'Operaciones', 3);
     days.slice(0, nd).forEach(function (x, k) { put(H, cD0 + k, dowOf(x) + '\n' + shortDate(x), 3); });
-    put(H, cTot, 'Total', 3); put(H, cPct, '% del costo', 3);
+    put(H, cTot, pay ? 'TOTAL DESTAJO\n(producido)' : 'TOTAL DESTAJO', 22); put(H, cPct, '% del costo', 3);
     if (pay) { put(H, cP1, 'Pago por días sin producción (autorizados)', 3); put(H, cP2, 'Complemento autorizado', 3); put(H, cP3, 'Total a pagar', 3); }
     var grand = d.total.costo || 0;
     ops.forEach(function (o, k) {
       var r = first + k;
       put(r, 0, o.personal, 4); put(r, cOps, o.operaciones, 5);
-      days.slice(0, nd).forEach(function (x, j) { var v = (o.fechas || {})[x]; put(r, cD0 + j, v == null ? null : v, 6); });
-      if (nd) put(r, cTot, o.costo, 6, 'SUM(' + colL(cD0) + r + ':' + colL(cD0 + nd - 1) + r + ')'); else put(r, cTot, o.costo, 6);
+      days.slice(0, nd).forEach(function (x, j) {
+        var inf = dayInfo(o, x, pay, hol), st = { plain: 6, dest: 16, dia: 17, pend: 18, aus: 20, fest: 21, festp: 19, vacio: 4 }[inf.k];
+        put(r, cD0 + j, inf.v, st);
+      });
+      /* Con pago por día las celdas muestran lo que se paga; el total de destajo es lo producido. */
+      if (nd && !pay) put(r, cTot, o.costo, 30, 'SUM(' + colL(cD0) + r + ':' + colL(cD0 + nd - 1) + r + ')'); else put(r, cTot, o.costo, 30);
       put(r, cPct, grand ? o.costo / grand : 0, 7, 'IF($' + colL(cTot) + '$' + tot + '=0,0,' + colL(cTot) + r + '/$' + colL(cTot) + '$' + tot + ')');
       if (pay) { put(r, cP1, num(o.pagoDiasSinProd), 6); put(r, cP2, num(o.complemento), 6); put(r, cP3, num(o.pagar), 6, colL(cTot) + r + '+' + colL(cP1) + r + '+' + colL(cP2) + r); }
     });
+    var dayTot = days.slice(0, nd).map(function (x) { var s = 0, txt = false; ops.forEach(function (o) { var i = dayInfo(o, x, pay, hol); s += i.n; if (i.txt) txt = true; }); return { s: Math.round(s * 100) / 100, txt: txt }; });
     function colSum(c) { return n ? 'SUM(' + colL(c) + first + ':' + colL(c) + last + ')' : '0'; }
     put(tot, 0, 'TOTAL', 8); put(tot, cOps, d.total.operaciones, 9, colSum(cOps));
-    days.slice(0, nd).forEach(function (x, j) { put(tot, cD0 + j, (d.total.fechas || {})[x] || 0, 10, colSum(cD0 + j)); });
+    days.slice(0, nd).forEach(function (x, j) { put(tot, cD0 + j, pay ? dayTot[j].s : ((d.total.fechas || {})[x] || 0), 10, pay && dayTot[j].txt ? undefined : colSum(cD0 + j)); });
     put(tot, cTot, d.total.costo, 10, colSum(cTot)); put(tot, cPct, n ? 1 : 0, 11, n ? colSum(cPct) : '0');
     if (pay) { put(tot, cP1, num(d.total.pagoDiasSinProd), 10, colSum(cP1)); put(tot, cP2, num(d.total.complemento), 10, colSum(cP2)); put(tot, cP3, num(d.total.pagar), 10, colSum(cP3)); }
-    var w1 = [34, 14].concat(days.slice(0, nd).map(function () { return 12.5; }), [15, 12], pay ? [17, 17, 16] : []);
-    var m1 = [1, 2, 3].map(function (r) { return 'A' + r + ':' + colL(nCols - 1) + r; });
+    var lastRow1 = tot, m1x = [];
+    if (pay) {
+      var LG = [[24, 'Destajo', 'Se paga lo producido (monto en $).'], [25, 'Pago por día', 'Día sin producción autorizado o producción completada hasta el pago por día (monto en $).'], [26, 'Pendiente', 'Falta autorización del supervisor: por ahora se paga solo lo producido.'], [27, 'Falta / Permiso / Vacaciones…', 'Incidencia autorizada tal cual (motivo). El día no se paga; si hubo producción se muestra y se paga como destajo.'], [28, 'Festivo', 'Feriado validado: el día no se paga como pago por día.']];
+      put(tot + 2, 0, 'LEYENDA DE COLORES', 12);
+      LG.forEach(function (it, q) { var rr = tot + 3 + q; put(rr, 0, it[1], it[0]); put(rr, 1, it[2], 2); m1x.push('B' + rr + ':' + colL(Math.min(nCols - 1, 9)) + rr); });
+      put(tot + 3 + LG.length, 0, 'TOTAL DESTAJO = lo producido · TOTAL A PAGAR = total destajo + días sin producción autorizados + complementos autorizados.', 2);
+      m1x.push('A' + (tot + 3 + LG.length) + ':' + colL(nCols - 1) + (tot + 3 + LG.length));
+    }
+    var w1 = [34, 14].concat(days.slice(0, nd).map(function () { return 13.5; }), [16, 12], pay ? [17, 17, 16] : []);
+    var m1 = [1, 2, 3].map(function (r) { return 'A' + r + ':' + colL(nCols - 1) + r; }).concat(m1x);
     var s1 = sheetXml(cells, { widths: w1, merges: m1, freeze: H, freezeCols: 1, heights: { 1: 30, 5: 34 } });
 
     /* ---- Hoja 2: Detalle por operación (fecha, operador, estilo, operación...) ---- */
@@ -323,7 +383,7 @@
       ['Fecha', 'Operador', 'Producido', 'Pago por día', 'Estado', 'Motivo de ausencia', 'Autorizó (supervisor)', 'Pago adicional al destajo'].forEach(function (h, c) { put3(4, c, h, 3); });
       inc.forEach(function (x) {
         put3(r3, 0, serial(x.fecha), 15); put3(r3, 1, x.personal, 4); put3(r3, 2, num(x.prod), 6); put3(r3, 3, num(x.pagoDia), 6);
-        put3(r3, 4, ESTADO[x.estado] || x.estado, 4); put3(r3, 5, x.motivo || '', 4); put3(r3, 6, x.autoriza || '', 4); put3(r3, 7, adicional(x), 6); r3++;
+        put3(r3, 4, x.estado === 'AUS' ? 'Ausencia · ' + (x.motivo || '') + ' (no se paga)' : (ESTADO[x.estado] || x.estado), { DIA: 25, COMP: 25, PEND: 26, AUS: 27 }[x.estado] || 4); put3(r3, 5, x.motivo || '', 4); put3(r3, 6, x.autoriza || '', 4); put3(r3, 7, adicional(x), 6); r3++;
       });
       var l3 = r3 - 1, t3 = r3;
       for (var q3 = 0; q3 < 7; q3++) put3(t3, q3, q3 ? null : 'TOTAL', 8);
@@ -358,7 +418,7 @@
     var p = new Pdf(jsPDF, logo), doc = p.doc, M = p.M, W = p.W, H = p.H;
     var ops = d.operadores || [], t = d.total || {};
     var title = 'Informe de Destajo', pay = payOn(d);
-    var rango = 'Rango de fechas: ' + dmy(d.desde) + ' - ' + dmy(d.hasta);
+    var rango = weekLabel(d) + ' · Rango de fechas: ' + dmy(d.desde) + ' - ' + dmy(d.hasta);
     var days = dayList(d.desde, d.hasta), nd = days.length <= MAXPDF ? days.length : 0;
     var cents = nd <= 9, fm = function (v) { return v == null || v === '' ? '' : (cents ? money.format(v) : '$' + nf.format(Math.round(v))); };
     var tw = W - 2 * M, nameW = 150, opsW = 66, totW = 78, pctW = 46, payW = pay ? 78 : 0;
@@ -368,22 +428,25 @@
     for (var k = 0; k < nd; k++) { cols.push({ x: x, w: dateW, right: 1 }); x += dateW; }
     cols.push({ x: x, w: totW, right: 1 }); cols.push({ x: x + totW, w: pctW, right: 1 });
     if (pay) cols.push({ x: x + totW + pctW, w: payW, right: 1 });
-    var head = ['Operador', 'Operaciones'].concat(days.slice(0, nd).map(function (z) { return dowOf(z).toUpperCase() + ' ' + shortDate(z); }), ['Total', '% costo'].concat(pay ? ['A pagar'] : []));
-    /* Marcas del pago por día: * día sin producción pagado · + pago del día autorizado · ! pendiente de autorización · Aus ausencia */
+    var head = ['Operador', 'Operaciones'].concat(days.slice(0, nd).map(function (z) { return dowOf(z).toUpperCase() + ' ' + shortDate(z); }), ['Total destajo', '% costo'].concat(pay ? ['A pagar'] : []));
+    /* Cada celda de día muestra lo que se paga, con color: verde destajo · azul pago por día · ámbar pendiente · rojo incidencia autorizada (motivo) · morado festivo */
+    var hol = pay ? (d.pago.feriados || {}) : {};
+    var FILL = { dest: '#e3f4e8', dia: '#dcebfa', pend: '#fff1cc', aus: '#f9d9d5', fest: '#e8ddf5', festp: '#e8ddf5' };
+    var INK = { aus: '#9b2c20', fest: '#5b3a8c', festp: '#5b3a8c' };
     function dayTxt(o, z) {
-      var base = fm((o.fechas || {})[z]), e = pay && o.dias ? o.dias[z] : null;
-      if (!e) return base;
-      if (e.estado === 'DIA') return fm(e.pago) + '*';
-      if (e.estado === 'COMP') return fm(e.pago) + '+';
-      if (e.estado === 'PEND') return fm(e.prod) + '!';
-      return (base ? base + ' ' : '') + 'Aus';
+      var i = dayInfo(o, z, pay, hol);
+      if (i.k === 'aus') { var m = i.v; if (m.length * (nd > 9 ? 3.4 : 4.4) > dateW - 8) m = MOT_ABR[m] || m.slice(0, 4) + '.'; return m + (i.prod && nd <= 9 ? ' ' + fm(i.prod) : ''); }
+      if (i.txt) return i.v;
+      return i.v == null ? '' : fm(i.v);
     }
+    var dayK = function (o, z) { return dayInfo(o, z, pay, hol).k; };
     var rows = ops.map(function (o) {
       return [o.personal, nf.format(o.operaciones)].concat(days.slice(0, nd).map(function (z) { return dayTxt(o, z); }), [fm(o.costo), (t.costo ? o.costo * 100 / t.costo : 0).toFixed(1) + '%'], pay ? [fm(num(o.pagar))] : []);
     });
-    var totalRow = ['TOTAL GENERAL', nf.format(num(t.operaciones))].concat(days.slice(0, nd).map(function (z) { return fm((t.fechas || {})[z] || 0); }), [fm(num(t.costo)), ops.length ? '100.0%' : '0.0%'], pay ? [fm(num(t.pagar))] : []);
+    var dayTotals = days.slice(0, nd).map(function (z) { var s = 0; ops.forEach(function (o) { s += dayInfo(o, z, pay, hol).n; }); return pay ? s : ((t.fechas || {})[z] || 0); });
+    var totalRow = ['TOTAL GENERAL', nf.format(num(t.operaciones))].concat(dayTotals.map(function (v) { return fm(v); }), [fm(num(t.costo)), ops.length ? '100.0%' : '0.0%'], pay ? [fm(num(t.pagar))] : []);
 
-    var rowH = 17, bottom = H - 44, i = 0, page = 0, y;
+    var rowH = 17, bottom = H - 44, legH = pay ? 30 : 0, i = 0, page = 0, y;
     var fs = nd > 9 ? 6.5 : 8;
     function cell(txt, c, yy) { doc.text(p.fit(txt, c.w - 8), c.right ? c.x + c.w - 4 : c.x + 4, yy + 11.5, { align: c.right ? 'right' : 'left' }); }
     do {
@@ -392,19 +455,29 @@
       y = 96;
       p.color(C.text); p.font(11, true); doc.text('Destajo por operador' + (page ? ' (continuación)' : ''), M, y); y += 8;
       p.fill('#0d3b36'); doc.rect(M, y, tw, rowH + 5, 'F'); p.color('#ffffff'); p.font(nd > 9 ? 6 : 7.2, true);
+      if (cols[nd + 2]) { p.fill('#b26a00'); doc.rect(cols[nd + 2].x, y, cols[nd + 2].w, rowH + 5, 'F'); }
       head.forEach(function (h, k) { var c = cols[k]; doc.text(p.fit(h.toUpperCase(), c.w - 6), c.right ? c.x + c.w - 4 : c.x + 4, y + 14, { align: c.right ? 'right' : 'left' }); });
       y += rowH + 5; var n = 0;
-      while (i < rows.length && y + rowH <= bottom - (i === rows.length - 1 ? rowH + (pay ? 16 : 0) : 0)) {
+      while (i < rows.length && y + rowH <= bottom - (i === rows.length - 1 ? rowH + legH : 0)) {
         if (n % 2) { p.fill('#f3f7f6'); doc.rect(M, y, tw, rowH, 'F'); }
         p.color(C.text); p.font(fs, false);
-        rows[i].forEach(function (v, k) { cell(v, cols[k], y); });
+        var ro = ops[i];
+        rows[i].forEach(function (v, k) {
+          if (pay && k >= 2 && k < 2 + nd) { var kk = dayK(ro, days[k - 2]); if (FILL[kk]) { p.fill(FILL[kk]); doc.rect(cols[k].x, y, cols[k].w, rowH, 'F'); } p.color(INK[kk] || C.text); p.font(fs, kk === 'aus' || kk === 'fest'); cell(v, cols[k], y); p.color(C.text); p.font(fs, false); }
+          else cell(v, cols[k], y);
+        });
         y += rowH; i++; n++;
       }
       if (i >= rows.length) {
         p.fill('#eaf1ef'); doc.rect(M, y, tw, rowH, 'F'); p.color(C.text); p.font(fs, true);
         totalRow.forEach(function (v, k) { cell(v, cols[k], y); });
         y += rowH; p.stroke(C.line); doc.setLineWidth(0.6); doc.line(M, y, W - M, y);
-        if (pay) { p.color(C.muted); p.font(6.8, false); doc.text(nd ? '* Día sin producción con pago autorizado   + Pago por día autorizado (producción menor)   ! Pendiente de autorización (no se paga)   Aus = Ausencia (no se paga)   Feriados validados: no se pagan' : 'A pagar = destajo + días sin producción autorizados + complementos autorizados. Las ausencias y los feriados validados no se pagan.', M, y + 12); }
+        if (pay) {
+          var LG = nd ? [['#e3f4e8', 'Destajo (producido)'], ['#dcebfa', 'Pago por día / complemento autorizado'], ['#fff1cc', 'Pendiente de autorización (se paga lo producido)'], ['#f9d9d5', 'Incidencia autorizada: Falta, Permiso, Vacaciones… (no se paga)'], ['#e8ddf5', 'Festivo']] : [];
+          var lx = M; p.font(6.8, false);
+          LG.forEach(function (it) { p.fill(it[0]); p.stroke('#9aa8a5'); doc.setLineWidth(0.3); doc.rect(lx, y + 5, 9, 9, 'FD'); p.color(C.muted); doc.text(it[1], lx + 13, y + 12.5); lx += 13 + doc.getTextWidth(it[1]) + 14; });
+          p.color(C.muted); p.font(6.8, false); doc.text('Total destajo = lo producido · A pagar = total destajo + días sin producción autorizados + complementos autorizados. Los feriados validados y las ausencias no se pagan como pago por día.', M, y + (nd ? 26 : 12));
+        }
       }
       page++;
     } while (i < rows.length);
@@ -424,13 +497,13 @@
   function pin() { return window.JVGate ? JVGate.pin() : ''; }
   function badPin(e) { if (/PIN de Gerencia|no está configurado/i.test(e.message) && window.JVGate) { JVGate.lock(e.message); return true; } return false; }
 
-  function dayCell(o, z, on) {
+  function dayCell(o, z, on, hol) {
     var v = (o.fechas || {})[z], e = on && o.dias ? o.dias[z] : null, mon = function (x) { return x == null ? '' : money.format(x); };
-    if (!e) return '<td class="num">' + mon(v) + '</td>';
+    if (!e) return (on && hol && hol[z] && !num(v)) ? '<td class="num" title="Feriado validado: ' + esc(hol[z]) + '"><span class="mk-fest">Festivo</span></td>' : '<td class="num">' + mon(v) + '</td>';
     if (e.estado === 'DIA') return '<td class="num" title="Día sin producción: pago autorizado por ' + esc(e.autoriza || '') + '"><span class="mk-dia">' + money.format(e.pago) + ' <small>día</small></span></td>';
     if (e.estado === 'COMP') return '<td class="num" title="Producido ' + money.format(e.prod) + ' + complemento ' + money.format(e.complemento) + ' (autorizó ' + esc(e.autoriza || '') + ')"><span class="mk-comp">' + money.format(e.pago) + ' <small>compl.</small></span></td>';
     if (e.estado === 'PEND') return '<td class="num" title="' + (e.prod ? 'Producción menor al pago por día' : 'Día sin producción') + ': pendiente de autorización del supervisor"><span class="mk-pend">' + money.format(e.prod) + ' <small>pend.</small></span></td>';
-    return '<td class="num" title="Ausencia: ' + esc(e.motivo || '') + (e.autoriza ? ' (registró ' + esc(e.autoriza) + ')' : '') + '. No se paga el día"><span class="mk-aus">' + (e.prod ? mon(e.prod) + ' ' : '') + '<small>aus.</small></span></td>';
+    return '<td class="num" title="Ausencia: ' + esc(e.motivo || '') + (e.autoriza ? ' (registró ' + esc(e.autoriza) + ')' : '') + '. No se paga el día"><span class="mk-aus">' + (e.prod ? mon(e.prod) + ' ' : '') + '<small>' + esc(e.motivo || 'aus.') + '</small></span></td>';
   }
 
   function renderData(d) {
@@ -449,7 +522,7 @@
     g('dz-rows').innerHTML = ops.map(function (o) {
       var pct = t.costo ? o.costo * 100 / t.costo : 0;
       return '<tr><td><b>' + esc(o.personal) + '</b></td><td class="num">' + nf.format(o.operaciones) + '</td>' +
-        days.slice(0, nd).map(function (z) { return dayCell(o, z, on); }).join('') +
+        days.slice(0, nd).map(function (z) { return dayCell(o, z, on, hol); }).join('') +
         '<td class="num"><b>' + money.format(o.costo) + '</b></td><td class="num">' + pct.toFixed(1) + '%</td>' + (on ? '<td class="num dz-pay"><b>' + money.format(num(o.pagar)) + '</b></td>' : '') + '</tr>';
     }).join('');
     g('dz-foot').innerHTML = '<td><b>TOTAL GENERAL</b></td><td class="num"><b>' + nf.format(t.operaciones) + '</b></td>' +
@@ -478,7 +551,9 @@
     var box = g('dz-inc');
     box.hidden = !on;
     if (!on) return;
-    var list = d.pago.incidencias || [], motivos = d.pago.motivos || [];
+    var all = d.pago.incidencias || [], motivos = d.pago.motivos || [];
+    renderFilters(all);
+    var list = incFiltered(all);
     var opts = '<option value="">Motivo…</option>' + motivos.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('');
     g('dz-inc-rows').innerHTML = list.map(function (x) {
       var cls = x.estado.toLowerCase(), act;
@@ -490,30 +565,58 @@
       else act = '<div class="inc-act"><span class="inc-note">Autorizó ' + esc(x.autoriza) + '</span><button class="secondary small" data-a="quitar" ' + key + ' type="button">Quitar autorización</button></div>';
       return '<tr><td>' + dmy(x.fecha) + ' <span class="inc-note">' + dowOf(x.fecha) + '</span></td><td><b>' + esc(x.personal) + '</b></td><td class="num">' + money.format(num(x.prod)) + '</td><td class="num">' + money.format(num(x.pagoDia)) + '</td><td><span class="st ' + cls + '">' + esc(ESTADO[x.estado] || x.estado) + '</span></td><td>' + act + '</td></tr>';
     }).join('');
+    g('dz-inc-empty').textContent = all.length ? 'Ningún renglón coincide con los filtros.' : 'Sin incidencias en el rango.';
     g('dz-inc-empty').hidden = !!list.length;
-    renderBulk(list);
+    updateBulk(all, list);
   }
 
-  /** Selector de persona + botón para autorizar de una vez todos los días pendientes. */
-  function renderBulk(list) {
-    var sel = g('dz-bulk-p'), keep = sel.value, by = {}, total = 0;
-    list.forEach(function (x) { if (x.estado === 'PEND') { by[x.personal] = (by[x.personal] || 0) + 1; total++; } });
-    var names = Object.keys(by).sort(function (a, b) { return a.localeCompare(b, 'es'); });
-    sel.innerHTML = '<option value="">Todas las personas · todo el rango (' + total + ')</option>' + names.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + ' (' + by[n] + ')</option>'; }).join('');
-    if (keep && by[keep]) sel.value = keep;
-    updateBulk(by, total);
+  /* ---------- Filtros del panel: operador, día y estado ---------- */
+
+  function incFiltered(all) {
+    var p = g('dz-f-p').value, f = g('dz-f-d').value, e = g('dz-f-e').value;
+    return all.filter(function (x) {
+      if (p && x.personal !== p) return false;
+      if (f && x.fecha !== f) return false;
+      if (e === 'PEND') return x.estado === 'PEND';
+      if (e === 'OK') return x.estado === 'DIA' || x.estado === 'COMP';
+      if (e === 'AUS') return x.estado === 'AUS';
+      return true;
+    });
   }
 
-  function updateBulk(by, total) {
-    var sel = g('dz-bulk-p'), n = sel.value ? (by[sel.value] || 0) : total;
+  /** Llena las listas de operador y día con lo que hay en el rango, conservando la selección si sigue existiendo. */
+  function renderFilters(all) {
+    var sp = g('dz-f-p'), sd = g('dz-f-d'), kp = sp.value, kd = sd.value, byP = {}, byD = {}, pend = 0;
+    all.forEach(function (x) {
+      byP[x.personal] = (byP[x.personal] || 0) + (x.estado === 'PEND' ? 1 : 0);
+      byD[x.fecha] = (byD[x.fecha] || 0) + (x.estado === 'PEND' ? 1 : 0);
+      if (x.estado === 'PEND') pend++;
+    });
+    var names = Object.keys(byP).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+    var days = Object.keys(byD).sort();
+    sp.innerHTML = '<option value="">Todos los operadores</option>' + names.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + (byP[n] ? ' (' + byP[n] + ' pend.)' : '') + '</option>'; }).join('');
+    sd.innerHTML = '<option value="">Todos los días</option>' + days.map(function (z) { return '<option value="' + esc(z) + '">' + dowOf(z) + ' ' + dmy(z) + (byD[z] ? ' (' + byD[z] + ' pend.)' : '') + '</option>'; }).join('');
+    if (kp && byP[kp] !== undefined) sp.value = kp;
+    if (kd && byD[kd] !== undefined) sd.value = kd;
+  }
+
+  /** Botón "Autorizar N pendientes": actúa sobre los pendientes que cumplen el filtro de operador y día. */
+  function updateBulk(all, list) {
+    var n = pendientes().length;
     g('dz-bulk-go').disabled = !n;
     g('dz-bulk-go').textContent = n ? 'Autorizar ' + n + (n === 1 ? ' pendiente' : ' pendientes') : 'Autorizar pendientes';
-    g('dz-bulk-n').textContent = total ? 'Se paga el pago por día completo en cada día autorizado.' : 'No hay días pendientes de autorización.';
+    g('dz-bulk-n').textContent = 'Mostrando ' + list.length + ' de ' + all.length + ' días' + (n ? ' · se paga el pago por día completo en cada día autorizado.' : ' · sin pendientes en este filtro.');
   }
 
+  function incRefresh() {
+    var d = S.data; if (!d || !d.pago) return;
+    renderInc(d, true);
+  }
+
+  /** Pendientes del filtro actual (operador y día; el filtro de estado solo afecta lo que se muestra). */
   function pendientes() {
-    var who = g('dz-bulk-p').value, list = (S.data && S.data.pago && S.data.pago.incidencias) || [];
-    return list.filter(function (x) { return x.estado === 'PEND' && (!who || x.personal === who); });
+    var p = g('dz-f-p').value, f = g('dz-f-d').value, list = (S.data && S.data.pago && S.data.pago.incidencias) || [];
+    return list.filter(function (x) { return x.estado === 'PEND' && (!p || x.personal === p) && (!f || x.fecha === f); });
   }
 
   /* ---------- Ventana central: pide el supervisor que autoriza ---------- */
@@ -557,19 +660,19 @@
   }
 
   function bulkAuthorize() {
-    var items = pendientes(), who = g('dz-bulk-p').value;
+    var items = pendientes(), who = g('dz-f-p').value, dia = g('dz-f-d').value;
     if (!items.length) { msg('No hay días pendientes para autorizar.', false); return; }
     if (items.length > 500) { msg('Máximo 500 días por autorización. Autoriza por persona o reduce el rango.', false); return; }
     var extra = items.reduce(function (s, x) { return s + num(x.pagoDia) - num(x.prod); }, 0);
     askSup({
       title: 'Autorizar ' + items.length + (items.length === 1 ? ' día pendiente' : ' días pendientes'),
-      html: '<b>' + esc(who || 'Todas las personas') + '</b> · ' + dmy(S.data.desde) + ' - ' + dmy(S.data.hasta) + '<br>Se pagará el pago por día completo en cada uno.<br>Pago adicional al destajo: <b>' + money.format(extra) + '</b>',
+      html: '<b>' + esc(who || 'Todos los operadores') + '</b> · ' + (dia ? dowOf(dia) + ' ' + dmy(dia) : dmy(S.data.desde) + ' - ' + dmy(S.data.hasta)) + '<br>Se pagará el pago por día completo en cada uno.<br>Pago adicional al destajo: <b>' + money.format(extra) + '</b>',
       okText: 'Autorizar ' + items.length
     }).then(function (r) {
       if (!r) return;
       var btn = g('dz-bulk-go'); btn.disabled = true;
       req0('saveIncidenciasLote', { gpin: pin(), autoriza: r.sup, items: items.map(function (x) { return { fecha: x.fecha, personal: x.personal }; }) }, true).then(function (res) {
-        if (typeof logChange === 'function') logChange('saveIncidenciasLote', { autoriza: r.sup, personal: who || 'TODAS', dias: res.autorizados, desde: S.data.desde, hasta: S.data.hasta });
+        if (typeof logChange === 'function') logChange('saveIncidenciasLote', { autoriza: r.sup, personal: who || 'TODOS', dia: dia || 'TODOS', dias: res.autorizados, desde: S.data.desde, hasta: S.data.hasta });
         return query().then(function (ok) { if (ok) msg('Pago del día autorizado en ' + res.autorizados + (res.autorizados === 1 ? ' día' : ' días') + (res.omitidos ? ' (' + res.omitidos + ' omitidos)' : '') + '.', true); });
       }).catch(function (e) { if (!badPin(e)) msg(e.message, false); btn.disabled = false; });
     });
@@ -666,7 +769,8 @@
     g('dz-m-cancel').addEventListener('click', function () { closeModal(null); });
     g('dz-modal').addEventListener('mousedown', function (ev) { if (ev.target === g('dz-modal')) closeModal(null); });
     g('dz-modal').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeModal(null); } else if (ev.key === 'Enter' && ev.target.tagName !== 'BUTTON') { ev.preventDefault(); modalOk(); } });
-    g('dz-bulk-p').addEventListener('change', function () { renderBulk((S.data && S.data.pago && S.data.pago.incidencias) || []); });
+    ['dz-f-p', 'dz-f-d', 'dz-f-e'].forEach(function (id) { g(id).addEventListener('change', incRefresh); });
+    g('dz-f-clear').addEventListener('click', function () { g('dz-f-p').value = ''; g('dz-f-d').value = ''; g('dz-f-e').value = ''; incRefresh(); });
     g('dz-bulk-go').addEventListener('click', bulkAuthorize);
     g('dz-inc-rows').addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('button[data-a]'); if (b && !b.disabled) incAction(b); });
     g('dz-xlsx').addEventListener('click', exportXlsx);
