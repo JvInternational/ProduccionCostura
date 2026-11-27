@@ -518,7 +518,7 @@
     var mon = function (v) { return v == null ? '' : money.format(v); };
     g('dz-head').innerHTML = '<th>OPERADOR</th><th class="num">OPERACIONES</th>' + days.slice(0, nd).map(function (z) {
       return '<th class="num dz-dh' + (hol[z] ? ' dz-hol' : '') + '"' + (hol[z] ? ' title="Feriado validado: ' + esc(hol[z]) + '"' : '') + '>' + dowOf(z).toUpperCase() + '<br>' + shortDate(z) + '</th>';
-    }).join('') + '<th class="num">TOTAL</th><th class="num">% DEL COSTO</th>' + (on ? '<th class="num">A PAGAR</th>' : '');
+    }).join('') + '<th class="num dz-tot">TOTAL DESTAJO</th><th class="num">% DEL COSTO</th>' + (on ? '<th class="num">A PAGAR</th>' : '');
     g('dz-rows').innerHTML = ops.map(function (o) {
       var pct = t.costo ? o.costo * 100 / t.costo : 0;
       return '<tr><td><b>' + esc(o.personal) + '</b></td><td class="num">' + nf.format(o.operaciones) + '</td>' +
